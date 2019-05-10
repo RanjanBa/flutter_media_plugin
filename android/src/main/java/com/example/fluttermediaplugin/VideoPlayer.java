@@ -6,12 +6,14 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -21,7 +23,9 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.AssetDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
@@ -29,16 +33,12 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import com.google.android.exoplayer2.video.VideoListener;
 
 import io.flutter.view.TextureRegistry;
 
+import static com.google.android.exoplayer2.C.CONTENT_TYPE_MOVIE;
+import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
@@ -46,6 +46,9 @@ public class VideoPlayer {
     private static String TAG = "VideoPlayer";
 
     private VideoExoPlayerListener videoExoPlayerListener;
+    private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;
+
+    private SimpleExoPlayer simpleExoPlayer;
     private Context context;
 
     private Surface surface;
@@ -53,27 +56,44 @@ public class VideoPlayer {
 
     VideoPlayer(Context context) {
         this.context = context;
+        initializeSimpleExoPlayer(context);
+        mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager(simpleExoPlayer, "videoPlayer");
     }
 
-    public void addVideoEventListener() {
+    private void initializeSimpleExoPlayer(Context context) {
+        if (simpleExoPlayer != null) {
+            simpleExoPlayer.stop();
+            simpleExoPlayer.release();
+        }
+
+        TrackSelector trackSelector = new DefaultTrackSelector();
+        simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(USAGE_MEDIA)
+                .setContentType(CONTENT_TYPE_MOVIE)
+                .build();
+
+        simpleExoPlayer.setAudioAttributes(audioAttributes, true);
         if (videoExoPlayerListener == null) {
             videoExoPlayerListener = new VideoExoPlayerListener();
         }
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().addListener(videoExoPlayerListener);
+        simpleExoPlayer.addListener(videoExoPlayerListener);
+
+        simpleExoPlayer.addVideoListener(new VideoListener() {
+            @Override
+            public void onSurfaceSizeChanged(int width, int height) {
+                videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
+            }
+        });
     }
 
-    public void removeVideoEventListener() {
-        if (videoExoPlayerListener != null)
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().addListener(videoExoPlayerListener);
+    public void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
+        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerListener);
     }
 
-//    public void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-//        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerListener);
-//    }
-//
-//    public void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-//        mediaPlayerExoPlayerListenerManager.removeExoPlayerListener(exoPlayerListener);
-//    }
+    public void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
+        mediaPlayerExoPlayerListenerManager.removeExoPlayerListener(exoPlayerListener);
+    }
 
     public void initialize(String stringUri) {
         Uri uri = Uri.parse(stringUri);
@@ -90,14 +110,14 @@ public class VideoPlayer {
         } else {
             dataSourceFactory =
                     new DefaultHttpDataSourceFactory(
-                            "ExoPlayer",
+                            "VideoExoPlayer",
                             null,
                             DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
                             DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
                             true);
         }
         MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, context);
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().prepare(mediaSource);
+        simpleExoPlayer.prepare(mediaSource);
     }
 
     private static boolean isFileOrAsset(Uri uri) {
@@ -139,144 +159,114 @@ public class VideoPlayer {
             TextureRegistry.SurfaceTextureEntry textureEntry) {
 
         surface = new Surface(textureEntry.surfaceTexture());
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setVideoSurface(surface);
+        simpleExoPlayer.setVideoSurface(surface);
 
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getVideoFormat() != null) {
-            Format videoFormat = FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getVideoFormat();
+        if (simpleExoPlayer.getVideoFormat() != null) {
+            Format videoFormat = simpleExoPlayer.getVideoFormat();
             assert videoFormat != null;
             int width = videoFormat.width;
             int height = videoFormat.height;
             int rotationDegrees = videoFormat.rotationDegrees;
             // Switch the width/height if video was taken in portrait mode
             if (rotationDegrees == 90 || rotationDegrees == 270) {
-                width = FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getVideoFormat().height;
-                height = FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getVideoFormat().width;
+                width = simpleExoPlayer.getVideoFormat().height;
+                height = simpleExoPlayer.getVideoFormat().width;
             }
-
-            FlutterMediaPlugin.getInstance().videoInitialize(textureEntry.id(), height, width);
+            videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
         }
     }
 
     void play() {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setPlayWhenReady(true);
+        simpleExoPlayer.setPlayWhenReady(true);
     }
 
     void pause() {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setPlayWhenReady(false);
+        simpleExoPlayer.setPlayWhenReady(false);
     }
 
     void setLooping(boolean value) {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setRepeatMode(value ? REPEAT_MODE_ALL : REPEAT_MODE_OFF);
+        simpleExoPlayer.setRepeatMode(value ? REPEAT_MODE_ALL : REPEAT_MODE_OFF);
     }
 
     void setVolume(double value) {
         float bracketedValue = (float) Math.max(0.0, Math.min(1.0, value));
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setVolume(bracketedValue);
+        simpleExoPlayer.setVolume(bracketedValue);
     }
 
     void seekTo(int location) {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(location);
+        simpleExoPlayer.seekTo(location);
     }
 
     long getPosition() {
-        return FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getCurrentPosition();
+        return simpleExoPlayer.getCurrentPosition();
     }
 
     void dispose() {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().stop();
         textureEntry.release();
         if (surface != null) {
             surface.release();
         }
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer() != null) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().release();
+
+        if (simpleExoPlayer != null) {
+            simpleExoPlayer.removeListener(videoExoPlayerListener);
+            simpleExoPlayer.stop();
         }
     }
-
-    private void onDestroy() {
-    }
-//
-//    @Override
-//    public void onMethodCall(MethodCall call, Result result) {
-//        TextureRegistry textures = registrar.textures();
-//        if (textures == null) {
-//            result.error("no_activity", "video_player plugin requires a foreground activity", null);
-//            return;
-//        }
-//        switch (call.method) {
-//            case "init":
-//                disposeAllPlayers();
-//                break;
-//            case "create":
-//            {
-//
-//            }
-//            default:
-//            {
-//                long textureId = ((Number) call.argument("textureId")).longValue();
-//                VideoPlayer player = videoPlayers.get(textureId);
-//                if (player == null) {
-//                    result.error(
-//                            "Unknown textureId",
-//                            "No video player associated with texture id " + textureId,
-//                            null);
-//                    return;
-//                }
-//                break;
-//            }
-//        }
-//    }
 
     private class VideoExoPlayerListener implements EventListener {
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onTimelineChanged(timeline, manifest, reason);
+            mediaPlayerExoPlayerListenerManager.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onTracksChanged(trackGroups, trackSelections);
+            mediaPlayerExoPlayerListenerManager.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onLoadingChanged(isLoading);
+            mediaPlayerExoPlayerListenerManager.onLoadingChanged(isLoading);
         }
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStateChanged(playWhenReady, playbackState);
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStatus("player state " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() + ", " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady());
+            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(playWhenReady, playbackState);
+            mediaPlayerExoPlayerListenerManager.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
         }
 
         @Override
         public void onRepeatModeChanged(int repeatMode) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onRepeatModeChanged(repeatMode);
+            mediaPlayerExoPlayerListenerManager.onRepeatModeChanged(repeatMode);
         }
 
         @Override
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onShuffleModeEnabledChanged(shuffleModeEnabled);
+            mediaPlayerExoPlayerListenerManager.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerError(error);
+            mediaPlayerExoPlayerListenerManager.onPlayerError(error);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPositionDiscontinuity(reason);
+            mediaPlayerExoPlayerListenerManager.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlaybackParametersChanged(playbackParameters);
+            mediaPlayerExoPlayerListenerManager.onPlaybackParametersChanged(playbackParameters);
         }
 
         @Override
         public void onSeekProcessed() {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onSeekProcessed();
+            mediaPlayerExoPlayerListenerManager.onSeekProcessed();
+        }
+
+        public void videoInitialize(long textureId, int height, int width, long duration) {
+            FlutterMediaPlugin.getInstance().videoInitialize(textureId, height, width, duration);
         }
     }
 }

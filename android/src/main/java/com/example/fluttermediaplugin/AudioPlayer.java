@@ -5,31 +5,39 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
+
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
+import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.IOException;
+
+import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 
 public class AudioPlayer {
     private static final String TAG = "AudioPlayer";
 //    private static int playerId = -1;
 
     private AudioExoPlayerListener audioEventListener;
-    //private SimpleExoPlayer simpleExoPlayer;
-//    private AudioManager audioManager;
+    private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;
+    private SimpleExoPlayer simpleExoPlayer;
 
-
-    //    private AudioManager.OnAudioFocusChangeListener afChangeListener;
-//    private boolean isPlayingBeforeInterrupted = false;
     private boolean isShowingNotification = false;
     private DefaultDataSourceFactory dataSourceFactory;
     private Playlist.PlaylistEventListener playlistEventListener;
@@ -46,53 +54,43 @@ public class AudioPlayer {
         return playlist.getSongAtIndex(index);
     }
 
-    public AudioPlayer(@NonNull Context context) {//, @NonNull SimpleExoPlayer simpleExoPlayer) {
-//        this.simpleExoPlayer = simpleExoPlayer;
+    public SimpleExoPlayer getSimpleExoPlayer() {
+        return simpleExoPlayer;
+    }
+
+    public AudioPlayer(@NonNull Context context) {
+
         initSimpleExoPlayer(context);
-
-//        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-
-//        afChangeListener =
-//                new AudioManager.OnAudioFocusChangeListener() {
-//                    public void onAudioFocusChange(int focusChange) {
-//                        if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-//                            // Permanent loss of audio focus
-//                            if (isPlaying()) {
-//                                pause();
-//                            }
-//                        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-//                            // Pause playback
-//                            isPlayingBeforeInterrupted = isPlaying();
-//                            pause();
-//                        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-//                            // Lower the volume, keep playing
-//                            isPlayingBeforeInterrupted = isPlaying();
-//                            pause();
-//                        } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-//                            // Your app has been granted audio focus again
-//                            // Raise volume to normal, restart playback if necessary
-//                            if (isPlayingBeforeInterrupted) {
-//                                play();
-//                            }
-//                        }
-//                    }
-//                };
+        mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager(simpleExoPlayer, "audioPlayer");
     }
 
     private void initSimpleExoPlayer(Context context) {
         dataSourceFactory = new DefaultDataSourceFactory(context, "audio_player");
-//        mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager("audioPlayer");
+        TrackSelector trackSelector = new DefaultTrackSelector();
+        if (simpleExoPlayer != null) {
+            simpleExoPlayer.stop();
+            simpleExoPlayer.release();
+        }
+
+        simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(USAGE_MEDIA)
+                .setContentType(C.CONTENT_TYPE_MUSIC)
+                .build();
+
+        simpleExoPlayer.setAudioAttributes(audioAttributes, true);
+
 //        playerId = simpleExoPlayer.getAudioSessionId();
 
         playlistEventListener = new Playlist.PlaylistEventListener() {
             @Override
             public void onPlaylistChanged(Playlist playlist) {
-                FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlaylistChanged(playlist);
+                mediaPlayerExoPlayerListenerManager.onPlaylistChanged(playlist);
             }
 
             @Override
             public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
-                FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onMediaPeriodCreated(windowIndex);
+                mediaPlayerExoPlayerListenerManager.onMediaPeriodCreated(windowIndex);
                 Log.d(TAG + "CC", "onMediaPeriodCreated : " + windowIndex);
             }
 
@@ -136,35 +134,24 @@ public class AudioPlayer {
                 //Log.d(TAG + "CC", "on Down stream discarded : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
             }
         };
-        playlist = new Playlist("currentPlaylist", playlistEventListener, dataSourceFactory);
-    }
+        playlist = new Playlist("currentPlaylist", simpleExoPlayer, playlistEventListener, dataSourceFactory);
 
-    public void addAudioEventListener() {
         if (audioEventListener == null) {
             audioEventListener = new AudioExoPlayerListener();
         }
-
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().addListener(audioEventListener);
+        simpleExoPlayer.addListener(audioEventListener);
     }
-
-//    public void removeAudioEventListener() {
-//        if (audioEventListener == null) {
-//            return;
-//        }
-//        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().removeListener(audioEventListener);
-//        if (mediaPlayerExoPlayerListenerManager != null) {
-//            mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
-//            mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
-//        }
-//    }
 
     public void release() {
 //        if (mediaPlayerExoPlayerListenerManager != null) {
 //            mediaPlayerExoPlayerListenerManager.clear();
 //        }
+        if (simpleExoPlayer != null) {
+            simpleExoPlayer.removeListener(audioEventListener);
+            simpleExoPlayer.stop();
+            simpleExoPlayer.release();
+        }
 
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().release();
-//        this.mediaPlayerExoPlayerListenerManager = null;
         this.playlist.clear();
         if (MediaPlayerNotificationService.getInstance() != null) {
             MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setPlayer(null);
@@ -173,28 +160,28 @@ public class AudioPlayer {
     }
 
     private void stop() {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().stop(false);
-        if (FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager() != null) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().stopBufferingPolling();
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().stopPlaybackPolling();
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStatus("stop player state " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() + ", " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady() + ", playlist length : " + playlist.getSize());
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlaybackUpdate(0, 0);
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onBufferedUpdate(0);
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStateChanged(FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady(), FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState());
+        simpleExoPlayer.stop(false);
+        if (simpleExoPlayer != null) {
+            mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
+            mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
+            mediaPlayerExoPlayerListenerManager.onPlayerStatus("stop player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
+            mediaPlayerExoPlayerListenerManager.onPlaybackUpdate(0, 0);
+            mediaPlayerExoPlayerListenerManager.onBufferedUpdate(0);
+            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
         playlist.clear();
     }
 
-//    public void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-//        FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().addExoPlayerListener(exoPlayerMediaListener);
-//    }
-//
-//    public void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-//        FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().addExoPlayerListener(exoPlayerMediaListener);
-//    }
+    public void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
+    }
+
+    public void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
+    }
 
     private void showAudioPlayerNotification() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer() == null) {
+        if (simpleExoPlayer == null) {
             Log.d(TAG, "simple exo player is null");
             return;
         }
@@ -227,49 +214,49 @@ public class AudioPlayer {
     }
 
     public void play() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE && FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE && simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
             preparePlaylist();
         }
 
-        if (!FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady()) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setPlayWhenReady(true);
+        if (!simpleExoPlayer.getPlayWhenReady()) {
+            simpleExoPlayer.setPlayWhenReady(true);
         } else {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStatus("Already playing player state " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() + ", " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady());
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStateChanged(FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady(), FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState());
+            mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already playing player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
         Log.d(TAG, "Already playing");
     }
 
     public void pause() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady()) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setPlayWhenReady(false);
+        if (simpleExoPlayer.getPlayWhenReady()) {
+            simpleExoPlayer.setPlayWhenReady(false);
         } else {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStatus("Already paused, player state " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() + ", " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady());
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStateChanged(FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady(), FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState());
+            mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already paused, player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
             Log.d(TAG, "Already paused");
         }
     }
 
     public void setRepeatMode(@Player.RepeatMode int repeatMode) {
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().setRepeatMode(repeatMode);
+        simpleExoPlayer.setRepeatMode(repeatMode);
     }
 
     public void skipToIndex(int index) {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED || FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToIndex(index);
     }
 
     public void skipToNext() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED || FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToNext();
     }
 
     public void skipToPrevious() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED || FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToPrevious();
@@ -290,8 +277,8 @@ public class AudioPlayer {
     public void setPlaylist(String playlistStr, int playIndex) {
         try {
             JSONObject jsonObject = new JSONObject(playlistStr);
-            if (playlistEventListener != null && dataSourceFactory != null && FlutterMediaPlugin.getInstance().getSimpleExoPlayer() != null)
-                this.playlist = Playlist.fromJson(jsonObject, FlutterMediaPlugin.getInstance().getSimpleExoPlayer(), playlistEventListener, dataSourceFactory, playIndex);
+            if (playlistEventListener != null && dataSourceFactory != null && simpleExoPlayer != null)
+                this.playlist = Playlist.fromJson(jsonObject, simpleExoPlayer, playlistEventListener, dataSourceFactory, playIndex);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -302,52 +289,38 @@ public class AudioPlayer {
     }
 
     public void seekTo(long position) {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED || FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         if (audioLength() > position) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(position);
+            simpleExoPlayer.seekTo(position);
         }
 
         Log.d(TAG, "seek to " + position);
     }
 
-//    private int requestAudioFocus() {
-//        int res = audioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, // Music streaming
-//                AudioManager.AUDIOFOCUS_GAIN);
-//        return res;
-//    }
-
     private long audioLength() {
-        return FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getDuration();
+        return simpleExoPlayer.getDuration();
     }
 
 //    private boolean isPlaying() {
 //        return simpleExoPlayer.getPlayWhenReady();
 //    }
 
-//    private class AudioExoPlayerMediaListener implements MediaPlayerExoPlayerListenerManager.AudioExoPlayerListener {
-//    }
-
-//    @Override
-//    public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-
-//    }
-
     private class AudioExoPlayerListener implements EventListener {
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onTimelineChanged(timeline, manifest, reason);
+            mediaPlayerExoPlayerListenerManager.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onTracksChanged(trackGroups, trackSelections);
+            mediaPlayerExoPlayerListenerManager.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onLoadingChanged(isLoading);
+            mediaPlayerExoPlayerListenerManager.onLoadingChanged(isLoading);
         }
 
         @Override
@@ -374,38 +347,38 @@ public class AudioPlayer {
                 }
             }
 
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStateChanged(playWhenReady, playbackState);
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerStatus("player state " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() + ", " + FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlayWhenReady());
+            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(playWhenReady, playbackState);
+            mediaPlayerExoPlayerListenerManager.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
         }
 
         @Override
         public void onRepeatModeChanged(int repeatMode) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onRepeatModeChanged(repeatMode);
+            mediaPlayerExoPlayerListenerManager.onRepeatModeChanged(repeatMode);
         }
 
         @Override
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onShuffleModeEnabledChanged(shuffleModeEnabled);
+            mediaPlayerExoPlayerListenerManager.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlayerError(error);
+            mediaPlayerExoPlayerListenerManager.onPlayerError(error);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPositionDiscontinuity(reason);
+            mediaPlayerExoPlayerListenerManager.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onPlaybackParametersChanged(playbackParameters);
+            mediaPlayerExoPlayerListenerManager.onPlaybackParametersChanged(playbackParameters);
         }
 
         @Override
         public void onSeekProcessed() {
-            FlutterMediaPlugin.getInstance().getMediaPlayerExoPlayerListenerManager().onSeekProcessed();
+            mediaPlayerExoPlayerListenerManager.onSeekProcessed();
         }
     }
 }

@@ -16,8 +16,6 @@ import android.util.Log;
 import android.view.View;
 
 import com.google.android.exoplayer2.Player;
-//import com.google.android.exoplayer2.ui.PlayerNotificationManager;
-import com.google.android.exoplayer2.util.Util;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
@@ -78,7 +76,6 @@ public class MediaPlayerNotificationService extends Service {
                     }
 
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                    @Nullable
                     @Override
                     public PendingIntent createCurrentContentIntent(Player player) {
                         String packageName = FlutterMediaPlugin.getInstance().getRegistrar().context().getPackageName();
@@ -94,7 +91,6 @@ public class MediaPlayerNotificationService extends Service {
                         }
                     }
 
-                    @Nullable
                     @Override
                     public String getCurrentContentText(Player player) {
                         Song song = FlutterMediaPlugin.getInstance().getAudioPlayer().getSongByIndex(player.getCurrentWindowIndex());
@@ -104,14 +100,13 @@ public class MediaPlayerNotificationService extends Service {
                         return song.getArtist();
                     }
 
-                    @Nullable
                     @Override
                     public String getCurrentSubText(Player player) {
                         //Song song = FlutterMediaPlugin.getInstance().getAudioPlayer().getSongByIndex(player.getCurrentWindowIndex());
                         if (player == null) {
                             return "0.00";
                         }
-                        String str = "";
+                        String str;
 
                         long minute = (player.getCurrentPosition() / 1000) / 60;
                         long second = (player.getCurrentPosition() / 1000) % 60;
@@ -159,7 +154,7 @@ public class MediaPlayerNotificationService extends Service {
                 stopSelf();
             }
         });
-        playerNotificationManager.setPlayer(FlutterMediaPlugin.getInstance().getSimpleExoPlayer());
+        playerNotificationManager.setPlayer(FlutterMediaPlugin.getInstance().getAudioPlayer().getSimpleExoPlayer());
         mediaSession.setActive(true);
         playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
     }

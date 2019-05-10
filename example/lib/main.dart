@@ -42,6 +42,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    flutterMediaPlugin.audioPlayer.initialize();
+    flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.asset, null);
     flutterMediaPlugin.audioPlayer.playWhenReady
         ? _iconData = Icons.pause
         : _iconData = Icons.play_arrow;
@@ -82,7 +84,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void initializeVideo() {
-    flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.asset, _assetUri);
+    flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.network, _uri);
   }
 
   void _setIcons() {

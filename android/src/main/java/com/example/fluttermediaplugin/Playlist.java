@@ -32,9 +32,11 @@ public class Playlist {
     private ArrayList<Song> songs;
     private DefaultDataSourceFactory dataSourceFactory;
     private PlaylistEventListener playlistEventListener;
+    private SimpleExoPlayer simpleExoPlayer;
 
-    public Playlist(String playlistName, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
+    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
         this.playlistName = playlistName;
+        this.simpleExoPlayer = simpleExoPlayer;
         songs = new ArrayList<>();
         this.playlistEventListener = playlistEventListener;
         concatenatingMediaSource = new ConcatenatingMediaSource();
@@ -58,24 +60,24 @@ public class Playlist {
             Log.w(TAG, "can't skip to index " + index);
             return;
         }
-        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(index, 0);
+        simpleExoPlayer.seekTo(index, 0);
     }
 
     public void skipToPrevious() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPreviousWindowIndex() >= 0) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPreviousWindowIndex(), 0);
+        if (simpleExoPlayer.getPreviousWindowIndex() >= 0) {
+            simpleExoPlayer.seekTo(simpleExoPlayer.getPreviousWindowIndex(), 0);
         }
     }
 
     public void skipToNext() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getNextWindowIndex() >= 0) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getNextWindowIndex(), 0);
+        if (simpleExoPlayer.getNextWindowIndex() >= 0) {
+            simpleExoPlayer.seekTo(simpleExoPlayer.getNextWindowIndex(), 0);
         }
     }
 
     public void prepare() {
-        if (FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_IDLE || FlutterMediaPlugin.getInstance().getSimpleExoPlayer().getPlaybackState() == Player.STATE_ENDED) {
-            FlutterMediaPlugin.getInstance().getSimpleExoPlayer().prepare(concatenatingMediaSource);
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
+            simpleExoPlayer.prepare(concatenatingMediaSource);
         }
     }
 
@@ -85,7 +87,7 @@ public class Playlist {
         addSong(song, new Runnable() {
             @Override
             public void run() {
-                FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(concatenatingMediaSource.getSize() - 1, C.TIME_UNSET);
+                simpleExoPlayer.seekTo(concatenatingMediaSource.getSize() - 1, C.TIME_UNSET);
             }
         });
     }
@@ -140,7 +142,7 @@ public class Playlist {
                 concatenatingMediaSource.addMediaSource(mediaSource, new Handler(), new Runnable() {
                     @Override
                     public void run() {
-                        FlutterMediaPlugin.getInstance().getSimpleExoPlayer().seekTo(playIndex, C.TIME_UNSET);
+                        simpleExoPlayer.seekTo(playIndex, C.TIME_UNSET);
                     }
                 });
             } else {
@@ -189,7 +191,7 @@ public class Playlist {
     public static Playlist fromJson(JSONObject jsonObject, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory, int playIndex) {
         try {
             String playlist_name = jsonObject.get(PLAYLIST_NAME).toString();
-            Playlist playlist = new Playlist(playlist_name, playlistEventListener, dataSourceFactory);
+            Playlist playlist = new Playlist(playlist_name, simpleExoPlayer, playlistEventListener, dataSourceFactory);
             JSONArray jsonArray = jsonObject.getJSONArray("songs");
 
             List<Song> songs = new ArrayList<>();
@@ -208,6 +210,6 @@ public class Playlist {
     }
 
     public interface PlaylistEventListener extends MediaSourceEventListener {
-        public void onPlaylistChanged(Playlist playlist);
+        void onPlaylistChanged(Playlist playlist);
     }
 }

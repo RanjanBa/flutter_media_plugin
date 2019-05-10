@@ -16,7 +16,6 @@ class FlutterMediaPlugin {
     _audioPlayer = new AudioPlayer(playerId: "audioPlayer", channel: _channel);
     _videoPlayer = new VideoPlayer(playerId: "videoPlayer", channel: _channel);
     _channel.setMethodCallHandler((MethodCall call) {
-      print("Video Method : ${call.method}");
       Match match = _regExp.firstMatch(call.method);
       String mediaType, method;
       if (match.groupCount >= 2) {
@@ -25,6 +24,7 @@ class FlutterMediaPlugin {
       } else {
         return;
       }
+      print("Type : $mediaType Method : $method");
       if (mediaType == AUDIO_MEDIA_TYPE) {
         _audioPlayer.callMethod(method, call.arguments);
       } else if (mediaType == VIDEO_MEDIA_TYPE) {
