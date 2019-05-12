@@ -7,10 +7,14 @@ import 'package:flutter_media_plugin/audio_player.dart';
 
 import 'package:flutter_media_plugin/video_player.dart';
 
-FlutterMediaPlugin flutterMediaPlugin;
+AudioPlayer _audioPlayer;
+VideoPlayer _videoPlayer;
 
 void main() {
-  flutterMediaPlugin = FlutterMediaPlugin.initialize();
+  FlutterMediaPlugin();
+  _audioPlayer = FlutterMediaPlugin.audioPlayer;
+  _videoPlayer = FlutterMediaPlugin.videoPlayer;
+
   runApp(MyApp());
 }
 
@@ -42,9 +46,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    flutterMediaPlugin.audioPlayer.initialize();
-    flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.asset, null);
-    flutterMediaPlugin.audioPlayer.playWhenReady
+    //flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.asset, null);
+    _audioPlayer.playWhenReady
         ? _iconData = Icons.pause
         : _iconData = Icons.play_arrow;
 
@@ -57,9 +60,9 @@ class _MyAppState extends State<MyApp> {
     );
     _videoExoPlayerListener =
         VideoExoPlayerListener(onVideoInitialize: _onTextureIdChanged);
-    flutterMediaPlugin.videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
+    _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
-    flutterMediaPlugin.audioPlayer.addExoPlayerListener(
+    _audioPlayer.addExoPlayerListener(
       _exoPlayerListener,
     );
     _setIcons();
@@ -78,22 +81,22 @@ class _MyAppState extends State<MyApp> {
   @override
   void dispose() {
     super.dispose();
-    flutterMediaPlugin.audioPlayer.removeExoPlayerListener(_exoPlayerListener);
-    flutterMediaPlugin.videoPlayer.removeVideoExoPlayer(_videoExoPlayerListener);
+    _audioPlayer.removeExoPlayerListener(_exoPlayerListener);
+    _videoPlayer.removeVideoExoPlayer(_videoExoPlayerListener);
     print("Main dispose");
   }
 
-  void initializeVideo() {
-    flutterMediaPlugin.videoPlayer.initialize(TypeOfPlace.network, _uri);
+  void addAndPlay() {
+    _videoPlayer.addAndPlay(TypeOfPlace.network, _uri);
   }
 
   void _setIcons() {
-    if (flutterMediaPlugin.audioPlayer.playWhenReady) {
+    if (_audioPlayer.playWhenReady) {
       _iconData = Icons.pause;
-      _function = flutterMediaPlugin.audioPlayer.pause;
+      _function = _audioPlayer.pause;
     } else {
       _iconData = Icons.play_arrow;
-      _function = flutterMediaPlugin.audioPlayer.play;
+      _function = _audioPlayer.play;
     }
   }
 
@@ -149,8 +152,8 @@ class _MyAppState extends State<MyApp> {
 
   void _onMediaPeriodCreated(int windowIndex) {
     print(
-        "window index : $windowIndex, length ${flutterMediaPlugin.audioPlayer.playlist.getSize()}");
-    Song song = flutterMediaPlugin.audioPlayer.playlist.getSongAtIndex(windowIndex);
+        "window index : $windowIndex, length ${_audioPlayer.playlist.getSize()}");
+    Song song = _audioPlayer.playlist.getSongAtIndex(windowIndex);
     if (song == null)
       currentlyPlayingSongTitle = "No Song";
     else
@@ -163,7 +166,7 @@ class _MyAppState extends State<MyApp> {
 
   void _seekTo(double percent) {
     int position = (percent * _audioLength).toInt();
-    flutterMediaPlugin.audioPlayer.seekTo(position);
+    _audioPlayer.seekTo(position);
   }
 
   @override
@@ -174,9 +177,16 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
           actions: <Widget>[
             IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                _videoPlayer.initSetTexture();
+                //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
+              },
+            ),
+            IconButton(
               icon: Icon(Icons.playlist_add),
               onPressed: () {
-                initializeVideo();
+                addAndPlay();
                 //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
               },
             ),
@@ -219,7 +229,7 @@ class _MyAppState extends State<MyApp> {
                   RaisedButton(
                     child: Icon(Icons.skip_previous),
                     onPressed: () {
-                      flutterMediaPlugin.audioPlayer.skipToPrevious();
+                      _audioPlayer.skipToPrevious();
                     },
                   ),
                   RaisedButton(
@@ -230,7 +240,7 @@ class _MyAppState extends State<MyApp> {
                   RaisedButton(
                       child: Icon(Icons.skip_next),
                       onPressed: () {
-                        flutterMediaPlugin.audioPlayer.skipToNext();
+                        _audioPlayer.skipToNext();
                       }),
                 ],
               ),
@@ -241,7 +251,7 @@ class _MyAppState extends State<MyApp> {
             Center(
               child: RaisedButton(
                 onPressed: () {
-                  flutterMediaPlugin.audioPlayer.setRepeatMode(C.REPEAT_MODE_ONE);
+                  _audioPlayer.setRepeatMode(C.REPEAT_MODE_ONE);
                 },
                 child: Text("Repeat one"),
               ),
@@ -255,10 +265,10 @@ class _MyAppState extends State<MyApp> {
                     '${Samples.songs[index].title}',
                   ),
                   onTap: () {
-                    flutterMediaPlugin.audioPlayer.setPlaylistAndSongIndex(playlist, index);
+                    _audioPlayer.setPlaylistAndSongIndex(playlist, index);
                   },
                   onLongPress: () {
-                    flutterMediaPlugin.audioPlayer.addAndPlay(Samples.songs[index]);
+                    _audioPlayer.addAndPlay(Samples.songs[index]);
                   },
                 );
               },
@@ -273,7 +283,7 @@ class _MyAppState extends State<MyApp> {
               color: Colors.red,
               child: _textureId != null
                   ? AspectRatio(
-                      aspectRatio: flutterMediaPlugin.videoPlayer.aspectRatio,
+                      aspectRatio: _videoPlayer.aspectRatio,
                       child: Texture(textureId: _textureId),
                     )
                   : Container(
@@ -286,13 +296,13 @@ class _MyAppState extends State<MyApp> {
                 RaisedButton(
                   child: Icon(Icons.play_arrow),
                   onPressed: () {
-                    flutterMediaPlugin.videoPlayer.play();
+                    _videoPlayer.play();
                   },
                 ),
                 RaisedButton(
                   child: Icon(Icons.pause),
                   onPressed: () {
-                    flutterMediaPlugin.videoPlayer.pause();
+                    _videoPlayer.pause();
                   },
                 ),
               ],

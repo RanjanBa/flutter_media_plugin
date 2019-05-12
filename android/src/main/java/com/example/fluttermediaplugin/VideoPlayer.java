@@ -2,6 +2,7 @@ package com.example.fluttermediaplugin;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 
@@ -30,8 +31,6 @@ import com.google.android.exoplayer2.upstream.AssetDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 
@@ -95,12 +94,16 @@ public class VideoPlayer {
         mediaPlayerExoPlayerListenerManager.removeExoPlayerListener(exoPlayerListener);
     }
 
-    public void initialize(String stringUri) {
+    public void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
+        this.textureEntry = textureEntry;
         Uri uri = Uri.parse(stringUri);
+
         Log.d(TAG, "Uri : " + uri);
 
         DataSource.Factory dataSourceFactory;
+
         if (isFileOrAsset(uri)) {
+            Log.d(TAG, "file is in file or asset");
             dataSourceFactory = new DataSource.Factory() {
                 @Override
                 public DataSource createDataSource() {
@@ -108,13 +111,8 @@ public class VideoPlayer {
                 }
             };
         } else {
-            dataSourceFactory =
-                    new DefaultHttpDataSourceFactory(
-                            "VideoExoPlayer",
-                            null,
-                            DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                            DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-                            true);
+            Log.d(TAG, "file is in network");
+            dataSourceFactory = new DefaultDataSourceFactory(context, "videoExoPlayer");
         }
         MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, context);
         simpleExoPlayer.prepare(mediaSource);
@@ -156,8 +154,8 @@ public class VideoPlayer {
     }
 
     public void setupVideoPlayer(
-            TextureRegistry.SurfaceTextureEntry textureEntry) {
-
+            @NonNull TextureRegistry.SurfaceTextureEntry textureEntry) {
+        this.textureEntry = textureEntry;
         surface = new Surface(textureEntry.surfaceTexture());
         simpleExoPlayer.setVideoSurface(surface);
 

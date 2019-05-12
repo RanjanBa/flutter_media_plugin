@@ -1,21 +1,13 @@
 package com.example.fluttermediaplugin;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
@@ -33,8 +25,6 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 import io.flutter.view.TextureRegistry;
 
-import static com.google.android.exoplayer2.C.USAGE_MEDIA;
-
 /**
  * FlutterMediaPlugin
  */
@@ -50,8 +40,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private Registrar registrar;
     private AudioPlayer audioPlayer;
     private VideoPlayer videoPlayer;
-    //private SimpleExoPlayer simpleExoPlayer;
-    //private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;
 
     private boolean isPlayingAudio = true;
     private MethodChannel channel;
@@ -70,14 +58,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         return registrar;
     }
 
-//    public SimpleExoPlayer getSimpleExoPlayer() {
-//        return simpleExoPlayer;
-//    }
-
-//    public MediaPlayerExoPlayerListenerManager getMediaPlayerExoPlayerListenerManager() {
-//        return mediaPlayerExoPlayerListenerManager;
-//    }
-
     public AudioPlayer getAudioPlayer() {
         return audioPlayer;
     }
@@ -88,19 +68,19 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
         channel.setMethodCallHandler(this);
         this.channel = channel;
-        Context context = registrar.context();
-
-        audioPlayer = new AudioPlayer(context);
-        videoPlayer = new VideoPlayer(context);
-        audioExoPlayerListener = GetExoPlayerListener(true);
-        videoExoPlayerListener = GetExoPlayerListener(false);
-
-        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(registrar.context()).build();
-        ImageLoader.getInstance().init(config);
     }
 
     private void initializeAudioPlayer() {
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(registrar.context()).build();
+        ImageLoader.getInstance().init(config);
+
+        audioPlayer = new AudioPlayer(registrar.activeContext());
+
+        audioExoPlayerListener = GetExoPlayerListener(true);
         audioPlayer.addExoPlayerListener(audioExoPlayerListener);
+    }
+
+    private void sendAudioInitialization() {
         if (audioPlayer == null || audioPlayer.getSimpleExoPlayer() == null) {
             Map<String, Object> args = new HashMap<>();
             args.put("message", "Simple ExoPlayer is null");
@@ -146,6 +126,13 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             method += "/onMediaPeriodCreated";
             channel.invokeMethod(method, args);
         }
+    }
+
+    private void initializeVideoPlayer() {
+        videoPlayer = new VideoPlayer(registrar.activeContext());
+
+        videoExoPlayerListener = GetExoPlayerListener(false);
+        videoPlayer.addExoPlayerListener(videoExoPlayerListener);
     }
 
     private ExoPlayerListener GetExoPlayerListener(final boolean isAudio) {
@@ -315,12 +302,19 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             MethodChannel channel = new MethodChannel(_registrar.messenger(), "flutter_media_plugin");
             channel.setMethodCallHandler(instance);
             instance.channel = channel;
-            instance.audioPlayer.removeExoPlayerListener(instance.audioExoPlayerListener);
-            instance.videoPlayer.removeExoPlayerListener(instance.videoExoPlayerListener);
-            instance.audioExoPlayerListener = instance.GetExoPlayerListener(true);
-            instance.videoExoPlayerListener = instance.GetExoPlayerListener(false);
-            instance.audioPlayer.addExoPlayerListener(instance.audioExoPlayerListener);
-            instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
+
+            if (instance.audioPlayer != null) {
+                instance.audioPlayer.removeExoPlayerListener(instance.audioExoPlayerListener);
+
+                instance.audioExoPlayerListener = instance.GetExoPlayerListener(true);
+                instance.audioPlayer.addExoPlayerListener(instance.audioExoPlayerListener);
+            }
+
+            if (instance.videoPlayer != null) {
+                instance.videoPlayer.removeExoPlayerListener(instance.videoExoPlayerListener);
+                instance.videoExoPlayerListener = instance.GetExoPlayerListener(false);
+                instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
+            }
         }
     }
 
@@ -330,10 +324,16 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             MediaMethodCall mediaMethodCall = parseMethodName(call.method);
             Log.d(TAG, mediaMethodCall.toString());
             if (mediaMethodCall.mediaType.equals(AUDIO_MEDIA_TYPE)) {
+                if (mediaMethodCall.command.equals("initialize")) {
+                    initializeAudioPlayer();
+                    return;
+                }
+
+                if (audioPlayer == null) {
+                    Log.d(TAG, "AudioPlayer is null");
+                    return;
+                }
                 switch (mediaMethodCall.command) {
-                    case "initialize":
-                        initializeAudioPlayer();
-                        break;
                     case "play":
                         Log.d(TAG, "play");
                         audioPlayer.play();
@@ -428,19 +428,40 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                         break;
                 }
             } else if (mediaMethodCall.mediaType.equals(VIDEO_MEDIA_TYPE)) {
+                if (mediaMethodCall.command.equals("initialize")) {
+                    initializeVideoPlayer();
+                    return;
+                }
+                if (videoPlayer == null) {
+                    Log.d(TAG, "VideoPlayer is null");
+                    return;
+                }
+
                 switch (mediaMethodCall.command) {
-                    case "initialize":
+                    case "addAndPlay": {
+                        TextureRegistry textures = registrar.textures();
+                        if (textures == null) {
+                            result.error("no_activity", "video_player plugin requires a foreground activity", null);
+                            return;
+                        }
+
+                        TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
+                        if (handle == null) {
+                            return;
+                        }
 
                         String uri = call.argument("uri");
                         String asset = call.argument("asset");
                         if (uri == null && asset != null) {
                             String assetLookupKey = registrar.lookupKeyForAsset(asset);
                             Log.d(TAG, "asset : " + assetLookupKey);
-                            videoPlayer.initialize("assets:///" + assetLookupKey);
+                            videoPlayer.addAndPlay("assets:///" + assetLookupKey, handle);
                         } else if (uri != null && asset == null) {
-                            videoPlayer.initialize(uri);
+                            videoPlayer.addAndPlay(uri, handle);
                         }
-
+                        break;
+                    }
+                    case "initSetTexture": {
                         TextureRegistry textures = registrar.textures();
                         if (textures == null) {
                             result.error("no_activity", "video_player plugin requires a foreground activity", null);
@@ -452,6 +473,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                             videoPlayer.setupVideoPlayer(handle);
                         }
                         break;
+                    }
                     case "play":
                         videoPlayer.play();
                         audioPlayer.pause();

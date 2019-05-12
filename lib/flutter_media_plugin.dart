@@ -9,12 +9,10 @@ class FlutterMediaPlugin {
   static const MethodChannel _channel =
       const MethodChannel('flutter_media_plugin');
 
-  AudioPlayer _audioPlayer;
-  VideoPlayer _videoPlayer;
+  static AudioPlayer _audioPlayer;
+  static VideoPlayer _videoPlayer;
 
-  FlutterMediaPlugin.initialize() {
-    _audioPlayer = new AudioPlayer(playerId: "audioPlayer", channel: _channel);
-    _videoPlayer = new VideoPlayer(playerId: "videoPlayer", channel: _channel);
+  FlutterMediaPlugin() {
     _channel.setMethodCallHandler((MethodCall call) {
       Match match = _regExp.firstMatch(call.method);
       String mediaType, method;
@@ -26,18 +24,22 @@ class FlutterMediaPlugin {
       }
       print("Type : $mediaType Method : $method");
       if (mediaType == AUDIO_MEDIA_TYPE) {
-        _audioPlayer.callMethod(method, call.arguments);
+        if(_audioPlayer != null) {
+          _audioPlayer.callMethod(method, call.arguments);
+        }
       } else if (mediaType == VIDEO_MEDIA_TYPE) {
-        _videoPlayer.callMethod(method, call.arguments);
+        if(_videoPlayer != null) {
+          _videoPlayer.callMethod(method, call.arguments);
+        }
       }
     });
   }
 
-  AudioPlayer get audioPlayer {
-    return _audioPlayer;
+  static AudioPlayer get audioPlayer {
+    return _audioPlayer = new AudioPlayer(playerId: "audioPlayer", channel: _channel);
   }
 
-  VideoPlayer get videoPlayer {
-    return _videoPlayer;
+  static VideoPlayer get videoPlayer {
+    return _videoPlayer = new VideoPlayer(playerId: "videoPlayer", channel: _channel);
   }
 }

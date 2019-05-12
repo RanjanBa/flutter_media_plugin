@@ -36,7 +36,7 @@ class AudioPlayer {
   int get windowIndex => _windowIndex;
 
   AudioPlayer({this.playerId, this.channel}) {
-    initialize();
+    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
   }
 
   void callMethod(String method, dynamic arguments) {
@@ -99,9 +99,9 @@ class AudioPlayer {
     }
   }
 
-  void initialize() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
-  }
+//  void initialize() {
+//    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
+//  }
 
   void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
     _exoPlayerListeners.add(exoPlayerListener);

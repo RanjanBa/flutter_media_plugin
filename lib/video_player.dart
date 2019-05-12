@@ -17,9 +17,12 @@ class VideoPlayer {
 
   double get aspectRatio =>
       _width != null && _height != null && _height > 0 ? _width / _height : 1.0;
+
   int get duration => _duration;
 
-  VideoPlayer({this.playerId, this.channel});
+  VideoPlayer({this.playerId, this.channel}) {
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/initialize');
+  }
 
   void callMethod(String method, dynamic arguments) {
     switch (method) {
@@ -46,14 +49,18 @@ class VideoPlayer {
     _exoPlayerListeners.remove(videoExoPlayerListener);
   }
 
-  void initialize(TypeOfPlace type, String uri) {
-    String path = type == TypeOfPlace.asset ? "asset" : uri;
+  void addAndPlay(TypeOfPlace type, String uri) {
+    String path = type == TypeOfPlace.asset ? "asset" : "uri";
     channel.invokeMethod(
-      '${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/initialize',
+      '${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/addAndPlay',
       {
         path: uri,
       },
     );
+  }
+
+  void initSetTexture() {
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/initSetTexture');
   }
 
   void play() {
@@ -82,11 +89,11 @@ class VideoExoPlayerListener extends ExoPlayerListener {
     onPlaylistChanged,
     this.onVideoInitialize,
   }) : super(
-          onPlayerStateChanged: onPlayerStateChanged,
-          onPlaybackUpdate: onPlaybackUpdate,
-          onBufferedUpdate: onBufferedUpdate,
-          onMediaPeriodCreated: onMediaPeriodCreated,
-          onPlayerStatus: onPlayerStatus,
-          onPlaylistChanged: onPlaylistChanged,
-        );
+    onPlayerStateChanged: onPlayerStateChanged,
+    onPlaybackUpdate: onPlaybackUpdate,
+    onBufferedUpdate: onBufferedUpdate,
+    onMediaPeriodCreated: onMediaPeriodCreated,
+    onPlayerStatus: onPlayerStatus,
+    onPlaylistChanged: onPlaylistChanged,
+  );
 }
