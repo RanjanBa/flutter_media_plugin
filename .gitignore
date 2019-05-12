@@ -1,9 +1,8 @@
+.idea/
+.pub/
+.packages
+
+example/
+build/
 .DS_Store
 .dart_tool/
-.idea/
-
-.packages
-.pub/
-pubspec.lock
-
-build/
