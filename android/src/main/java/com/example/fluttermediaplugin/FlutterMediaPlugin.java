@@ -78,6 +78,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         audioExoPlayerListener = GetExoPlayerListener(true);
         audioPlayer.addExoPlayerListener(audioExoPlayerListener);
     }
+
 //
 //    private void sendAudioInitialization() {
 //        if (audioPlayer == null || audioPlayer.getSimpleExoPlayer() == null) {
