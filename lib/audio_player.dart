@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
@@ -166,13 +168,12 @@ class AudioPlayer {
     );
   }
 
-  void setPlaylistAndSongIndex(Playlist playlist, int playIndex) {
+  Future<void> setPlaylist(Playlist playlist) async {
     String s = json.encode(playlist);
-    channel.invokeMethod(
-      "${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setPlaylistAndSongIndex",
+    await channel.invokeMethod(
+      "${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setPlaylist",
       {
         "playlist": s,
-        "playIndex": playIndex,
       },
     );
   }
@@ -216,7 +217,8 @@ class AudioPlayer {
   }
 
   void skipToPrevious() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/skipToPrevious');
+    channel
+        .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/skipToPrevious');
   }
 
   void skipToIndex(int index) {
@@ -229,7 +231,8 @@ class AudioPlayer {
   }
 
   void clearPlaylist() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/clearPlaylist');
+    channel
+        .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/clearPlaylist');
   }
 
   void release() {

@@ -37,7 +37,8 @@ class _MyAppState extends State<MyApp> {
   Playlist playlist;
 
   String _assetUri = "assets/videos/birwiBirwi.mp4";
-  String _uri = "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
+  String _uri =
+      "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
 
   //"https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
 
@@ -264,8 +265,9 @@ class _MyAppState extends State<MyApp> {
                   title: Text(
                     '${Samples.songs[index].title}',
                   ),
-                  onTap: () {
-                    _audioPlayer.setPlaylistAndSongIndex(playlist, index);
+                  onTap: () async {
+                    await _audioPlayer.setPlaylist(playlist);
+                    _audioPlayer.skipToIndex(index);
                   },
                   onLongPress: () {
                     _audioPlayer.addAndPlay(Samples.songs[index]);

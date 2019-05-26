@@ -159,7 +159,7 @@ public class AudioPlayer {
         audioEventListener = null;
     }
 
-    private void stop() {
+    public void stop() {
         simpleExoPlayer.stop(false);
         if (simpleExoPlayer != null) {
             mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
@@ -169,6 +169,11 @@ public class AudioPlayer {
             mediaPlayerExoPlayerListenerManager.onBufferedUpdate(0);
             mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
+
+        if (MediaPlayerNotificationService.getInstance() != null) {
+            MediaPlayerNotificationService.getInstance().stopService(true);
+        }
+
         playlist.clear();
     }
 
@@ -274,11 +279,11 @@ public class AudioPlayer {
         playlist.addSong(index, song);
     }
 
-    public void setPlaylist(String playlistStr, int playIndex) {
+    public void setPlaylist(String playlistStr) {
         try {
             JSONObject jsonObject = new JSONObject(playlistStr);
             if (playlistEventListener != null && dataSourceFactory != null && simpleExoPlayer != null)
-                this.playlist = Playlist.fromJson(jsonObject, simpleExoPlayer, playlistEventListener, dataSourceFactory, playIndex);
+                this.playlist = Playlist.fromJson(jsonObject, simpleExoPlayer, playlistEventListener, dataSourceFactory);
         } catch (JSONException e) {
             e.printStackTrace();
         }
