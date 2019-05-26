@@ -1,0 +1,7 @@
+.settings/
+/local.properties
+.DS_Store
+/build
+/captures
+/.settings/
+/.classpath
