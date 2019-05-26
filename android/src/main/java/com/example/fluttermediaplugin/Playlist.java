@@ -20,8 +20,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Playlist {
     private static final String TAG = "Playlist";
@@ -101,7 +99,7 @@ public class Playlist {
         playlistEventListener.onPlaylistChanged(this);
     }
 
-    public void addSong(Song song, @NonNull Runnable actionOnCompletion) {
+    private void addSong(Song song, @NonNull Runnable actionOnCompletion) {
         songs.add(song);
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
@@ -121,17 +119,17 @@ public class Playlist {
         playlistEventListener.onPlaylistChanged(this);
     }
 
-    public void addSong(int index, Song song, @NonNull Runnable actionOnCompletion) {
-        if (index >= songs.size() && index >= concatenatingMediaSource.getSize()) {
-            Log.w(TAG, index + " is greater than size of songs : " + songs.size());
-            return;
-        }
-        songs.add(index, song);
-        Uri uri = Uri.parse(song.getUri());
-        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
-        concatenatingMediaSource.addMediaSource(index, mediaSource, new Handler(), actionOnCompletion);
-        playlistEventListener.onPlaylistChanged(this);
-    }
+//    public void addSong(int index, Song song, @NonNull Runnable actionOnCompletion) {
+//        if (index >= songs.size() && index >= concatenatingMediaSource.getSize()) {
+//            Log.w(TAG, index + " is greater than size of songs : " + songs.size());
+//            return;
+//        }
+//        songs.add(index, song);
+//        Uri uri = Uri.parse(song.getUri());
+//        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+//        concatenatingMediaSource.addMediaSource(index, mediaSource, new Handler(), actionOnCompletion);
+//        playlistEventListener.onPlaylistChanged(this);
+//    }
 
     public void addSongs(List<Song> songs) {
         for (int i = 0; i < songs.size(); i++) {
@@ -143,15 +141,14 @@ public class Playlist {
         playlistEventListener.onPlaylistChanged(this);
     }
 
-    public int removeSong(Song song) {
+    public void removeSong(Song song) {
         for (int i = 0; i < songs.size(); i++) {
-            if (song.getKey() == songs.get(i).getKey()) {
-                return i;
+            if (song.getKey().equals(songs.get(i).getKey())) {
+                return;
             }
         }
 
         playlistEventListener.onPlaylistChanged(this);
-        return -1;
     }
 
     public void clear() {
@@ -178,26 +175,26 @@ public class Playlist {
         return null;
     }
 
-    public static Playlist fromJson(JSONObject jsonObject, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory, int playIndex) {
-        try {
-            String playlist_name = jsonObject.get(PLAYLIST_NAME).toString();
-            Playlist playlist = new Playlist(playlist_name, simpleExoPlayer, playlistEventListener, dataSourceFactory);
-            JSONArray jsonArray = jsonObject.getJSONArray("songs");
-
-            List<Song> songs = new ArrayList<>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject json = jsonArray.getJSONObject(i);
-                Song song = Song.fromJson(json);
-                songs.add(song);
-            }
-            playlist.addSongs(songs);
-            return playlist;
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
+//    public static Playlist fromJson(JSONObject jsonObject, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory, int playIndex) {
+//        try {
+//            String playlist_name = jsonObject.get(PLAYLIST_NAME).toString();
+//            Playlist playlist = new Playlist(playlist_name, simpleExoPlayer, playlistEventListener, dataSourceFactory);
+//            JSONArray jsonArray = jsonObject.getJSONArray("songs");
+//
+//            List<Song> songs = new ArrayList<>();
+//            for (int i = 0; i < jsonArray.length(); i++) {
+//                JSONObject json = jsonArray.getJSONObject(i);
+//                Song song = Song.fromJson(json);
+//                songs.add(song);
+//            }
+//            playlist.addSongs(songs);
+//            return playlist;
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return null;
+//    }
 
     public static List<Song> songsFromPlaylistJson(JSONObject jsonObject) {
         try {
