@@ -335,134 +335,8 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     result.success(null);
                     return;
                 }
-                switch (mediaMethodCall.command) {
-                    case "play":
-                        Log.d(TAG, "play");
-                        audioPlayer.play();
-                        if (videoPlayer != null) {
-                            videoPlayer.pause();
-                        }
-                        result.success(null);
-                        break;
-                    case "pause":
-                        Log.d(TAG, "pause");
-                        audioPlayer.pause();
-                        result.success(null);
-                        break;
-                    case "seekTo":
-                        //noinspection ConstantConditions
-                        int position = call.argument("position");
-                        audioPlayer.seekTo(position);
-                        result.success(null);
-                        break;
-                    case "addAndPlay": {
-                        String key = call.argument(Song.song_key_tag);
-                        String title = call.argument(Song.song_title_tag);
-                        String artist = call.argument(Song.song_artist_tag);
-                        String album = call.argument(Song.song_album_tag);
-                        String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                        String uri = call.argument(Song.song_uri_tag);
-                        Song song = new Song(key, title, artist, album, album_art_uri, uri);
-                        audioPlayer.addAndPlay(song);
-                        audioPlayer.play();
-                        result.success(null);
-                        break;
-                    }
-                    case "addSong": {
-                        String key = call.argument(Song.song_key_tag);
-                        String title = call.argument(Song.song_title_tag);
-                        String artist = call.argument(Song.song_artist_tag);
-                        String album = call.argument(Song.song_album_tag);
-                        String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                        String uri = call.argument(Song.song_uri_tag);
-                        Song song = new Song(key, title, artist, album, album_art_uri, uri);
-                        audioPlayer.addSong(song);
-                        result.success(null);
-                        break;
-                    }
-                    case "addSongAtIndex": {
-                        //noinspection ConstantConditions
-                        int index = call.argument("index");
-                        String key = call.argument(Song.song_key_tag);
-                        String title = call.argument(Song.song_title_tag);
-                        String artist = call.argument(Song.song_artist_tag);
-                        String album = call.argument(Song.song_album_tag);
-                        String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                        String uri = call.argument(Song.song_uri_tag);
-                        Song song = new Song(key, title, artist, album, album_art_uri, uri);
-                        audioPlayer.addSongAtIndex(index, song);
-                        result.success(null);
-                        break;
-                    }
-                    case "removeSong": {
-                        String key = call.argument(Song.song_key_tag);
-                        String title = call.argument(Song.song_title_tag);
-                        String artist = call.argument(Song.song_artist_tag);
-                        String album = call.argument(Song.song_album_tag);
-                        String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                        String uri = call.argument(Song.song_uri_tag);
-                        Song song = new Song(key, title, artist, album, album_art_uri, uri);
-                        audioPlayer.removeSong(song);
-                        result.success(null);
-                        break;
-                    }
-                    case "setPlaylist": {
-                        String playlistStr = call.argument("playlist");
-                        audioPlayer.setPlaylist(playlistStr);
-                        audioPlayer.preparePlaylist();
-                        result.success(null);
-                        break;
-                    }
-                    case "getPlaylist":
-                        Log.d(TAG, "Json onPlaylistChanged");
-                        JSONObject jsonObject = Playlist.toJson(audioPlayer.getPlaylist());
-                        if (jsonObject != null) {
-                            String json = jsonObject.toString();
-                            Map<String, Object> args = new HashMap<>();
-                            args.put("playlist", json);
-                            result.success(args);
-                        } else {
-                            Log.d(TAG, "Json object playlist is null");
-                            result.error("Playlist Object", "Json object playlist is null", null);
-                        }
-                        break;
-                    case "clearPlaylist":
-                        audioPlayer.clearPlaylist();
-                        result.success(null);
-                        break;
-                    case "setRepeatMode":
-                        //noinspection ConstantConditions
-                        int repeatMode = call.argument("repeatMode");
-                        audioPlayer.setRepeatMode(repeatMode);
-                        result.success(null);
-                        break;
-                    case "skipToNext":
-                        audioPlayer.skipToNext();
-                        result.success(null);
-                        break;
-                    case "skipToPrevious":
-                        audioPlayer.skipToPrevious();
-                        result.success(null);
-                        break;
-                    case "skipToIndex": {
-                        //noinspection ConstantConditions
-                        int index = call.argument("index");
-                        audioPlayer.skipToIndex(index);
-                        result.success(null);
-                        break;
-                    }
-                    case "stop":
-                        audioPlayer.stop();
-                        result.success(null);
-                        break;
-                    case "release":
-                        audioPlayer.release();
-                        result.success(null);
-                        break;
-                    default:
-                        result.notImplemented();
-                        break;
-                }
+
+                audioMethodCall(mediaMethodCall.command, call, result);
             } else if (mediaMethodCall.mediaType.equals(VIDEO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {
                     initializeVideoPlayer();
@@ -475,65 +349,200 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     return;
                 }
 
-                switch (mediaMethodCall.command) {
-                    case "addAndPlay": {
-                        TextureRegistry textures = registrar.textures();
-                        if (textures == null) {
-                            result.error("no_activity", "video_player plugin requires a foreground activity", null);
-                            return;
-                        }
-
-                        TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
-                        if (handle == null) {
-                            return;
-                        }
-
-                        String uri = call.argument("uri");
-                        String asset = call.argument("asset");
-                        if (uri == null && asset != null) {
-                            String assetLookupKey = registrar.lookupKeyForAsset(asset);
-                            Log.d(TAG, "asset : " + assetLookupKey);
-                            videoPlayer.addAndPlay("assets:///" + assetLookupKey, handle);
-                        } else if (uri != null && asset == null) {
-                            videoPlayer.addAndPlay(uri, handle);
-                        }
-                        result.success(null);
-                        break;
-                    }
-                    case "initSetTexture": {
-                        TextureRegistry textures = registrar.textures();
-                        if (textures == null) {
-                            result.error("no_activity", "video_player plugin requires a foreground activity", null);
-                            return;
-                        }
-
-                        TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
-                        if (handle != null) {
-                            videoPlayer.setupVideoPlayer(handle);
-                        }
-                        result.success(null);
-                        break;
-                    }
-                    case "play":
-                        videoPlayer.play();
-                        if (audioPlayer != null) {
-                            audioPlayer.pause();
-                        }
-                        result.success(null);
-                        break;
-                    case "pause":
-                        videoPlayer.pause();
-                        result.success(null);
-                        break;
-                    default:
-                        result.notImplemented();
-                        break;
-                }
+                videoMethodCall(mediaMethodCall.command, call, result);
             } else {
                 result.error("MethodCall mediaType ", "type of " + mediaMethodCall.mediaType + " is not equal.", null);
             }
         } catch (IllegalArgumentException e) {
             result.error("IllegalArgument", e.getMessage(), null);
+        }
+    }
+
+    private void audioMethodCall(String method, MethodCall call, Result result) {
+        switch (method) {
+            case "play":
+                Log.d(TAG, "play");
+                audioPlayer.play();
+                if (videoPlayer != null) {
+                    videoPlayer.pause();
+                }
+                result.success(null);
+                break;
+            case "pause":
+                Log.d(TAG, "pause");
+                audioPlayer.pause();
+                result.success(null);
+                break;
+            case "seekTo":
+                //noinspection ConstantConditions
+                int position = call.argument("position");
+                audioPlayer.seekTo(position);
+                result.success(null);
+                break;
+            case "addAndPlay": {
+                String key = call.argument(Song.song_key_tag);
+                String title = call.argument(Song.song_title_tag);
+                String artist = call.argument(Song.song_artist_tag);
+                String album = call.argument(Song.song_album_tag);
+                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
+                String uri = call.argument(Song.song_uri_tag);
+                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                audioPlayer.addAndPlay(song);
+                audioPlayer.play();
+                result.success(null);
+                break;
+            }
+            case "addSong": {
+                String key = call.argument(Song.song_key_tag);
+                String title = call.argument(Song.song_title_tag);
+                String artist = call.argument(Song.song_artist_tag);
+                String album = call.argument(Song.song_album_tag);
+                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
+                String uri = call.argument(Song.song_uri_tag);
+                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                audioPlayer.addSong(song);
+                result.success(null);
+                break;
+            }
+            case "addSongAtIndex": {
+                //noinspection ConstantConditions
+                int index = call.argument("index");
+                String key = call.argument(Song.song_key_tag);
+                String title = call.argument(Song.song_title_tag);
+                String artist = call.argument(Song.song_artist_tag);
+                String album = call.argument(Song.song_album_tag);
+                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
+                String uri = call.argument(Song.song_uri_tag);
+                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                audioPlayer.addSongAtIndex(index, song);
+                result.success(null);
+                break;
+            }
+            case "removeSong": {
+                String key = call.argument(Song.song_key_tag);
+                String title = call.argument(Song.song_title_tag);
+                String artist = call.argument(Song.song_artist_tag);
+                String album = call.argument(Song.song_album_tag);
+                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
+                String uri = call.argument(Song.song_uri_tag);
+                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                audioPlayer.removeSong(song);
+                result.success(null);
+                break;
+            }
+            case "setPlaylist": {
+                String playlistStr = call.argument("playlist");
+                audioPlayer.setPlaylist(playlistStr);
+                audioPlayer.preparePlaylist();
+                result.success(null);
+                break;
+            }
+            case "getPlaylist":
+                Log.d(TAG, "Json onPlaylistChanged");
+                JSONObject jsonObject = Playlist.toJson(audioPlayer.getPlaylist());
+                if (jsonObject != null) {
+                    String json = jsonObject.toString();
+                    Map<String, Object> args = new HashMap<>();
+                    args.put("playlist", json);
+                    result.success(args);
+                } else {
+                    Log.d(TAG, "Json object playlist is null");
+                    result.error("Playlist Object", "Json object playlist is null", null);
+                }
+                break;
+            case "clearPlaylist":
+                audioPlayer.clearPlaylist();
+                result.success(null);
+                break;
+            case "setRepeatMode":
+                //noinspection ConstantConditions
+                int repeatMode = call.argument("repeatMode");
+                audioPlayer.setRepeatMode(repeatMode);
+                result.success(null);
+                break;
+            case "skipToNext":
+                audioPlayer.skipToNext();
+                result.success(null);
+                break;
+            case "skipToPrevious":
+                audioPlayer.skipToPrevious();
+                result.success(null);
+                break;
+            case "skipToIndex": {
+                //noinspection ConstantConditions
+                int index = call.argument("index");
+                audioPlayer.skipToIndex(index);
+                result.success(null);
+                break;
+            }
+            case "stop":
+                audioPlayer.stop();
+                result.success(null);
+                break;
+            case "release":
+                audioPlayer.release();
+                result.success(null);
+                break;
+            default:
+                result.notImplemented();
+                break;
+        }
+    }
+
+    private void videoMethodCall(String method, MethodCall call, Result result) {
+        switch (method) {
+            case "addAndPlay": {
+                TextureRegistry textures = registrar.textures();
+                if (textures == null) {
+                    result.error("no_activity", "video_player plugin requires a foreground activity", null);
+                    return;
+                }
+
+                TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
+                if (handle == null) {
+                    return;
+                }
+
+                String uri = call.argument("uri");
+                String asset = call.argument("asset");
+                if (uri == null && asset != null) {
+                    String assetLookupKey = registrar.lookupKeyForAsset(asset);
+                    Log.d(TAG, "asset : " + assetLookupKey);
+                    videoPlayer.addAndPlay("assets:///" + assetLookupKey, handle);
+                } else if (uri != null && asset == null) {
+                    videoPlayer.addAndPlay(uri, handle);
+                }
+                result.success(null);
+                break;
+            }
+            case "initSetTexture": {
+                TextureRegistry textures = registrar.textures();
+                if (textures == null) {
+                    result.error("no_activity", "video_player plugin requires a foreground activity", null);
+                    return;
+                }
+
+                TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
+                if (handle != null) {
+                    videoPlayer.setupVideoPlayer(handle);
+                }
+                result.success(null);
+                break;
+            }
+            case "play":
+                videoPlayer.play();
+                if (audioPlayer != null) {
+                    audioPlayer.pause();
+                }
+                result.success(null);
+                break;
+            case "pause":
+                videoPlayer.pause();
+                result.success(null);
+                break;
+            default:
+                result.notImplemented();
+                break;
         }
     }
 
