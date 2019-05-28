@@ -60,7 +60,7 @@ class _MyAppState extends State<MyApp> {
       onPlayerStatus: _onPlayerStatus,
     );
     _videoExoPlayerListener =
-        VideoExoPlayerListener(onVideoInitialize: _onTextureIdChanged);
+        VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
     _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
     _audioPlayer.addExoPlayerListener(
@@ -101,7 +101,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _onTextureIdChanged(int textureId) {
+  void _onVideoInitialized(int textureId) {
     _textureId = textureId;
     print("Texture id $_textureId");
     setState(() {});

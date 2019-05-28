@@ -176,6 +176,13 @@ class AudioPlayer {
     );
   }
 
+  Future<Playlist> getPlaylist() async{
+    String s = await channel.invokeMethod("getPlaylist");
+    Map<String, dynamic> map = json.decode(s);
+    Playlist playlist = Playlist.fromJson(map);
+    return playlist;
+  }
+
   void removeSong(Song song) {
     channel.invokeMethod(
       '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/removeSong',
