@@ -41,7 +41,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private AudioPlayer audioPlayer;
     private VideoPlayer videoPlayer;
 
-    private boolean isPlayingAudio = true;
     private MethodChannel channel;
 
     private ExoPlayerListener audioExoPlayerListener;
@@ -315,6 +314,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 instance.videoExoPlayerListener = instance.GetExoPlayerListener(false);
                 instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
             }
+            instance.sendAudioInitialization();
         }
     }
 

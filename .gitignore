@@ -2,7 +2,6 @@
 .pub/
 .packages
 
-example/
 build/
 .DS_Store
 .dart_tool/

@@ -11,8 +11,6 @@ class AudioPlayer {
   final String playerId;
   final MethodChannel channel;
 
-  final RegExp _regExp = new RegExp(r"([^/]+)/([^/]+)");
-
   bool _playWhenReady = false;
   int _playbackState = 1;
   int _playbackPosition = 0;

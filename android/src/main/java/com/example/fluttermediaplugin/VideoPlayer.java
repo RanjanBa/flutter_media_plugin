@@ -77,13 +77,24 @@ public class VideoPlayer {
             videoExoPlayerListener = new VideoExoPlayerListener();
         }
         simpleExoPlayer.addListener(videoExoPlayerListener);
+        simpleExoPlayer.addVideoListener(
+                new VideoListener() {
+                    @Override
+                    public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
+                        videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
+                    }
 
-        simpleExoPlayer.addVideoListener(new VideoListener() {
-            @Override
-            public void onSurfaceSizeChanged(int width, int height) {
-                videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
-            }
-        });
+                    @Override
+                    public void onSurfaceSizeChanged(int width, int height) {
+
+                    }
+
+                    @Override
+                    public void onRenderedFirstFrame() {
+
+                    }
+                }
+        );
     }
 
     public void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
