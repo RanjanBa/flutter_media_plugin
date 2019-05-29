@@ -79,54 +79,60 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         audioPlayer.addExoPlayerListener(audioExoPlayerListener);
     }
 
-//
-//    private void sendAudioInitialization() {
-//        if (audioPlayer == null || audioPlayer.getSimpleExoPlayer() == null) {
-//            Map<String, Object> args = new HashMap<>();
-//            args.put("message", "Simple ExoPlayer is null");
-//            String method;
-//            method = AUDIO_MEDIA_TYPE;
-//            method += "/onPlayerStatus";
-//            channel.invokeMethod(method, args);
-//            return;
-//        }
-//
-//        Log.d(TAG, "Json onPlaylistChanged");
-//        JSONObject jsonObject = Playlist.toJson(instance.audioPlayer.getPlaylist());
-//        if (jsonObject != null) {
-//            String json = jsonObject.toString();
-//            Map<String, Object> args = new HashMap<>();
-//            args.put("playlist", json);
-//            String method;
-//            method = AUDIO_MEDIA_TYPE;
-//            method += "/onPlaylistChanged";
-//            channel.invokeMethod(method, args);
-//        } else {
-//            Log.d(TAG, "Json object playlist is null");
-//        }
-//
-//        {
-//            int playbackState = audioPlayer.getSimpleExoPlayer().getPlaybackState();
-//            boolean playWhenReady = audioPlayer.getSimpleExoPlayer().getPlayWhenReady();
-//            Log.d(TAG, "onPlayerStateChanged : " + playbackState);
-//            Map<String, Object> args = new HashMap<>();
-//            args.put("playWhenReady", playWhenReady);
-//            args.put("playbackState", playbackState);
-//            String method;
-//            method = AUDIO_MEDIA_TYPE;
-//            method += "/onPlayerStateChanged";
-//            channel.invokeMethod(method, args);
-//        }
-//        {
-//            Log.d(TAG, "onMediaPeriodCreated");
-//            Map<String, Object> args = new HashMap<>();
-//            args.put("windowIndex", audioPlayer.getSimpleExoPlayer().getCurrentWindowIndex());
-//            String method;
-//            method = AUDIO_MEDIA_TYPE;
-//            method += "/onMediaPeriodCreated";
-//            channel.invokeMethod(method, args);
-//        }
-//    }
+
+    private void sendAudioInitialization() {
+        if (audioPlayer == null || audioPlayer.getSimpleExoPlayer() == null) {
+            Map<String, Object> args = new HashMap<>();
+            args.put("message", "Simple ExoPlayer is null");
+            String method;
+            method = AUDIO_MEDIA_TYPE;
+            method += "/onPlayerStatus";
+            channel.invokeMethod(method, args);
+            return;
+        }
+
+        Log.d(TAG, "Json onPlaylistChanged");
+        JSONObject jsonObject = Playlist.toJson(instance.audioPlayer.getPlaylist());
+        if (jsonObject != null) {
+            String json = jsonObject.toString();
+            Map<String, Object> args = new HashMap<>();
+            args.put("playlist", json);
+            String method;
+            method = AUDIO_MEDIA_TYPE;
+            method += "/onPlaylistChanged";
+            channel.invokeMethod(method, args);
+        } else {
+            Log.d(TAG, "Json object playlist is null");
+        }
+
+        {
+            int playbackState = audioPlayer.getSimpleExoPlayer().getPlaybackState();
+            boolean playWhenReady = audioPlayer.getSimpleExoPlayer().getPlayWhenReady();
+            Log.d(TAG, "onPlayerStateChanged : " + playbackState);
+            Map<String, Object> args = new HashMap<>();
+            args.put("playWhenReady", playWhenReady);
+            args.put("playbackState", playbackState);
+            String method;
+            method = AUDIO_MEDIA_TYPE;
+            method += "/onPlayerStateChanged";
+            channel.invokeMethod(method, args);
+        }
+        {
+            Log.d(TAG, "onMediaPeriodCreated");
+            Map<String, Object> args = new HashMap<>();
+            args.put("windowIndex", audioPlayer.getSimpleExoPlayer().getCurrentWindowIndex());
+            Song song = audioPlayer.getSongByIndex(audioPlayer.getSimpleExoPlayer().getCurrentWindowIndex());
+            if (song == null)
+                return;
+
+            Map<String, Object> songMap = Song.toMap(song);
+            args.put("currentPlayingSong", songMap);
+            String method;
+            method = AUDIO_MEDIA_TYPE;
+            method += "/onMediaPeriodCreated";
+            channel.invokeMethod(method, args);
+        }
+    }
 
     private void initializeVideoPlayer() {
         videoPlayer = new VideoPlayer(registrar.activeContext());
@@ -285,6 +291,8 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 instance.videoExoPlayerListener = instance.GetExoPlayerListener(false);
                 instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
             }
+
+            instance.sendAudioInitialization();
         }
     }
 
