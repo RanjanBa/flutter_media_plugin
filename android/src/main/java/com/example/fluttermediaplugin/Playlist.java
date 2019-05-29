@@ -29,16 +29,16 @@ public class Playlist {
     private ConcatenatingMediaSource concatenatingMediaSource;
     private ArrayList<Song> songs;
     private DefaultDataSourceFactory dataSourceFactory;
-    private PlaylistEventListener playlistEventListener;
+//    private PlaylistEventListener playlistEventListener;
     private SimpleExoPlayer simpleExoPlayer;
 
-    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull PlaylistEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
+    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, /*@NonNull PlaylistEventListener playlistEventListener,*/ @NonNull DefaultDataSourceFactory dataSourceFactory) {
         this.playlistName = playlistName;
         this.simpleExoPlayer = simpleExoPlayer;
         songs = new ArrayList<>();
-        this.playlistEventListener = playlistEventListener;
+//        this.playlistEventListener = playlistEventListener;
         concatenatingMediaSource = new ConcatenatingMediaSource();
-        concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
+//        concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
         this.dataSourceFactory = dataSourceFactory;
     }
 
@@ -95,8 +95,7 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource);
-
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
     private void addSong(Song song, @NonNull Runnable actionOnCompletion) {
@@ -104,7 +103,7 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource, new Handler(), actionOnCompletion);
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void addSong(int index, Song song) {
@@ -116,7 +115,7 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(index, mediaSource);
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
 //    public void addSong(int index, Song song, @NonNull Runnable actionOnCompletion) {
@@ -138,7 +137,7 @@ public class Playlist {
             MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
             concatenatingMediaSource.addMediaSource(mediaSource);
         }
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void removeSong(Song song) {
@@ -147,14 +146,13 @@ public class Playlist {
                 return;
             }
         }
-
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void clear() {
         songs.clear();
         concatenatingMediaSource.clear();
-        playlistEventListener.onPlaylistChanged(this);
+//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public static JSONObject toJson(Playlist playlist) {
@@ -217,7 +215,7 @@ public class Playlist {
         return null;
     }
 
-    public interface PlaylistEventListener extends MediaSourceEventListener {
-        void onPlaylistChanged(Playlist playlist);
-    }
+//    public interface PlaylistEventListener extends MediaSourceEventListener {
+//        void onPlaylistChanged(Playlist playlist);
+//    }
 }

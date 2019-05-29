@@ -18,7 +18,6 @@ class AudioPlayer {
   int _bufferingPercent = 0;
 
   final Set<ExoPlayerListener> _exoPlayerListeners = Set();
-  Playlist _playlist = new Playlist("currentPlaylist");
   int _windowIndex = -1;
 
   bool get playWhenReady => _playWhenReady;
@@ -30,8 +29,6 @@ class AudioPlayer {
   int get playbackLength => _playbackLength;
 
   int get bufferingPercent => _bufferingPercent;
-
-  Playlist get playlist => _playlist;
 
   int get windowIndex => _windowIndex;
 
@@ -76,18 +73,18 @@ class AudioPlayer {
           listener.onBufferingUpdate(percent);
         }
         break;
-      case "onPlaylistChanged":
-        String str = arguments['playlist'];
-        Map<String, dynamic> map = json.decode(str);
-        Playlist newPlaylist = Playlist.fromJson(map);
-        // print("playlist Name : " +
-        //     newPlaylist._playlistName +
-        //     ", songs : ${newPlaylist.getSize()}");
-        _playlist = newPlaylist;
-        for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onPlaylistChanged(newPlaylist);
-        }
-        break;
+//      case "onPlaylistChanged":
+//        String str = arguments['playlist'];
+//        Map<String, dynamic> map = json.decode(str);
+//        Playlist newPlaylist = Playlist.fromJson(map);
+//        // print("playlist Name : " +
+//        //     newPlaylist._playlistName +
+//        //     ", songs : ${newPlaylist.getSize()}");
+//        _playlist = newPlaylist;
+//        for (ExoPlayerListener listener in _exoPlayerListeners) {
+//          listener.onPlaylistChanged(newPlaylist);
+//        }
+//        break;
       case "onPlayerStatus":
         String message = arguments['message'];
         for (ExoPlayerListener listener in _exoPlayerListeners) {

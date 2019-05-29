@@ -152,16 +152,21 @@ class _MyAppState extends State<MyApp> {
   String currentlyPlayingSongTitle = "";
 
   void _onMediaPeriodCreated(int windowIndex) {
-    print(
-        "window index : $windowIndex, length ${_audioPlayer.playlist.getSize()}");
-    Song song = _audioPlayer.playlist.getSongAtIndex(windowIndex);
+    print("window index : $windowIndex");
+    if (!mounted) return;
+    _audioLength = 0;
+    _position = 0;
+    setCurrentSong(windowIndex);
+  }
+
+  void setCurrentSong(int windowIndex) async {
+    Playlist playlist = await _audioPlayer.getPlaylist();
+    print("length ${playlist.getSize()}");
+    Song song = playlist.getSongAtIndex(windowIndex);
     if (song == null)
       currentlyPlayingSongTitle = "No Song";
     else
       currentlyPlayingSongTitle = song.title;
-    if (!mounted) return;
-    _audioLength = 0;
-    _position = 0;
     setState(() {});
   }
 
