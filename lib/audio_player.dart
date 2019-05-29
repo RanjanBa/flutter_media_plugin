@@ -16,9 +16,9 @@ class AudioPlayer {
   int _playbackPosition = 0;
   int _playbackLength = 0;
   int _bufferingPercent = 0;
+  Song _currentPlayingSong;
 
   final Set<ExoPlayerListener> _exoPlayerListeners = Set();
-  int _windowIndex = -1;
 
   bool get playWhenReady => _playWhenReady;
 
@@ -30,7 +30,7 @@ class AudioPlayer {
 
   int get bufferingPercent => _bufferingPercent;
 
-  int get windowIndex => _windowIndex;
+  Song get currentPlayingSong => _currentPlayingSong;
 
   AudioPlayer({this.playerId, this.channel}) {
     channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
@@ -40,8 +40,11 @@ class AudioPlayer {
     switch (method) {
       case "onMediaPeriodCreated":
         int windowIndex = arguments["windowIndex"];
+        Map<String, dynamic> songMap = arguments["currentPlayingSong"];
+        Song song = Song.fromJson(songMap);
+        if(song != null)
+          _currentPlayingSong = song;
         print("onMediaPeriodCreated $windowIndex");
-        _windowIndex = windowIndex;
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onMediaPeriodCreated(windowIndex);
         }
@@ -73,18 +76,6 @@ class AudioPlayer {
           listener.onBufferingUpdate(percent);
         }
         break;
-//      case "onPlaylistChanged":
-//        String str = arguments['playlist'];
-//        Map<String, dynamic> map = json.decode(str);
-//        Playlist newPlaylist = Playlist.fromJson(map);
-//        // print("playlist Name : " +
-//        //     newPlaylist._playlistName +
-//        //     ", songs : ${newPlaylist.getSize()}");
-//        _playlist = newPlaylist;
-//        for (ExoPlayerListener listener in _exoPlayerListeners) {
-//          listener.onPlaylistChanged(newPlaylist);
-//        }
-//        break;
       case "onPlayerStatus":
         String message = arguments['message'];
         for (ExoPlayerListener listener in _exoPlayerListeners) {
@@ -174,7 +165,7 @@ class AudioPlayer {
   }
 
   Future<Playlist> getPlaylist() async{
-    String s = await channel.invokeMethod("getPlaylist");
+    String s = await channel.invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
     Map<String, dynamic> map = json.decode(s);
     Playlist playlist = Playlist.fromJson(map);
     return playlist;

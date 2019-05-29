@@ -3,6 +3,9 @@ package com.example.fluttermediaplugin;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Song {
     private String key;
     private String title;
@@ -83,5 +86,16 @@ public class Song {
         }
 
         return null;
+    }
+
+    public static Map<String, Object> toMap(Song song) {
+        Map<String, Object> songMap = new HashMap<>();
+        songMap.put(song_key_tag, song.key);
+        songMap.put(song_title_tag, song.title);
+        songMap.put(song_artist_tag, song.artist);
+        songMap.put(song_album_tag, song.album);
+        songMap.put(song_album_art_uri_tag, song.album_art_uri);
+        songMap.put(song_uri_tag, song.uri);
+        return songMap;
     }
 }

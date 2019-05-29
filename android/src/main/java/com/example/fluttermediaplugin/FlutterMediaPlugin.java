@@ -192,7 +192,12 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 Log.d(TAG, "onMediaPeriodCreated");
                 Map<String, Object> args = new HashMap<>();
                 args.put("windowIndex", windowIndex);
+                Song song = audioPlayer.getSongByIndex(windowIndex);
+                if (song == null)
+                    return;
 
+                Map<String, Object> songMap = Song.toMap(song);
+                args.put("currentPlayingSong", songMap);
                 String method;
                 if (isAudio) {
                     method = AUDIO_MEDIA_TYPE;
@@ -217,26 +222,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 method += "/onPlaybackUpdate";
                 channel.invokeMethod(method, args);
             }
-
-//            public void onPlaylistChanged(Playlist playlist) {
-//                Log.d(TAG, "Json onPlaylistChanged");
-//                JSONObject jsonObject = Playlist.toJson(playlist);
-//                if (jsonObject != null) {
-//                    String json = jsonObject.toString();
-//                    Map<String, Object> args = new HashMap<>();
-//                    args.put("playlist", json);
-//                    String method;
-//                    if (isAudio) {
-//                        method = AUDIO_MEDIA_TYPE;
-//                    } else {
-//                        method = VIDEO_MEDIA_TYPE;
-//                    }
-//                    method += "/onPlaylistChanged";
-//                    channel.invokeMethod(method, args);
-//                } else {
-//                    Log.d(TAG, "Json object playlist is null");
-//                }
-//            }
 
             public void onBufferedUpdate(int percent) {
                 //Log.d(TAG, "onBufferedUpdate " + percent);
