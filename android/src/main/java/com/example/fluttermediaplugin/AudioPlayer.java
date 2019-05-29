@@ -82,11 +82,6 @@ public class AudioPlayer {
 //        playerId = simpleExoPlayer.getAudioSessionId();
 
         MediaSourceEventListener playlistEventListener = new MediaSourceEventListener() {
-//            @Override
-//            public void onPlaylistChanged(Playlist playlist) {
-//                mediaPlayerExoPlayerListenerManager.onPlaylistChanged(playlist);
-//            }
-
             @Override
             public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
                 mediaPlayerExoPlayerListenerManager.onMediaPeriodCreated(windowIndex);

@@ -93,7 +93,6 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource);
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
     private void addSong(Song song, @NonNull Runnable actionOnCompletion) {
@@ -101,7 +100,6 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource, new Handler(), actionOnCompletion);
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void addSong(int index, Song song) {
@@ -113,7 +111,6 @@ public class Playlist {
         Uri uri = Uri.parse(song.getUri());
         MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(index, mediaSource);
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
 //    public void addSong(int index, Song song, @NonNull Runnable actionOnCompletion) {
@@ -125,7 +122,6 @@ public class Playlist {
 //        Uri uri = Uri.parse(song.getUri());
 //        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
 //        concatenatingMediaSource.addMediaSource(index, mediaSource, new Handler(), actionOnCompletion);
-//        playlistEventListener.onPlaylistChanged(this);
 //    }
 
     public void addSongs(List<Song> songs) {
@@ -135,7 +131,6 @@ public class Playlist {
             MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
             concatenatingMediaSource.addMediaSource(mediaSource);
         }
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void removeSong(Song song) {
@@ -144,13 +139,11 @@ public class Playlist {
                 return;
             }
         }
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public void clear() {
         songs.clear();
         concatenatingMediaSource.clear();
-//        playlistEventListener.onPlaylistChanged(this);
     }
 
     public static JSONObject toJson(Playlist playlist) {

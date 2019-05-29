@@ -40,11 +40,34 @@ class AudioPlayer {
     switch (method) {
       case "onMediaPeriodCreated":
         int windowIndex = arguments["windowIndex"];
-        Map<String, dynamic> songMap = arguments["currentPlayingSong"];
-        Song song = Song.fromJson(songMap);
-        if(song != null)
-          _currentPlayingSong = song;
         print("onMediaPeriodCreated $windowIndex");
+        print(arguments["currentPlayingSong"]);
+        print(arguments["currentPlayingSong"][C.song_key_tag].toString());
+        print(arguments["currentPlayingSong"][C.song_title_tag].toString());
+        print(arguments["currentPlayingSong"][C.song_artist_tag].toString());
+        print(arguments["currentPlayingSong"][C.song_album_tag].toString());
+        print(arguments["currentPlayingSong"][C.song_album_art_uri_tag]
+            .toString());
+        print(arguments["currentPlayingSong"][C.song_uri_tag].toString());
+
+        Map<String, dynamic> songMap = new Map();
+        songMap[C.song_key_tag] =
+            arguments["currentPlayingSong"][C.song_key_tag].toString();
+        songMap[C.song_title_tag] =
+            arguments["currentPlayingSong"][C.song_title_tag].toString();
+        songMap[C.song_artist_tag] =
+            arguments["currentPlayingSong"][C.song_artist_tag].toString();
+        songMap[C.song_album_tag] =
+            arguments["currentPlayingSong"][C.song_album_tag].toString();
+        songMap[C.song_album_art_uri_tag] = arguments["currentPlayingSong"]
+                [C.song_album_art_uri_tag]
+            .toString();
+        songMap[C.song_uri_tag] =
+            arguments["currentPlayingSong"][C.song_uri_tag].toString();
+
+        Song song = Song.fromMap(songMap);
+        if (song != null) _currentPlayingSong = song;
+
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onMediaPeriodCreated(windowIndex);
         }
@@ -164,8 +187,10 @@ class AudioPlayer {
     );
   }
 
-  Future<Playlist> getPlaylist() async{
-    String s = await channel.invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
+  Future<Playlist> getPlaylist() async {
+
+    String s = await channel
+        .invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
     Map<String, dynamic> map = json.decode(s);
     Playlist playlist = Playlist.fromJson(map);
     return playlist;
@@ -261,7 +286,7 @@ class Song {
     };
   }
 
-  factory Song.fromJson(Map<String, dynamic> map) {
+  factory Song.fromMap(Map<String, dynamic> map) {
     String key = map[C.song_key_tag];
     String title = map[C.song_title_tag];
     String artist = map[C.song_artist_tag];

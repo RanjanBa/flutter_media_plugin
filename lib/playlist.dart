@@ -69,7 +69,7 @@ class Playlist {
     List<dynamic> songs = json["songs"];
 
     for (Map<String, dynamic> map in songs) {
-      Song song = Song.fromJson(map);
+      Song song = Song.fromMap(map);
       playlist.addSong(song);
     }
     return playlist;
