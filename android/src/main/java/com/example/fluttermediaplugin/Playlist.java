@@ -83,7 +83,9 @@ public class Playlist {
         addSong(song, new Runnable() {
             @Override
             public void run() {
-                simpleExoPlayer.seekTo(concatenatingMediaSource.getSize() - 1, C.TIME_UNSET);
+                if (concatenatingMediaSource.getSize() > 0) {
+                    simpleExoPlayer.seekTo(concatenatingMediaSource.getSize() - 1, C.TIME_UNSET);
+                }
             }
         });
     }

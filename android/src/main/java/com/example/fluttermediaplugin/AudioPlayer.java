@@ -269,11 +269,11 @@ public class AudioPlayer {
     public void setPlaylist(String playlistStr) {
         try {
             JSONObject jsonObject = new JSONObject(playlistStr);
-                List<Song> songs = Playlist.songsFromPlaylistJson(jsonObject);
-                if (songs != null) {
-                    this.playlist.clear();
-                    this.playlist.addSongs(songs);
-                }
+            List<Song> songs = Playlist.songsFromPlaylistJson(jsonObject);
+            if (songs != null) {
+                this.playlist.clear();
+                this.playlist.addSongs(songs);
+            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
