@@ -137,22 +137,18 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
     private ExoPlayerListener GetExoPlayerListener(final boolean isAudio) {
         return new ExoPlayerListener() {
-            @Override
             public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
                 Log.d(TAG, "onTimelineChanged");
             }
 
-            @Override
             public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
                 Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
             }
 
-            @Override
             public void onLoadingChanged(boolean isLoading) {
                 Log.d(TAG, "onLoadingChanged");
             }
 
-            @Override
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 Map<String, Object> args = new HashMap<>();
                 args.put("playWhenReady", playWhenReady);
@@ -168,37 +164,30 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 channel.invokeMethod(method, args);
             }
 
-            @Override
             public void onRepeatModeChanged(int repeatMode) {
                 Log.d(TAG, "onRepeatModeChanged");
             }
 
-            @Override
             public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
                 Log.d(TAG, "onShuffleModeEnabledChanged");
             }
 
-            @Override
             public void onPlayerError(ExoPlaybackException error) {
                 Log.d(TAG, "onPlayerError");
             }
 
-            @Override
             public void onPositionDiscontinuity(int reason) {
                 Log.d(TAG, "onPositionDiscontinuity");
             }
 
-            @Override
             public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
                 Log.d(TAG, "onPlaybackParametersChanged");
             }
 
-            @Override
             public void onSeekProcessed() {
                 Log.d(TAG, "onSeekProcessed");
             }
 
-            @Override
             public void onMediaPeriodCreated(int windowIndex) {
                 Log.d(TAG, "onMediaPeriodCreated");
                 Map<String, Object> args = new HashMap<>();
@@ -214,7 +203,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 channel.invokeMethod(method, args);
             }
 
-            @Override
             public void onPlaybackUpdate(long position, long audioLength) {
                 //Log.d(TAG, "onPlaybackUpdate");
                 Map<String, Object> args = new HashMap<>();
@@ -230,28 +218,26 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 channel.invokeMethod(method, args);
             }
 
-            @Override
-            public void onPlaylistChanged(Playlist playlist) {
-                Log.d(TAG, "Json onPlaylistChanged");
-                JSONObject jsonObject = Playlist.toJson(playlist);
-                if (jsonObject != null) {
-                    String json = jsonObject.toString();
-                    Map<String, Object> args = new HashMap<>();
-                    args.put("playlist", json);
-                    String method;
-                    if (isAudio) {
-                        method = AUDIO_MEDIA_TYPE;
-                    } else {
-                        method = VIDEO_MEDIA_TYPE;
-                    }
-                    method += "/onPlaylistChanged";
-                    channel.invokeMethod(method, args);
-                } else {
-                    Log.d(TAG, "Json object playlist is null");
-                }
-            }
+//            public void onPlaylistChanged(Playlist playlist) {
+//                Log.d(TAG, "Json onPlaylistChanged");
+//                JSONObject jsonObject = Playlist.toJson(playlist);
+//                if (jsonObject != null) {
+//                    String json = jsonObject.toString();
+//                    Map<String, Object> args = new HashMap<>();
+//                    args.put("playlist", json);
+//                    String method;
+//                    if (isAudio) {
+//                        method = AUDIO_MEDIA_TYPE;
+//                    } else {
+//                        method = VIDEO_MEDIA_TYPE;
+//                    }
+//                    method += "/onPlaylistChanged";
+//                    channel.invokeMethod(method, args);
+//                } else {
+//                    Log.d(TAG, "Json object playlist is null");
+//                }
+//            }
 
-            @Override
             public void onBufferedUpdate(int percent) {
                 //Log.d(TAG, "onBufferedUpdate " + percent);
                 Map<String, Object> args = new HashMap<>();
@@ -266,7 +252,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 channel.invokeMethod(method, args);
             }
 
-            @Override
             public void onPlayerStatus(String message) {
                 Map<String, Object> args = new HashMap<>();
                 args.put("message", message);

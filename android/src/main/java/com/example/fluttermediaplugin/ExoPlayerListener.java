@@ -9,42 +9,42 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 
 public interface ExoPlayerListener extends Player.EventListener {
     @Override
-    public void onTimelineChanged(Timeline timeline, Object manifest, int reason);
+    void onTimelineChanged(Timeline timeline, Object manifest, int reason);
 
     @Override
-    public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections);
+    void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections);
 
     @Override
-    public void onLoadingChanged(boolean isLoading);
+    void onLoadingChanged(boolean isLoading);
 
     @Override
-    public void onPlayerStateChanged(boolean playWhenReady, int playbackState);
+    void onPlayerStateChanged(boolean playWhenReady, int playbackState);
 
     @Override
-    public void onRepeatModeChanged(int repeatMode);
+    void onRepeatModeChanged(int repeatMode);
 
     @Override
-    public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled);
+    void onShuffleModeEnabledChanged(boolean shuffleModeEnabled);
 
     @Override
-    public void onPlayerError(ExoPlaybackException error);
+    void onPlayerError(ExoPlaybackException error);
 
     @Override
-    public void onPositionDiscontinuity(int reason);
+    void onPositionDiscontinuity(int reason);
 
     @Override
-    public void onPlaybackParametersChanged(PlaybackParameters playbackParameters);
+    void onPlaybackParametersChanged(PlaybackParameters playbackParameters);
 
     @Override
-    public void onSeekProcessed();
+    void onSeekProcessed();
 
-    public void onPlaylistChanged(Playlist playlist);
+//    void onPlaylistChanged(Playlist playlist);
 
-    public void onMediaPeriodCreated(int windowIndex);
+    void onMediaPeriodCreated(int windowIndex);
 
-    public void onPlaybackUpdate(long position, long audioLength);
+    void onPlaybackUpdate(long position, long audioLength);
 
-    public void onBufferedUpdate(int percent);
+    void onBufferedUpdate(int percent);
 
-    public void onPlayerStatus(String message);
+    void onPlayerStatus(String message);
 }

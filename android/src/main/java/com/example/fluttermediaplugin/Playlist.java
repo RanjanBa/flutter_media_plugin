@@ -29,16 +29,14 @@ public class Playlist {
     private ConcatenatingMediaSource concatenatingMediaSource;
     private ArrayList<Song> songs;
     private DefaultDataSourceFactory dataSourceFactory;
-//    private PlaylistEventListener playlistEventListener;
     private SimpleExoPlayer simpleExoPlayer;
 
-    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, /*@NonNull PlaylistEventListener playlistEventListener,*/ @NonNull DefaultDataSourceFactory dataSourceFactory) {
+    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull MediaSourceEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
         this.playlistName = playlistName;
         this.simpleExoPlayer = simpleExoPlayer;
         songs = new ArrayList<>();
-//        this.playlistEventListener = playlistEventListener;
         concatenatingMediaSource = new ConcatenatingMediaSource();
-//        concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
+        concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
         this.dataSourceFactory = dataSourceFactory;
     }
 
@@ -196,8 +194,6 @@ public class Playlist {
 
     public static List<Song> songsFromPlaylistJson(JSONObject jsonObject) {
         try {
-//            String playlist_name = jsonObject.get(PLAYLIST_NAME).toString();
-//            Playlist playlist = new Playlist(playlist_name, simpleExoPlayer, playlistEventListener, dataSourceFactory);
             JSONArray jsonArray = jsonObject.getJSONArray("songs");
 
             List<Song> songs = new ArrayList<>();
@@ -214,8 +210,4 @@ public class Playlist {
 
         return null;
     }
-
-//    public interface PlaylistEventListener extends MediaSourceEventListener {
-//        void onPlaylistChanged(Playlist playlist);
-//    }
 }

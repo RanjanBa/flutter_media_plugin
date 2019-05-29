@@ -159,19 +159,6 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
             stopPlaybackPolling();
         }
 
-//            if (playbackState == Player.STATE_READY) {
-//                if (playWhenReady) {
-//                    if (requestAudioFocus() != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-//                        pause();
-//                    }
-//                    startPlaybackPolling();
-//                } else {
-//                    stopPlaybackPolling();
-//                }
-//            } else {
-//                stopPlaybackPolling();
-//            }
-
         if (playbackState == Player.STATE_ENDED || playbackState == Player.STATE_IDLE) {
             stopBufferingPolling();
         }
@@ -222,11 +209,11 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
         }
     }
 
-    public void onPlaylistChanged(Playlist playlist) {
-        for (ExoPlayerListener exoPlayerListener : exoPlayerMediaListeners) {
-            exoPlayerListener.onPlaylistChanged(playlist);
-        }
-    }
+//    public void onPlaylistChanged(Playlist playlist) {
+//        for (ExoPlayerListener exoPlayerListener : exoPlayerMediaListeners) {
+//            exoPlayerListener.onPlaylistChanged(playlist);
+//        }
+//    }
 
     public void onMediaPeriodCreated(int windowIndex) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) {
