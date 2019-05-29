@@ -41,7 +41,7 @@ public class AudioPlayer {
 
     private boolean isShowingNotification = false;
     private DefaultDataSourceFactory dataSourceFactory;
-    private Playlist.PlaylistEventListener playlistEventListener;
+//    private Playlist.PlaylistEventListener playlistEventListener;
     private Playlist playlist;
 
     public Playlist getPlaylist() {
@@ -82,59 +82,59 @@ public class AudioPlayer {
 
 //        playerId = simpleExoPlayer.getAudioSessionId();
 
-        playlistEventListener = new Playlist.PlaylistEventListener() {
-            @Override
-            public void onPlaylistChanged(Playlist playlist) {
-                mediaPlayerExoPlayerListenerManager.onPlaylistChanged(playlist);
-            }
-
-            @Override
-            public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
-                mediaPlayerExoPlayerListenerManager.onMediaPeriodCreated(windowIndex);
-                Log.d(TAG + "CC", "onMediaPeriodCreated : " + windowIndex);
-            }
-
-            @Override
-            public void onMediaPeriodReleased(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
-                //Log.d(TAG + "CC", "on media Period Released : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onLoadStarted(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
-                //Log.d(TAG + "CC", "on load started : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onLoadCompleted(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
-                //Log.d(TAG + "CC", "on load Completed : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onLoadCanceled(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
-                //Log.d(TAG + "CC", "on load Canceled : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onLoadError(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, IOException error, boolean wasCanceled) {
-                //Log.d(TAG + "CC", "on load error : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onReadingStarted(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
-                //Log.d(TAG + "CC", "on Reading Started : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onUpstreamDiscarded(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId, MediaLoadData mediaLoadData) {
-                //Log.d(TAG + "CC", "on Upstream Discarded : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-
-            @Override
-            public void onDownstreamFormatChanged(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, MediaLoadData mediaLoadData) {
-                //Log.d(TAG + "CC", "on Down stream discarded : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
-            }
-        };
-        playlist = new Playlist("currentPlaylist", simpleExoPlayer, playlistEventListener, dataSourceFactory);
+//        playlistEventListener = new Playlist.PlaylistEventListener() {
+//            @Override
+//            public void onPlaylistChanged(Playlist playlist) {
+//                mediaPlayerExoPlayerListenerManager.onPlaylistChanged(playlist);
+//            }
+//
+//            @Override
+//            public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
+//                mediaPlayerExoPlayerListenerManager.onMediaPeriodCreated(windowIndex);
+//                Log.d(TAG + "CC", "onMediaPeriodCreated : " + windowIndex);
+//            }
+//
+//            @Override
+//            public void onMediaPeriodReleased(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
+//                //Log.d(TAG + "CC", "on media Period Released : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onLoadStarted(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
+//                //Log.d(TAG + "CC", "on load started : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onLoadCompleted(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
+//                //Log.d(TAG + "CC", "on load Completed : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onLoadCanceled(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData) {
+//                //Log.d(TAG + "CC", "on load Canceled : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onLoadError(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, LoadEventInfo loadEventInfo, MediaLoadData mediaLoadData, IOException error, boolean wasCanceled) {
+//                //Log.d(TAG + "CC", "on load error : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onReadingStarted(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
+//                //Log.d(TAG + "CC", "on Reading Started : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onUpstreamDiscarded(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId, MediaLoadData mediaLoadData) {
+//                //Log.d(TAG + "CC", "on Upstream Discarded : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//
+//            @Override
+//            public void onDownstreamFormatChanged(int windowIndex, @Nullable MediaSource.MediaPeriodId mediaPeriodId, MediaLoadData mediaLoadData) {
+//                //Log.d(TAG + "CC", "on Down stream discarded : " + windowIndex + ",media period : " + mediaPeriodId.periodIndex);
+//            }
+//        };
+        playlist = new Playlist("currentPlaylist", simpleExoPlayer,/* playlistEventListener,*/ dataSourceFactory);
 
         if (audioEventListener == null) {
             audioEventListener = new AudioExoPlayerListener();
@@ -275,14 +275,14 @@ public class AudioPlayer {
     public void setPlaylist(String playlistStr) {
         try {
             JSONObject jsonObject = new JSONObject(playlistStr);
-            if (playlistEventListener != null && dataSourceFactory != null && simpleExoPlayer != null) {
+//            if (playlistEventListener != null && dataSourceFactory != null && simpleExoPlayer != null) {
                 List<Song> songs = Playlist.songsFromPlaylistJson(jsonObject);
                 if (songs != null) {
                     this.playlist.clear();
                     this.playlist.addSongs(songs);
                 }
 //                this.playlist = Playlist.fromJson(jsonObject, simpleExoPlayer, playlistEventListener, dataSourceFactory, playIndex);
-            }
+//            }
         } catch (JSONException e) {
             e.printStackTrace();
         }
