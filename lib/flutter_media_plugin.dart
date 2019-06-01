@@ -22,13 +22,14 @@ class FlutterMediaPlugin {
       } else {
         return;
       }
-      print("Type : $mediaType Method : $method");
+      if (method != "onBufferedUpdate" && method != "onPlaybackUpdate")
+        print("Type : $mediaType Method : $method");
       if (mediaType == AUDIO_MEDIA_TYPE) {
-        if(_audioPlayer != null) {
+        if (_audioPlayer != null) {
           _audioPlayer.callMethod(method, call.arguments);
         }
       } else if (mediaType == VIDEO_MEDIA_TYPE) {
-        if(_videoPlayer != null) {
+        if (_videoPlayer != null) {
           _videoPlayer.callMethod(method, call.arguments);
         }
       }
@@ -36,10 +37,12 @@ class FlutterMediaPlugin {
   }
 
   static AudioPlayer get audioPlayer {
-    return _audioPlayer = new AudioPlayer(playerId: "audioPlayer", channel: _channel);
+    return _audioPlayer =
+        new AudioPlayer(playerId: "audioPlayer", channel: _channel);
   }
 
   static VideoPlayer get videoPlayer {
-    return _videoPlayer = new VideoPlayer(playerId: "videoPlayer", channel: _channel);
+    return _videoPlayer =
+        new VideoPlayer(playerId: "videoPlayer", channel: _channel);
   }
 }
