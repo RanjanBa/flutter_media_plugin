@@ -151,12 +151,12 @@ public class AudioPlayer {
 
     public void stop() {
         simpleExoPlayer.stop(false);
+        mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
+        mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
+        mediaPlayerExoPlayerListenerManager.onBufferedUpdate(0);
+        mediaPlayerExoPlayerListenerManager.onPlaybackUpdate(0, 0);
         if (simpleExoPlayer != null) {
-            mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
-            mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
             mediaPlayerExoPlayerListenerManager.onPlayerStatus("stop player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
-            mediaPlayerExoPlayerListenerManager.onPlaybackUpdate(0, 0);
-            mediaPlayerExoPlayerListenerManager.onBufferedUpdate(0);
             mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
         if (MediaPlayerNotificationService.getInstance() != null)

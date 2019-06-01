@@ -78,6 +78,12 @@ class AudioPlayer {
         //print("onPlayerStateChanged, $playWhenReady $playbackState");
         _playWhenReady = playWhenReady;
         _playbackState = playbackState;
+        if (_playbackState == C.STATE_ENDED || _playbackState == C.STATE_IDLE) {
+          _playbackPosition = 0;
+          _playbackLength = 0;
+          _currentPlayingSong = null;
+        }
+
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlayerStateChanged(playWhenReady, playbackState);
         }
@@ -110,9 +116,10 @@ class AudioPlayer {
     }
   }
 
-//  void initialize() {
-//    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
-//  }
+  void getInitialization() async {
+    Object object = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getInitialization');
+    print(object);
+  }
 
   void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
     _exoPlayerListeners.add(exoPlayerListener);
@@ -188,7 +195,6 @@ class AudioPlayer {
   }
 
   Future<Playlist> getPlaylist() async {
-
     String s = await channel
         .invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
     Map<String, dynamic> map = json.decode(s);
