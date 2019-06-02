@@ -330,8 +330,7 @@ public class AudioPlayer {
                     showAudioPlayerNotification();
                 }
             }
-
-
+            
             if (playbackState == Player.STATE_ENDED && MediaPlayerNotificationService.getInstance() != null) {
                 if (isShowingNotification) {
                     MediaPlayerNotificationService.getInstance().stopService(true);

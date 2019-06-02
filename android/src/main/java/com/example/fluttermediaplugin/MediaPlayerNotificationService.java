@@ -69,7 +69,6 @@ public class MediaPlayerNotificationService extends Service {
                     public String getCurrentContentTitle(Player player) {
                         Song song = FlutterMediaPlugin.getInstance().getAudioPlayer().getSongByIndex(player.getCurrentWindowIndex());
                         if (song == null) {
-                            stopSelf();
                             return "No Name";
                         }
                         return song.getTitle();
@@ -190,6 +189,7 @@ public class MediaPlayerNotificationService extends Service {
             if (albumArts != null) {
                 albumArts.clear();
             }
+            stopSelf();
         }
     }
 
