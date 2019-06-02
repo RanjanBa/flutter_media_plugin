@@ -40,16 +40,6 @@ class AudioPlayer {
     switch (method) {
       case "onMediaPeriodCreated":
         int windowIndex = arguments["windowIndex"];
-        print("onMediaPeriodCreated $windowIndex");
-        print(arguments["currentPlayingSong"]);
-        print(arguments["currentPlayingSong"][C.song_key_tag].toString());
-        print(arguments["currentPlayingSong"][C.song_title_tag].toString());
-        print(arguments["currentPlayingSong"][C.song_artist_tag].toString());
-        print(arguments["currentPlayingSong"][C.song_album_tag].toString());
-        print(arguments["currentPlayingSong"][C.song_album_art_uri_tag]
-            .toString());
-        print(arguments["currentPlayingSong"][C.song_uri_tag].toString());
-
         Map<String, dynamic> songMap = new Map();
         songMap[C.song_key_tag] =
             arguments["currentPlayingSong"][C.song_key_tag].toString();
@@ -117,8 +107,9 @@ class AudioPlayer {
   }
 
   void getInitialization() async {
-    Object object = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getInitialization');
-    print(object);
+    Object object = await channel.invokeMethod(
+        '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getInitialization');
+    print("getInitialize $object");
   }
 
   void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
@@ -198,7 +189,7 @@ class AudioPlayer {
     String s = await channel
         .invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
     Map<String, dynamic> map = json.decode(s);
-    Playlist playlist = Playlist.fromJson(map);
+    Playlist playlist = Playlist.fromMap(map);
     return playlist;
   }
 
