@@ -21,7 +21,7 @@ class Playlist {
   }
 
   void addSongAtIndex(int index, Song song) {
-    if (index >= _songs.length) {
+    if (index > _songs.length) {
       return;
     }
 
@@ -64,7 +64,7 @@ class Playlist {
     return -1;
   }
 
-  factory Playlist.fromJson(Map<String, dynamic> json) {
+  factory Playlist.fromMap(Map<String, dynamic> json) {
     Playlist playlist = Playlist(json[C.playlist_name].toString());
     List<dynamic> songs = json["songs"];
 
@@ -75,7 +75,7 @@ class Playlist {
     return playlist;
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     List<dynamic> songObject = List();
 
     for (Song song in _songs) {
