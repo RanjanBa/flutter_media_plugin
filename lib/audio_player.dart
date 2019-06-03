@@ -45,15 +45,15 @@ class AudioPlayer {
             arguments["currentPlayingSong"][C.song_key_tag].toString();
         songMap[C.song_title_tag] =
             arguments["currentPlayingSong"][C.song_title_tag].toString();
-        songMap[C.song_artist_tag] =
-            arguments["currentPlayingSong"][C.song_artist_tag].toString();
+        songMap[C.song_artists_tag] =
+            arguments["currentPlayingSong"][C.song_artists_tag].toString();
         songMap[C.song_album_tag] =
             arguments["currentPlayingSong"][C.song_album_tag].toString();
-        songMap[C.song_album_art_uri_tag] = arguments["currentPlayingSong"]
-                [C.song_album_art_uri_tag]
+        songMap[C.song_album_art_url_tag] = arguments["currentPlayingSong"]
+                [C.song_album_art_url_tag]
             .toString();
-        songMap[C.song_uri_tag] =
-            arguments["currentPlayingSong"][C.song_uri_tag].toString();
+        songMap[C.song_url_tag] =
+            arguments["currentPlayingSong"][C.song_url_tag].toString();
 
         Song song = Song.fromMap(songMap);
         if (song != null) _currentPlayingSong = song;
@@ -138,10 +138,10 @@ class AudioPlayer {
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
-        C.song_artist_tag: song.artist,
+        C.song_artists_tag: song.artists,
         C.song_album_tag: song.album,
-        C.song_album_art_uri_tag: song.album_art_uri,
-        C.song_uri_tag: song.uri,
+        C.song_album_art_url_tag: song.album_art_url,
+        C.song_url_tag: song.url,
       },
     );
   }
@@ -152,10 +152,10 @@ class AudioPlayer {
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
-        C.song_artist_tag: song.artist,
+        C.song_artists_tag: song.artists,
         C.song_album_tag: song.album,
-        C.song_album_art_uri_tag: song.album_art_uri,
-        C.song_uri_tag: song.uri,
+        C.song_album_art_url_tag: song.album_art_url,
+        C.song_url_tag: song.url,
       },
     );
   }
@@ -167,10 +167,10 @@ class AudioPlayer {
         'index': index,
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
-        C.song_artist_tag: song.artist,
+        C.song_artists_tag: song.artists,
         C.song_album_tag: song.album,
-        C.song_album_art_uri_tag: song.album_art_uri,
-        C.song_uri_tag: song.uri,
+        C.song_album_art_url_tag: song.album_art_url,
+        C.song_url_tag: song.url,
       },
     );
   }
@@ -199,10 +199,10 @@ class AudioPlayer {
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
-        C.song_artist_tag: song.artist,
+        C.song_artists_tag: song.artists,
         C.song_album_tag: song.album,
-        C.song_album_art_uri_tag: song.album_art_uri,
-        C.song_uri_tag: song.uri,
+        C.song_album_art_url_tag: song.album_art_url,
+        C.song_url_tag: song.url,
       },
     );
   }
@@ -258,45 +258,45 @@ class AudioPlayer {
 class Song {
   final String key;
   final String title;
-  final String artist;
+  final String artists;
   final String album;
-  final String album_art_uri; // ignore: non_constant_identifier_names
-  final String uri;
+  final String album_art_url; // ignore: non_constant_identifier_names
+  final String url;
 
   Song({
     @required this.key,
     @required this.title,
-    @required this.artist,
+    @required this.artists,
     @required this.album,
-    @required this.album_art_uri, // ignore: non_constant_identifier_names
-    @required this.uri,
+    @required this.album_art_url, // ignore: non_constant_identifier_names
+    @required this.url,
   });
 
   Map<String, dynamic> toJson() {
     return {
       C.song_key_tag: key,
       C.song_title_tag: title,
-      C.song_artist_tag: artist,
+      C.song_artists_tag: artists,
       C.song_album_tag: album,
-      C.song_album_art_uri_tag: album_art_uri,
-      C.song_uri_tag: uri,
+      C.song_album_art_url_tag: album_art_url,
+      C.song_url_tag: url,
     };
   }
 
   factory Song.fromMap(Map<String, dynamic> map) {
     String key = map[C.song_key_tag];
     String title = map[C.song_title_tag];
-    String artist = map[C.song_artist_tag];
+    String artists = map[C.song_artists_tag];
     String album = map[C.song_album_tag];
-    String albumArtUri = map[C.song_album_art_uri_tag];
-    String uri = map[C.song_uri_tag];
+    String albumArtUrl = map[C.song_album_art_url_tag];
+    String url = map[C.song_url_tag];
     Song song = Song(
         key: key,
         title: title,
-        artist: artist,
+        artists: artists,
         album: album,
-        album_art_uri: albumArtUri,
-        uri: uri);
+        album_art_url: albumArtUrl,
+        url: url);
     return song;
   }
 }
@@ -312,16 +312,16 @@ class C {
   static String song_title_tag = "title";
 
   // ignore: non_constant_identifier_names
-  static String song_artist_tag = "artist";
+  static String song_artists_tag = "artists";
 
   // ignore: non_constant_identifier_names
   static String song_album_tag = "album";
 
   // ignore: non_constant_identifier_names
-  static String song_album_art_uri_tag = "album_art_uri";
+  static String song_album_art_url_tag = "album_art_url";
 
   // ignore: non_constant_identifier_names
-  static String song_uri_tag = "uri";
+  static String song_url_tag = "url";
 
   // ignore: non_constant_identifier_names
   static int REPEAT_MODE_OFF = 0;

@@ -9,25 +9,25 @@ import java.util.Map;
 public class Song {
     private String key;
     private String title;
-    private String artist;
+    private String artists;
     private String album;
-    private String album_art_uri;
-    private String uri;
+    private String album_art_url;
+    private String url;
 
     static String song_key_tag = "key";
     static String song_title_tag = "title";
-    static String song_artist_tag = "artist";
+    static String song_artists_tag = "artists";
     static String song_album_tag = "album";
-    static String song_album_art_uri_tag = "album_art_uri";
-    static String song_uri_tag = "uri";
+    static String song_album_art_url_tag = "album_art_url";
+    static String song_url_tag = "uri";
 
-    public Song(String key, String title, String artist, String album, String album_art_uri, String uri) {
+    public Song(String key, String title, String artist, String album, String album_art_url, String url) {
         this.key = key;
         this.title = title;
-        this.artist = artist;
+        this.artists = artist;
         this.album = album;
-        this.album_art_uri = album_art_uri;
-        this.uri = uri;
+        this.album_art_url = album_art_url;
+        this.url = url;
     }
 
     public String getKey() {
@@ -35,11 +35,11 @@ public class Song {
     }
 
     public String getUri() {
-        return uri;
+        return url;
     }
 
     public String getAlbumArtUri() {
-        return album_art_uri;
+        return album_art_url;
     }
 
     public String getAlbum() {
@@ -47,7 +47,7 @@ public class Song {
     }
 
     public String getArtist() {
-        return artist;
+        return artists;
     }
 
     public String getTitle() {
@@ -60,10 +60,10 @@ public class Song {
         try {
             objectMap.put(song_key_tag, song.getKey());
             objectMap.put(song_title_tag, song.getTitle());
-            objectMap.put(song_artist_tag, song.getArtist());
+            objectMap.put(song_artists_tag, song.getArtist());
             objectMap.put(song_album_tag, song.getAlbum());
-            objectMap.put(song_album_art_uri_tag, song.getAlbumArtUri());
-            objectMap.put(song_uri_tag, song.getUri());
+            objectMap.put(song_album_art_url_tag, song.getAlbumArtUri());
+            objectMap.put(song_url_tag, song.getUri());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -75,12 +75,11 @@ public class Song {
         try {
             String key = jsonObject.getString(Song.song_key_tag);
             String title = jsonObject.getString(Song.song_title_tag);
-            String artist = jsonObject.getString(Song.song_artist_tag);
+            String artists = jsonObject.getString(Song.song_artists_tag);
             String album = jsonObject.getString(Song.song_album_tag);
-            String album_art_uri = jsonObject.getString(Song.song_album_art_uri_tag);
-            String uri = jsonObject.getString(Song.song_uri_tag);
-            Song song = new Song(key, title, artist, album, album_art_uri, uri);
-            return song;
+            String album_art_url = jsonObject.getString(Song.song_album_art_url_tag);
+            String url = jsonObject.getString(Song.song_url_tag);
+            return new Song(key, title, artists, album, album_art_url, url);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -92,10 +91,10 @@ public class Song {
         Map<String, Object> songMap = new HashMap<>();
         songMap.put(song_key_tag, song.key);
         songMap.put(song_title_tag, song.title);
-        songMap.put(song_artist_tag, song.artist);
+        songMap.put(song_artists_tag, song.artists);
         songMap.put(song_album_tag, song.album);
-        songMap.put(song_album_art_uri_tag, song.album_art_uri);
-        songMap.put(song_uri_tag, song.uri);
+        songMap.put(song_album_art_url_tag, song.album_art_url);
+        songMap.put(song_url_tag, song.url);
         return songMap;
     }
 }

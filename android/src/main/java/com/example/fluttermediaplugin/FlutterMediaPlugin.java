@@ -322,11 +322,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             case "addAndPlay": {
                 String key = call.argument(Song.song_key_tag);
                 String title = call.argument(Song.song_title_tag);
-                String artist = call.argument(Song.song_artist_tag);
+                String artists = call.argument(Song.song_artists_tag);
                 String album = call.argument(Song.song_album_tag);
-                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                String uri = call.argument(Song.song_uri_tag);
-                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                String album_art_url = call.argument(Song.song_album_art_url_tag);
+                String url = call.argument(Song.song_url_tag);
+                Song song = new Song(key, title, artists, album, album_art_url, url);
                 audioPlayer.addAndPlay(song);
                 audioPlayer.play();
                 result.success(null);
@@ -335,11 +335,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             case "addSong": {
                 String key = call.argument(Song.song_key_tag);
                 String title = call.argument(Song.song_title_tag);
-                String artist = call.argument(Song.song_artist_tag);
+                String artists = call.argument(Song.song_artists_tag);
                 String album = call.argument(Song.song_album_tag);
-                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                String uri = call.argument(Song.song_uri_tag);
-                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                String album_art_url = call.argument(Song.song_album_art_url_tag);
+                String url = call.argument(Song.song_url_tag);
+                Song song = new Song(key, title, artists, album, album_art_url, url);
                 audioPlayer.addSong(song);
                 result.success(null);
                 break;
@@ -349,11 +349,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 int index = call.argument("index");
                 String key = call.argument(Song.song_key_tag);
                 String title = call.argument(Song.song_title_tag);
-                String artist = call.argument(Song.song_artist_tag);
+                String artists = call.argument(Song.song_artists_tag);
                 String album = call.argument(Song.song_album_tag);
-                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                String uri = call.argument(Song.song_uri_tag);
-                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                String album_art_url = call.argument(Song.song_album_art_url_tag);
+                String url = call.argument(Song.song_url_tag);
+                Song song = new Song(key, title, artists, album, album_art_url, url);
                 audioPlayer.addSongAtIndex(index, song);
                 result.success(null);
                 break;
@@ -361,11 +361,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             case "removeSong": {
                 String key = call.argument(Song.song_key_tag);
                 String title = call.argument(Song.song_title_tag);
-                String artist = call.argument(Song.song_artist_tag);
+                String artists = call.argument(Song.song_artists_tag);
                 String album = call.argument(Song.song_album_tag);
-                String album_art_uri = call.argument(Song.song_album_art_uri_tag);
-                String uri = call.argument(Song.song_uri_tag);
-                Song song = new Song(key, title, artist, album, album_art_uri, uri);
+                String album_art_url = call.argument(Song.song_album_art_url_tag);
+                String url = call.argument(Song.song_url_tag);
+                Song song = new Song(key, title, artists, album, album_art_url, url);
                 audioPlayer.removeSong(song);
                 result.success(null);
                 break;
