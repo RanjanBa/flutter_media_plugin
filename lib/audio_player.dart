@@ -185,7 +185,7 @@ class AudioPlayer {
     );
   }
 
-  void playNext() {
+  void playNext(Song song) {
     channel.invokeMethod(
       '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/playNext',
       {
