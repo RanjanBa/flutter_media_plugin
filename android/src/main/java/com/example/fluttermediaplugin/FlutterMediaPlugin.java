@@ -355,6 +355,18 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 result.success(null);
                 break;
             }
+            case "playNext" {
+              String key = call.argument(Song.song_key_tag);
+              String title = call.argument(Song.song_title_tag);
+              String artists = call.argument(Song.song_artists_tag);
+              String album = call.argument(Song.song_album_tag);
+              String album_art_url = call.argument(Song.song_album_art_url_tag);
+              String url = call.argument(Song.song_url_tag);
+              Song song = new Song(key, title, artists, album, album_art_url, url);
+              audioPlayer.playNext(song);
+              result.success(null);
+              break;
+            }
             case "addSongAtIndex": {
                 //noinspection ConstantConditions
                 int index = call.argument("index");

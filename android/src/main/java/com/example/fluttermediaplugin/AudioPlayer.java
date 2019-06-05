@@ -254,6 +254,10 @@ public class AudioPlayer {
         playlist.skipToPrevious();
     }
 
+    public void playNext(Song song) {
+      playlist.addSong(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
+    }
+
     public void addAndPlay(Song song) {
         playlist.addAndPlay(song);
     }
@@ -372,4 +376,3 @@ public class AudioPlayer {
         }
     }
 }
-

@@ -185,6 +185,20 @@ class AudioPlayer {
     );
   }
 
+  void playNext() {
+    channel.invokeMethod(
+      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/playNext',
+      {
+        C.song_key_tag: song.key,
+        C.song_title_tag: song.title,
+        C.song_artists_tag: song.artists,
+        C.song_album_tag: song.album,
+        C.song_album_art_url_tag: song.album_art_url,
+        C.song_url_tag: song.url,
+      },
+    );
+  }
+
   void addSongAtIndex(int index, Song song) {
     channel.invokeMethod(
       '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/addSongAtIndex',
