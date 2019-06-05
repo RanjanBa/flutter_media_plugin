@@ -75,7 +75,7 @@ class Playlist {
     return playlist;
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     List<dynamic> songObject = List();
 
     for (Song song in _songs) {
