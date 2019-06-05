@@ -41,7 +41,6 @@ class AudioPlayer {
     print("initialize ${arguments.runtimeType}");
     if(arguments != null)
     {
-      print("initilize arguments " + arguments["currentPlayingSong"][C.song_key_tag].toString());
       _playWhenReady = arguments["playWhenReady"];
       _playbackState = arguments["playbackState"];
 
@@ -63,6 +62,8 @@ class AudioPlayer {
         Song song = Song.fromMap(songMap);
         if (song != null) _currentPlayingSong = song;
       }
+
+      print("playWhenReady $_playWhenReady; playbackState $_playbackState");
     }
   }
 

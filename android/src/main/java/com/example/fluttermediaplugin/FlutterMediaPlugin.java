@@ -82,11 +82,10 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private void sendAudioInitialization(Result result) {
         int playbackState = audioPlayer.getSimpleExoPlayer().getPlaybackState();
         boolean playWhenReady = audioPlayer.getSimpleExoPlayer().getPlayWhenReady();
-        Log.d(TAG, "onPlayerStateChanged : " + playbackState);
         Map<String, Object> args = new HashMap<>();
         args.put("playWhenReady", playWhenReady);
         args.put("playbackState", playbackState);
-        
+
         Song song = audioPlayer.getSongByIndex(audioPlayer.getSimpleExoPlayer().getCurrentWindowIndex());
         if (song == null) {
           args.put("currentPlayingSong", null);
@@ -95,7 +94,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
           Map<String, Object> songMap = Song.toMap(song);
           args.put("currentPlayingSong", songMap);
         }
-        Log.d(TAG, "sendAudioInitialization()");
         result.success(args);
     }
 
