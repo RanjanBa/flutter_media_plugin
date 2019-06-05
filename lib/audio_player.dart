@@ -42,23 +42,27 @@ class AudioPlayer {
     if(arguments != null)
     {
       print("initilize arguments " + arguments["currentPlayingSong"][C.song_key_tag].toString());
-      Map<String, dynamic> songMap = new Map();
+      _playWhenReady = arguments["playWhenReady"];
+      _playbackState = arguments["playbackState"];
+
+      Map<dynamic, dynamic> songArgs = arguments["currentPlayingSong"];
+      if(songArgs != null)
+      {
+        Map<String, dynamic> songMap = new Map();
         songMap[C.song_key_tag] =
-            arguments["currentPlayingSong"][C.song_key_tag].toString();
+            songArgs[C.song_key_tag].toString();
         songMap[C.song_title_tag] =
-            arguments["currentPlayingSong"][C.song_title_tag].toString();
+            songArgs[C.song_title_tag].toString();
         songMap[C.song_artists_tag] =
-            arguments["currentPlayingSong"][C.song_artists_tag].toString();
+            songArgs[C.song_artists_tag].toString();
         songMap[C.song_album_tag] =
-            arguments["currentPlayingSong"][C.song_album_tag].toString();
-        songMap[C.song_album_art_url_tag] = arguments["currentPlayingSong"]
-                [C.song_album_art_url_tag]
-            .toString();
-        songMap[C.song_url_tag] =
-            arguments["currentPlayingSong"][C.song_url_tag].toString();
+            songArgs[C.song_album_tag].toString();
+        songMap[C.song_album_art_url_tag] = songArgs[C.song_album_art_url_tag].toString();
+        songMap[C.song_url_tag] = songArgs[C.song_url_tag].toString();
 
         Song song = Song.fromMap(songMap);
         if (song != null) _currentPlayingSong = song;
+      }
     }
   }
 
