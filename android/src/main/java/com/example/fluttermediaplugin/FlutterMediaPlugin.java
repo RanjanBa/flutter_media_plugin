@@ -79,7 +79,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         audioPlayer.addExoPlayerListener(audioExoPlayerListener);
     }
 
-    private void getAudioInitialization(Result result) {
+    private void sendAudioInitialization(Result result) {
         int playbackState = audioPlayer.getSimpleExoPlayer().getPlaybackState();
         boolean playWhenReady = audioPlayer.getSimpleExoPlayer().getPlayWhenReady();
         Log.d(TAG, "onPlayerStateChanged : " + playbackState);
@@ -242,7 +242,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
             if (instance.audioPlayer != null) {
                 instance.audioPlayer.removeExoPlayerListener(instance.audioExoPlayerListener);
-
                 instance.audioExoPlayerListener = instance.GetExoPlayerListener(true);
                 instance.audioPlayer.addExoPlayerListener(instance.audioExoPlayerListener);
             }
@@ -262,8 +261,15 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             Log.d(TAG, mediaMethodCall.toString());
             if (mediaMethodCall.mediaType.equals(AUDIO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {
-                    initializeAudioPlayer();
-                    result.success(null);
+                    if(audioPlayer == null)
+                    {
+                        initializeAudioPlayer();
+                        result.success(null);
+                    }
+                    else {
+                        Log.d(TAG, "Already audioPlayer is initialized");
+                        sendAudioInitialization(result);
+                    }
                     return;
                 }
 
@@ -276,7 +282,12 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 audioMethodCall(mediaMethodCall.command, call, result);
             } else if (mediaMethodCall.mediaType.equals(VIDEO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {
-                    initializeVideoPlayer();
+                    if(videoPlayer == null) {
+                        initializeVideoPlayer();
+                    }
+                    else{
+                        Log.d(TAG, "Already audioPlayer is initialized");
+                    }
                     result.success(null);
                     return;
                 }
@@ -297,9 +308,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
     private void audioMethodCall(String method, MethodCall call, Result result) {
         switch (method) {
-            case "getInitialization":
-                getAudioInitialization(result);
-                break;
             case "play":
                 Log.d(TAG, "play");
                 audioPlayer.play();

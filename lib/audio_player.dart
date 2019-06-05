@@ -33,7 +33,8 @@ class AudioPlayer {
   Song get currentPlayingSong => _currentPlayingSong;
 
   AudioPlayer({this.playerId, this.channel}) {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
+    Object object = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
+    print("initialize $object");
   }
 
   void callMethod(String method, dynamic arguments) {
@@ -104,12 +105,6 @@ class AudioPlayer {
       default:
         break;
     }
-  }
-
-  void getInitialization() async {
-    Object object = await channel.invokeMethod(
-        '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getInitialization');
-    print("getInitialize $object");
   }
 
   void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
