@@ -39,6 +39,7 @@ class AudioPlayer {
   void _initialize() async {
     Object object = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
     print("initialize ${object.runtimeType}");
+    
   }
 
   void callMethod(String method, dynamic arguments) {
