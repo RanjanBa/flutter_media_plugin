@@ -18,7 +18,7 @@ public class Song {
     static String song_title_tag = "title";
     static String song_artists_tag = "artists";
     static String song_album_tag = "album";
-    static String song_album_art_url_tag = "album_art_url";
+    static String song_album_art_url_tag = "art_url";
     static String song_url_tag = "uri";
 
     public Song(String key, String title, String artist, String album, String album_art_url, String url) {

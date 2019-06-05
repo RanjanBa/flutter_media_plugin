@@ -316,9 +316,9 @@ class C {
 
   // ignore: non_constant_identifier_names
   static String song_album_tag = "album";
-  
+
   // ignore: non_constant_identifier_names
-  static String song_album_art_url_tag = "album_art_url";
+  static String song_album_art_url_tag = "art_url";
 
   // ignore: non_constant_identifier_names
   static String song_url_tag = "url";
