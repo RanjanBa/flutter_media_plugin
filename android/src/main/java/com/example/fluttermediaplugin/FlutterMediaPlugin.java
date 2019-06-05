@@ -355,7 +355,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 result.success(null);
                 break;
             }
-            case "playNext" {
+            case "playNext": {
               String key = call.argument(Song.song_key_tag);
               String title = call.argument(Song.song_title_tag);
               String artists = call.argument(Song.song_artists_tag);
