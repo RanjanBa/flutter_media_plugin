@@ -37,11 +37,28 @@ class AudioPlayer {
   }
 
   void _initialize() async {
-    Map<dynamic, dynamic> object = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
-    print("initialize ${object.runtimeType}");
-    if(object != null)
+    Map<dynamic, dynamic> arguments = await channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
+    print("initialize ${arguments.runtimeType}");
+    if(arguments != null)
     {
-      print("initilize object " + object["currentPlayingSong"][C.song_key_tag].toString());
+      print("initilize arguments " + arguments["currentPlayingSong"][C.song_key_tag].toString());
+      Map<String, dynamic> songMap = new Map();
+        songMap[C.song_key_tag] =
+            arguments["currentPlayingSong"][C.song_key_tag].toString();
+        songMap[C.song_title_tag] =
+            arguments["currentPlayingSong"][C.song_title_tag].toString();
+        songMap[C.song_artists_tag] =
+            arguments["currentPlayingSong"][C.song_artists_tag].toString();
+        songMap[C.song_album_tag] =
+            arguments["currentPlayingSong"][C.song_album_tag].toString();
+        songMap[C.song_album_art_url_tag] = arguments["currentPlayingSong"]
+                [C.song_album_art_url_tag]
+            .toString();
+        songMap[C.song_url_tag] =
+            arguments["currentPlayingSong"][C.song_url_tag].toString();
+
+        Song song = Song.fromMap(songMap);
+        if (song != null) _currentPlayingSong = song;
     }
   }
 
