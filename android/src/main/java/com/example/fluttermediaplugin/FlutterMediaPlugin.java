@@ -92,6 +92,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             return;
         Map<String, Object> songMap = Song.toMap(song);
         args.put("currentPlayingSong", songMap);
+        Log.d(TAG, "sendAudioInitialization()");
         result.success(args);
     }
 
