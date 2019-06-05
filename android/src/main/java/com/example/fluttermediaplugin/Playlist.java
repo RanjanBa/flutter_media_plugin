@@ -105,7 +105,7 @@ public class Playlist {
     }
 
     public void addSong(int index, Song song) {
-        if (index >= songs.size() && index >= concatenatingMediaSource.getSize()) {
+        if (index > songs.size() && index >= concatenatingMediaSource.getSize()) {
             Log.w(TAG, index + " is greater than size of songs : " + songs.size());
             return;
         }
