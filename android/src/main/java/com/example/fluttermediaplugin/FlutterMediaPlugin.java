@@ -326,6 +326,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 String album = call.argument(Song.song_album_tag);
                 String album_art_url = call.argument(Song.song_album_art_url_tag);
                 String url = call.argument(Song.song_url_tag);
+                Lod.d(TAG, "url : " + url);
                 Song song = new Song(key, title, artists, album, album_art_url, url);
                 audioPlayer.addAndPlay(song);
                 audioPlayer.play();
