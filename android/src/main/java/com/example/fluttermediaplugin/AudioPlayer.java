@@ -42,7 +42,6 @@ public class AudioPlayer {
 
     private boolean isShowingNotification = false;
     private Playlist playlist;
-
     public Playlist getPlaylist() {
         return playlist;
     }
@@ -50,7 +49,6 @@ public class AudioPlayer {
     public Song getSongByIndex(int index) {
         if (playlist == null)
             return null;
-
         return playlist.getSongAtIndex(index);
     }
 
@@ -255,7 +253,7 @@ public class AudioPlayer {
     }
 
     public void playNext(Song song) {
-      playlist.addSong(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
+        playlist.addSong(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
     }
 
     public void addAndPlay(Song song) {

@@ -81,7 +81,6 @@ import java.util.Map;
  * </ul>
  */
 public class PlayerNotificationManager {
-
     /**
      * An adapter to provide content assets of the media currently playing.
      */

@@ -24,7 +24,6 @@ import java.util.List;
 public class Playlist {
     private static final String TAG = "Playlist";
     private static String PLAYLIST_NAME = "playlistName";
-
     private String playlistName;
     private ConcatenatingMediaSource concatenatingMediaSource;
     private ArrayList<Song> songs;
@@ -43,7 +42,6 @@ public class Playlist {
     public Song getSongAtIndex(int index) {
         if (getSize() <= 0 && index >= getSize())
             return null;
-
         return songs.get(index);
     }
 
