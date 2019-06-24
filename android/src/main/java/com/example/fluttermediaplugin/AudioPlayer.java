@@ -231,6 +231,10 @@ public class AudioPlayer {
         simpleExoPlayer.setRepeatMode(repeatMode);
     }
 
+    public int getRepeatMode() {
+        return simpleExoPlayer.getRepeatMode();
+    }
+
     public void skipToIndex(int index) {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;

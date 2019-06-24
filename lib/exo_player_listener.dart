@@ -6,7 +6,7 @@ class ExoPlayerListener {
   final Function(int) _onBufferedUpdate;
   final Function(int) _onMediaPeriodCreated;
   final Function(String) _onPlayerStatus;
-  final Function(Playlist) _onPlaylistChanged;
+  final Function(int) _onRepeatModeChanged;
 
   ExoPlayerListener(
       {onPlayerStateChanged,
@@ -14,13 +14,14 @@ class ExoPlayerListener {
         onBufferedUpdate,
         onMediaPeriodCreated,
         onPlayerStatus,
-        onPlaylistChanged})
+        onPlaylistChanged,
+        onRepeatModeChanged})
       : _onPlayerStateChanged = onPlayerStateChanged,
         _onPlaybackUpdate = onPlaybackUpdate,
         _onBufferedUpdate = onBufferedUpdate,
         _onMediaPeriodCreated = onMediaPeriodCreated,
         _onPlayerStatus = onPlayerStatus,
-        _onPlaylistChanged = onPlaylistChanged;
+        _onRepeatModeChanged = onRepeatModeChanged;
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
@@ -70,9 +71,9 @@ class ExoPlayerListener {
     }
   }
 
-  void onPlaylistChanged(Playlist playlist) {
-    if (_onPlaylistChanged != null) {
-      _onPlaylistChanged(playlist);
+  void onRepeatModeChanged(int repeatMode) {
+    if (_onRepeatModeChanged != null) {
+      _onRepeatModeChanged(repeatMode);
     }
   }
 }

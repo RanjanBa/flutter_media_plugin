@@ -127,6 +127,12 @@ class AudioPlayer {
           listener.onPlayerStatus(message);
         }
         break;
+      case "onRepeatModeChanged":
+        int repeatMode = arguments['repeatMode'];
+        for(ExoPlayerListener listener in _exoPlayerListeners) {
+          listener.onRepeatModeChanged(repeatMode);
+        }
+        break;
       default:
         break;
     }
@@ -259,6 +265,13 @@ class AudioPlayer {
         },
       );
     }
+  }
+
+  Future<int> getRepeatMode() async {
+    int mode = await channel.invokeMethod(
+      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getRepeatMode',
+    );
+    return mode;
   }
 
   void skipToNext() {

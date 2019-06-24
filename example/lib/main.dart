@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
   //"https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
 
   int _textureId;
-
+  int _repeatMode = 0;
   @override
   void initState() {
     super.initState();
@@ -58,6 +58,7 @@ class _MyAppState extends State<MyApp> {
       onBufferedUpdate: _onBufferedUpdate,
       onMediaPeriodCreated: _onMediaPeriodCreated,
       onPlayerStatus: _onPlayerStatus,
+      onRepeatModeChanged: _onRepeatModeChanged,
     );
     _videoExoPlayerListener =
         VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
@@ -159,6 +160,12 @@ class _MyAppState extends State<MyApp> {
     setCurrentSong(windowIndex);
   }
 
+  void _onRepeatModeChanged(int repeatMode) {
+    setState(() {
+      _repeatMode = repeatMode;
+    });
+  }
+
   void setCurrentSong(int windowIndex) async {
     Playlist playlist = await _audioPlayer.getPlaylist();
     print("length ${playlist.getSize()}");
@@ -256,11 +263,17 @@ class _MyAppState extends State<MyApp> {
             ),
             Center(
               child: RaisedButton(
-                onPressed: () {
-                  _audioPlayer.setRepeatMode(C.REPEAT_MODE_ONE);
+                onPressed: () async {
+                  int cMode = await _audioPlayer.getRepeatMode();
+                  _audioPlayer.setRepeatMode((cMode + 1) % 3);
                 },
-                child: Text("Repeat one"),
+                child: Text("RepeatMode Change"),
               ),
+            ),
+            Center(
+              child: Text(
+                "repeat mode : $_repeatMode"
+              )
             ),
             ListView.builder(
               shrinkWrap: true,

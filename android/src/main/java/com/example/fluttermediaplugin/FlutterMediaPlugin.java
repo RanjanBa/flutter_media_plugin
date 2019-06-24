@@ -134,11 +134,31 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             }
 
             public void onRepeatModeChanged(int repeatMode) {
-                Log.d(TAG, "onRepeatModeChanged");
+                Map<String, Object> args = new HashMap<>();
+                args.put("repeatMode", repeatMode);
+                String method;
+                if (isAudio) {
+                    method = AUDIO_MEDIA_TYPE;
+                } else {
+                    method = VIDEO_MEDIA_TYPE;
+                }
+                method += "/onRepeatModeChanged";
+                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
+                channel.invokeMethod(method, args);
             }
 
             public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-                Log.d(TAG, "onShuffleModeEnabledChanged");
+                Map<String, Object> args = new HashMap<>();
+                args.put("shuffleModeEnabled", shuffleModeEnabled);
+                String method;
+                if (isAudio) {
+                    method = AUDIO_MEDIA_TYPE;
+                } else {
+                    method = VIDEO_MEDIA_TYPE;
+                }
+                method += "/onShuffleModeEnabledChanged";
+                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
+                channel.invokeMethod(method, args);
             }
 
             public void onPlayerError(ExoPlaybackException error) {
@@ -420,6 +440,10 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 int repeatMode = call.argument("repeatMode");
                 audioPlayer.setRepeatMode(repeatMode);
                 result.success(null);
+                break;
+            case "getRepeatMode":
+                int mode = audioPlayer.getRepeatMode();
+                result.success(mode);
                 break;
             case "skipToNext":
                 audioPlayer.skipToNext();
