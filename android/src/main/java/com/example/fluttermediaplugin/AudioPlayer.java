@@ -235,6 +235,14 @@ public class AudioPlayer {
         return simpleExoPlayer.getRepeatMode();
     }
 
+    public void setShuffleModeEnabled(boolean shuffleModeEnabled) {
+        simpleExoPlayer.setShuffleModeEnabled(shuffleModeEnabled);
+    }
+
+    public boolean getShuffleModeEnabled() {
+        return simpleExoPlayer.getShuffleModeEnabled();
+    }
+
     public void skipToIndex(int index) {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;

@@ -44,6 +44,7 @@ class _MyAppState extends State<MyApp> {
 
   int _textureId;
   int _repeatMode = 0;
+  bool _shuffleModeEnabled = false;
   @override
   void initState() {
     super.initState();
@@ -59,6 +60,7 @@ class _MyAppState extends State<MyApp> {
       onMediaPeriodCreated: _onMediaPeriodCreated,
       onPlayerStatus: _onPlayerStatus,
       onRepeatModeChanged: _onRepeatModeChanged,
+      onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
     );
     _videoExoPlayerListener =
         VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
@@ -163,6 +165,12 @@ class _MyAppState extends State<MyApp> {
   void _onRepeatModeChanged(int repeatMode) {
     setState(() {
       _repeatMode = repeatMode;
+    });
+  }
+
+  void _onShuffleModeEnabledChanged(bool shuffleModeEnabled) {
+    setState(() {
+      _shuffleModeEnabled = shuffleModeEnabled;
     });
   }
 
@@ -274,6 +282,20 @@ class _MyAppState extends State<MyApp> {
               child: Text(
                 "repeat mode : $_repeatMode"
               )
+            ),
+            Center(
+              child: RaisedButton(
+                onPressed: () async {
+                  bool cShuffle = await _audioPlayer.getShuffleModeEnabled();
+                  _audioPlayer.setShuffleModeEnabled(!cShuffle);
+                },
+                child: Text("ShuffleMode Change"),
+              ),
+            ),
+            Center(
+                child: Text(
+                    "shuffle mode : $_shuffleModeEnabled"
+                )
             ),
             ListView.builder(
               shrinkWrap: true,

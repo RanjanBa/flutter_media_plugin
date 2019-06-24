@@ -161,10 +161,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 channel.invokeMethod(method, args);
             }
 
-            public void onPlayerError(ExoPlaybackException error) {
-                Log.d(TAG, "onPlayerError");
-            }
-
             public void onPositionDiscontinuity(int reason) {
                 Log.d(TAG, "onPositionDiscontinuity");
             }
@@ -237,6 +233,10 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 }
                 method += "/onPlayerStatus";
                 channel.invokeMethod(method, args);
+            }
+
+            public void onPlayerError(ExoPlaybackException error) {
+                Log.d(TAG, "onPlayerError");
             }
         };
     }
@@ -435,16 +435,30 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 audioPlayer.clearPlaylist();
                 result.success(null);
                 break;
-            case "setRepeatMode":
+            case "setRepeatMode": {
                 //noinspection ConstantConditions
                 int repeatMode = call.argument("repeatMode");
                 audioPlayer.setRepeatMode(repeatMode);
                 result.success(null);
                 break;
-            case "getRepeatMode":
-                int mode = audioPlayer.getRepeatMode();
-                result.success(mode);
+            }
+            case "getRepeatMode": {
+                int repeatMode = audioPlayer.getRepeatMode();
+                result.success(repeatMode);
                 break;
+            }
+            case "setShuffleModeEnabled": {
+                //noinspection ConstantConditions
+                boolean shuffleModeEnabled = call.argument("shuffleModeEnabled");
+                audioPlayer.setShuffleModeEnabled(shuffleModeEnabled);
+                result.success(null);
+                break;
+            }
+            case "getShuffleModeEnabled": {
+                boolean shuffleModeEnabled = audioPlayer.getShuffleModeEnabled();
+                result.success(shuffleModeEnabled);
+                break;
+            }
             case "skipToNext":
                 audioPlayer.skipToNext();
                 result.success(null);

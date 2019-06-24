@@ -133,6 +133,12 @@ class AudioPlayer {
           listener.onRepeatModeChanged(repeatMode);
         }
         break;
+      case "onShuffleModeEnabledChanged":
+        bool shuffleModeEnabled = arguments['shuffleModeEnabled'];
+        for(ExoPlayerListener listener in _exoPlayerListeners) {
+          listener.onShuffleModeEnabledChanged(shuffleModeEnabled);
+        }
+        break;
       default:
         break;
     }
@@ -272,6 +278,22 @@ class AudioPlayer {
       '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getRepeatMode',
     );
     return mode;
+  }
+
+  void setShuffleModeEnabled(bool shuffleModeEnabled) {
+    channel.invokeMethod(
+      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setShuffleModeEnabled',
+      {
+        'shuffleModeEnabled': shuffleModeEnabled,
+      },
+    );
+  }
+
+  Future<bool> getShuffleModeEnabled() async {
+    bool shuffleModeEnabled = await channel.invokeMethod(
+      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getShuffleModeEnabled',
+    );
+    return shuffleModeEnabled;
   }
 
   void skipToNext() {

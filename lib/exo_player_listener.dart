@@ -1,5 +1,3 @@
-import 'package:flutter_media_plugin/playlist.dart';
-
 class ExoPlayerListener {
   final Function(bool, int) _onPlayerStateChanged;
   final Function(int, int) _onPlaybackUpdate;
@@ -7,6 +5,7 @@ class ExoPlayerListener {
   final Function(int) _onMediaPeriodCreated;
   final Function(String) _onPlayerStatus;
   final Function(int) _onRepeatModeChanged;
+  final Function(bool) _onShuffleModeEnabledChanged;
 
   ExoPlayerListener(
       {onPlayerStateChanged,
@@ -14,14 +13,15 @@ class ExoPlayerListener {
         onBufferedUpdate,
         onMediaPeriodCreated,
         onPlayerStatus,
-        onPlaylistChanged,
-        onRepeatModeChanged})
+        onRepeatModeChanged,
+        onShuffleModeEnabledChanged})
       : _onPlayerStateChanged = onPlayerStateChanged,
         _onPlaybackUpdate = onPlaybackUpdate,
         _onBufferedUpdate = onBufferedUpdate,
         _onMediaPeriodCreated = onMediaPeriodCreated,
         _onPlayerStatus = onPlayerStatus,
-        _onRepeatModeChanged = onRepeatModeChanged;
+        _onRepeatModeChanged = onRepeatModeChanged,
+        _onShuffleModeEnabledChanged = onShuffleModeEnabledChanged;
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
@@ -74,6 +74,12 @@ class ExoPlayerListener {
   void onRepeatModeChanged(int repeatMode) {
     if (_onRepeatModeChanged != null) {
       _onRepeatModeChanged(repeatMode);
+    }
+  }
+
+  void onShuffleModeEnabledChanged(bool shuffleModeEnabled) {
+    if(_onShuffleModeEnabledChanged != null) {
+      _onShuffleModeEnabledChanged(shuffleModeEnabled);
     }
   }
 }

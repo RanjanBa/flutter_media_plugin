@@ -85,7 +85,6 @@ class VideoExoPlayerListener extends ExoPlayerListener {
     onBufferedUpdate,
     onMediaPeriodCreated,
     onPlayerStatus,
-    onPlaylistChanged,
     this.onVideoInitialize,
   }) : super(
     onPlayerStateChanged: onPlayerStateChanged,
@@ -93,6 +92,5 @@ class VideoExoPlayerListener extends ExoPlayerListener {
     onBufferedUpdate: onBufferedUpdate,
     onMediaPeriodCreated: onMediaPeriodCreated,
     onPlayerStatus: onPlayerStatus,
-    onPlaylistChanged: onPlaylistChanged,
   );
 }
