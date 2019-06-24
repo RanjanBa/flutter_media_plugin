@@ -330,14 +330,8 @@ public class AudioPlayer {
                 }
             } else {
                 if (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY) {
-                    Log.d(TAG, "Media Notification is null" + playbackState);
+                    Log.d(TAG, "Media Notification is null " + playbackState);
                     showAudioPlayerNotification();
-                }
-            }
-
-            if (playbackState == Player.STATE_ENDED && MediaPlayerNotificationService.getInstance() != null) {
-                if (isShowingNotification) {
-                    MediaPlayerNotificationService.getInstance().stopService(true);
                 }
             }
 

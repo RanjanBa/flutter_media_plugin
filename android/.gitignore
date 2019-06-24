@@ -4,4 +4,5 @@
 /captures
 /.settings/
 /.classpath
-/.project
+*.project
+.gradle/
