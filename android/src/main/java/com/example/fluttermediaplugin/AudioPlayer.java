@@ -335,6 +335,7 @@ public class AudioPlayer {
                     if (playWhenReady) {
                         MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setOngoing(true);
                     } else {
+                        MediaPlayerNotificationService.getInstance().stopService(false);
                         MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setOngoing(false);
                     }
                 }
