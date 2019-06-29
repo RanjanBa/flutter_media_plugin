@@ -95,6 +95,9 @@ class AudioPlayer {
         //print("onPlayerStateChanged, $playWhenReady $playbackState");
         _playWhenReady = playWhenReady;
         _playbackState = playbackState;
+        if (_playbackState == C.STATE_IDLE) {
+          _currentPlayingSong = null;
+        }
         if (_playbackState == C.STATE_ENDED || _playbackState == C.STATE_IDLE) {
           _playbackPosition = 0;
           _playbackLength = 0;
@@ -129,13 +132,13 @@ class AudioPlayer {
         break;
       case "onRepeatModeChanged":
         int repeatMode = arguments['repeatMode'];
-        for(ExoPlayerListener listener in _exoPlayerListeners) {
+        for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onRepeatModeChanged(repeatMode);
         }
         break;
       case "onShuffleModeEnabledChanged":
         bool shuffleModeEnabled = arguments['shuffleModeEnabled'];
-        for(ExoPlayerListener listener in _exoPlayerListeners) {
+        for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
         break;
