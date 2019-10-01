@@ -14,4 +14,10 @@
     <!-- Description for a media control button that causes playback to be fast-forwarded. [CHAR LIMIT=30] -->
     <string name="exo_controls_fastforward_description">Fast forward</string>
     <string name="exo_track_unknown">Unknown</string>
+    <string name="download_channel_name">Audio Download</string>
+    <string name="exo_download_notification_channel_name">Downloads</string>
+    <string name="exo_download_downloading">Downloading</string>
+    <string name="exo_download_removing">Download Remove</string>
+    <string name="exo_download_completed">Download Complete</string>
+    <string name="exo_download_failed">Download Failed</string>
 </resources>

@@ -1,11 +1,18 @@
 package com.example.fluttermediaplugin;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
+import android.net.Uri;
 import android.util.Log;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.offline.Download;
+import com.google.android.exoplayer2.offline.DownloadManager;
+import com.google.android.exoplayer2.offline.DownloadRequest;
+import com.google.android.exoplayer2.offline.DownloadService;
+import com.google.android.exoplayer2.offline.StreamKey;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -13,10 +20,14 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import org.json.JSONObject;
 
+import java.io.IOError;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -46,27 +57,37 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private ExoPlayerListener audioExoPlayerListener;
     private ExoPlayerListener videoExoPlayerListener;
 
-    public static FlutterMediaPlugin getInstance() {
+    static FlutterMediaPlugin getInstance() {
         if (instance == null) {
             Log.e(TAG, "Flutter Media plugin instance is null");
         }
         return instance;
     }
 
-    public Registrar getRegistrar() {
+    Registrar getRegistrar() {
         return registrar;
     }
 
-    public AudioPlayer getAudioPlayer() {
+    AudioPlayer getAudioPlayer() {
         return audioPlayer;
     }
 
     private FlutterMediaPlugin(Registrar _registrar) {
         this.registrar = _registrar;
-        MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_media_plugin");
+        final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_media_plugin");
 
         channel.setMethodCallHandler(this);
         this.channel = channel;
+
+        DownloadUtility.getDownloadManager(_registrar.context()).addListener(new DownloadManager.Listener() {
+            @Override
+            public void onDownloadChanged(DownloadManager downloadManager, Download download) {
+                Log.d(TAG, "on download changed : " + download.state);
+                Map<String, Object> args = new HashMap<>();
+                args.put("state", download.state);
+                channel.invokeMethod("onDownloadChanged", args);
+            }
+        });
     }
 
     private void initializeAudioPlayer() {
@@ -241,7 +262,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         };
     }
 
-    public void videoInitialize(long textureId, int height, int width, long duration) {
+    void videoInitialize(long textureId, int height, int width, long duration) {
         Map<String, Object> reply = new HashMap<>();
         reply.put("textureId", textureId);
         reply.put("width", width);
@@ -255,6 +276,12 @@ public class FlutterMediaPlugin implements MethodCallHandler {
      */
 
     public static void registerWith(@NonNull Registrar _registrar) {
+        try {
+            DownloadService.start(_registrar.context(), MediaDownloadService.class);
+        } catch (IllegalStateException e) {
+            DownloadService.startForeground(_registrar.context(), MediaDownloadService.class);
+        }
+
         if (instance == null) instance = new FlutterMediaPlugin(_registrar);
         else {
             instance.registrar = _registrar;
@@ -278,17 +305,15 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
     @Override
     public void onMethodCall(MethodCall call, Result result) {
-        try {
-            MediaMethodCall mediaMethodCall = parseMethodName(call.method);
-            Log.d(TAG, mediaMethodCall.toString());
+        MediaMethodCall mediaMethodCall = parseMethodName(call.method);
+        Log.d(TAG, mediaMethodCall.toString());
+        if(mediaMethodCall.mediaType != null) {
             if (mediaMethodCall.mediaType.equals(AUDIO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {
-                    if(audioPlayer == null)
-                    {
+                    if (audioPlayer == null) {
                         initializeAudioPlayer();
                         result.success(null);
-                    }
-                    else {
+                    } else {
                         Log.d(TAG, "Already audioPlayer is initialized");
                         sendAudioInitialization(result);
                     }
@@ -304,10 +329,9 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 audioMethodCall(mediaMethodCall.command, call, result);
             } else if (mediaMethodCall.mediaType.equals(VIDEO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {
-                    if(videoPlayer == null) {
+                    if (videoPlayer == null) {
                         initializeVideoPlayer();
-                    }
-                    else{
+                    } else {
                         Log.d(TAG, "Already audioPlayer is initialized");
                     }
                     result.success(null);
@@ -320,11 +344,26 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 }
 
                 videoMethodCall(mediaMethodCall.command, call, result);
-            } else {
-                result.error("MethodCall mediaType ", "type of " + mediaMethodCall.mediaType + " is not equal.", null);
             }
-        } catch (IllegalArgumentException e) {
-            result.error("IllegalArgument", e.getMessage(), null);
+        } else {
+            switch (mediaMethodCall.command) {
+                case "download": {
+                    Log.d(TAG, "Download tap");
+                    String url = call.argument(Song.song_url_tag);
+                    if (url != null) {
+                        DownloadRequest downloadRequest = new DownloadRequest(url, DownloadRequest.TYPE_PROGRESSIVE, Uri.parse(url), Collections.<StreamKey>emptyList(), null, null);
+                        DownloadService.sendAddDownload(getRegistrar().activeContext(), MediaDownloadService.class, downloadRequest, true);
+                    }
+                    result.success(null);
+                    break;
+                }
+                case "downloadRemove": {
+                    String url = call.argument(Song.song_url_tag);
+                    DownloadService.sendRemoveDownload(getRegistrar().activeContext(), MediaDownloadService.class, url, true);
+                    result.success(null);
+                    break;
+                }
+            }
         }
     }
 
@@ -546,27 +585,30 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     }
 
     private MediaMethodCall parseMethodName(@NonNull String methodName) {
-        Matcher matcher = METHOD_NAME_MATCH.matcher(methodName);
+        try {
+            Matcher matcher = METHOD_NAME_MATCH.matcher(methodName);
 
-        if (matcher.matches()) {
-            String mediaType = matcher.group(1);
-            String command = matcher.group(2);
-            return new MediaMethodCall(mediaType, command);
-        } else {
-            Log.d(TAG, "Match not found");
-            throw new IllegalArgumentException("Invalid audio player message: " + methodName);
+            if (matcher.matches() && matcher.groupCount() >= 2) {
+                String mediaType = matcher.group(1);
+                String command = matcher.group(2);
+                return new MediaMethodCall(mediaType, command);
+            }
+        } catch (Exception e) {
+            Log.d(TAG, e.getMessage());
         }
+        return new MediaMethodCall(null, methodName);
     }
 
     private static class MediaMethodCall {
         final String mediaType;
         final String command;
 
-        private MediaMethodCall(@NonNull String mediaType, @NonNull String command) {
+        private MediaMethodCall(String mediaType, @NonNull String command) {
             this.mediaType = mediaType;
             this.command = command;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return String.format("MediaMethodCall - mediaType %s, Command: %s", mediaType, command);

@@ -2,8 +2,8 @@ package com.example.fluttermediaplugin;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.exoplayer2.C;
@@ -32,7 +32,7 @@ import java.util.List;
 
 import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 
-public class AudioPlayer {
+class AudioPlayer {
     private static final String TAG = "AudioPlayer";
 //    private static int playerId = -1;
 
@@ -42,21 +42,21 @@ public class AudioPlayer {
 
     private boolean isShowingNotification = false;
     private Playlist playlist;
-    public Playlist getPlaylist() {
+    Playlist getPlaylist() {
         return playlist;
     }
 
-    public Song getSongByIndex(int index) {
+    Song getSongByIndex(int index) {
         if (playlist == null)
             return null;
         return playlist.getSongAtIndex(index);
     }
 
-    public SimpleExoPlayer getSimpleExoPlayer() {
+    SimpleExoPlayer getSimpleExoPlayer() {
         return simpleExoPlayer;
     }
 
-    public AudioPlayer(@NonNull Context context) {
+    AudioPlayer(@NonNull Context context) {
         initSimpleExoPlayer(context);
         mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager(simpleExoPlayer, "audioPlayer");
     }
@@ -134,7 +134,7 @@ public class AudioPlayer {
         simpleExoPlayer.addListener(audioEventListener);
     }
 
-    public void release() {
+    void release() {
         if (simpleExoPlayer != null) {
             simpleExoPlayer.removeListener(audioEventListener);
             simpleExoPlayer.release();
@@ -147,7 +147,7 @@ public class AudioPlayer {
         audioEventListener = null;
     }
 
-    public void stop() {
+    void stop() {
         simpleExoPlayer.stop(false);
         mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
         mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
@@ -162,11 +162,11 @@ public class AudioPlayer {
         playlist.clear();
     }
 
-    public void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+    void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
         mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
     }
 
-    public void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+    void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
         mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
     }
 
@@ -185,25 +185,25 @@ public class AudioPlayer {
         Util.startForegroundService(FlutterMediaPlugin.getInstance().getRegistrar().activeContext(), intent);
     }
 
-    public void onNotificationStarted() {
+    void onNotificationStarted() {
         isShowingNotification = true;
     }
 
-    public void onNotificationDestroyed() {
+    void onNotificationDestroyed() {
         isShowingNotification = false;
         stop();
         playlist.clear();
     }
 
-    public void preparePlaylist() {
+    void preparePlaylist() {
         playlist.prepare();
     }
 
-    public void clearPlaylist() {
+    void clearPlaylist() {
         playlist.clear();
     }
 
-    public void play() {
+    void play() {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE && simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
             preparePlaylist();
         }
@@ -217,7 +217,7 @@ public class AudioPlayer {
         Log.d(TAG, "Already playing");
     }
 
-    public void pause() {
+    void pause() {
         if (simpleExoPlayer.getPlayWhenReady()) {
             simpleExoPlayer.setPlayWhenReady(false);
         } else {
@@ -227,60 +227,60 @@ public class AudioPlayer {
         }
     }
 
-    public void setRepeatMode(@Player.RepeatMode int repeatMode) {
+    void setRepeatMode(@Player.RepeatMode int repeatMode) {
         simpleExoPlayer.setRepeatMode(repeatMode);
     }
 
-    public int getRepeatMode() {
+    int getRepeatMode() {
         return simpleExoPlayer.getRepeatMode();
     }
 
-    public void setShuffleModeEnabled(boolean shuffleModeEnabled) {
+    void setShuffleModeEnabled(boolean shuffleModeEnabled) {
         simpleExoPlayer.setShuffleModeEnabled(shuffleModeEnabled);
     }
 
-    public boolean getShuffleModeEnabled() {
+    boolean getShuffleModeEnabled() {
         return simpleExoPlayer.getShuffleModeEnabled();
     }
 
-    public void skipToIndex(int index) {
+    void skipToIndex(int index) {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToIndex(index);
     }
 
-    public void skipToNext() {
+    void skipToNext() {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToNext();
     }
 
-    public void skipToPrevious() {
+    void skipToPrevious() {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }
         playlist.skipToPrevious();
     }
 
-    public void playNext(Song song) {
+    void playNext(Song song) {
         playlist.addSong(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
     }
 
-    public void addAndPlay(Song song) {
+    void addAndPlay(Song song) {
         playlist.addAndPlay(song);
     }
 
-    public void addSong(Song song) {
+    void addSong(Song song) {
         playlist.addSong(song);
     }
 
-    public void addSongAtIndex(int index, Song song) {
+    void addSongAtIndex(int index, Song song) {
         playlist.addSong(index, song);
     }
 
-    public void setPlaylist(String playlistStr) {
+    void setPlaylist(String playlistStr) {
         try {
             JSONObject jsonObject = new JSONObject(playlistStr);
             List<Song> songs = Playlist.songsFromPlaylistJson(jsonObject);
@@ -293,11 +293,11 @@ public class AudioPlayer {
         }
     }
 
-    public void removeSong(Song song) {
+    void removeSong(Song song) {
         playlist.removeSong(song);
     }
 
-    public void seekTo(long position) {
+    void seekTo(long position) {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
             return;
         }

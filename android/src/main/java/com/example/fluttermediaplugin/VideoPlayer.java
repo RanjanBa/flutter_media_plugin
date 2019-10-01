@@ -2,7 +2,7 @@ package com.example.fluttermediaplugin;
 
 import android.content.Context;
 import android.net.Uri;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.view.Surface;
 
@@ -10,14 +10,13 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
@@ -41,7 +40,7 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
-public class VideoPlayer {
+class VideoPlayer {
     private static String TAG = "VideoPlayer";
 
     private VideoExoPlayerListener videoExoPlayerListener;
@@ -86,15 +85,15 @@ public class VideoPlayer {
         });
     }
 
-    public void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
+    void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
         mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerListener);
     }
 
-    public void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
+    void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
         mediaPlayerExoPlayerListenerManager.removeExoPlayerListener(exoPlayerListener);
     }
 
-    public void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
+    void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
         this.textureEntry = textureEntry;
         Uri uri = Uri.parse(stringUri);
 
@@ -144,8 +143,7 @@ public class VideoPlayer {
             case C.TYPE_HLS:
                 return new HlsMediaSource.Factory(mediaDataSourceFactory).createMediaSource(uri);
             case C.TYPE_OTHER:
-                return new ExtractorMediaSource.Factory(mediaDataSourceFactory)
-                        .setExtractorsFactory(new DefaultExtractorsFactory())
+                return new ProgressiveMediaSource.Factory(mediaDataSourceFactory, new DefaultExtractorsFactory())
                         .createMediaSource(uri);
             default: {
                 throw new IllegalStateException("Unsupported type: " + type);
@@ -153,7 +151,7 @@ public class VideoPlayer {
         }
     }
 
-    public void setupVideoPlayer(
+    void setupVideoPlayer(
             @NonNull TextureRegistry.SurfaceTextureEntry textureEntry) {
         this.textureEntry = textureEntry;
         surface = new Surface(textureEntry.surfaceTexture());
@@ -263,7 +261,7 @@ public class VideoPlayer {
             mediaPlayerExoPlayerListenerManager.onSeekProcessed();
         }
 
-        public void videoInitialize(long textureId, int height, int width, long duration) {
+        void videoInitialize(long textureId, int height, int width, long duration) {
             FlutterMediaPlugin.getInstance().videoInitialize(textureId, height, width, duration);
         }
     }

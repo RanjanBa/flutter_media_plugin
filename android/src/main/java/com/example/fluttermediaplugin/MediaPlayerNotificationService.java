@@ -9,8 +9,8 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.view.View;
@@ -58,12 +58,12 @@ public class MediaPlayerNotificationService extends Service {
     private void instantiateNotification() {
         final Context context = FlutterMediaPlugin.getInstance().getRegistrar().activeContext();
         if (mediaSession == null) {
-            mediaSession = new MediaSessionCompat(context, com.example.fluttermediaplugin.C.MEDIA_SESSION_TAG);
+            mediaSession = new MediaSessionCompat(context, StaticConst.MEDIA_SESSION_TAG);
             mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
-                FlutterMediaPlugin.getInstance().getRegistrar().context(), com.example.fluttermediaplugin.C.PLAYBACK_CHANNEL_ID, R.string.exo_track_unknown, com.example.fluttermediaplugin.C.PLAYBACK_NOTIFICATION_ID, new PlayerNotificationManager.MediaDescriptionAdapter() {
+                FlutterMediaPlugin.getInstance().getRegistrar().context(), StaticConst.PLAYBACK_CHANNEL_ID, R.string.exo_track_unknown, StaticConst.PLAYBACK_NOTIFICATION_ID, new PlayerNotificationManager.MediaDescriptionAdapter() {
 
                     @Override
                     public String getCurrentContentTitle(Player player) {

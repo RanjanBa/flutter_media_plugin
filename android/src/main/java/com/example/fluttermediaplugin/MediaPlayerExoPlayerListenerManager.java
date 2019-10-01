@@ -3,7 +3,7 @@ package com.example.fluttermediaplugin;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
@@ -27,7 +27,7 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
     private boolean isPollingBuffering = false;
     private SimpleExoPlayer simpleExoPlayer;
 
-    public MediaPlayerExoPlayerListenerManager(@NonNull SimpleExoPlayer simpleExoPlayer, @NonNull String handlerThreadName) {
+    MediaPlayerExoPlayerListenerManager(@NonNull SimpleExoPlayer simpleExoPlayer, @NonNull String handlerThreadName) {
         this.simpleExoPlayer = simpleExoPlayer;
         HandlerThread playbackHandlerThread = new HandlerThread(handlerThreadName + "playback");
         playbackHandlerThread.start();
@@ -40,15 +40,15 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
         bufferingPollHandler = new Handler(Looper.getMainLooper());
     }
 
-    public void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+    void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
         exoPlayerMediaListeners.add(exoPlayerMediaListener);
     }
 
-    public void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
+    void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
         exoPlayerMediaListeners.remove(exoPlayerMediaListener);
     }
 
-    public void stopPlaybackPolling() {
+    void stopPlaybackPolling() {
         isPollingPlayback = false;
         if (simpleExoPlayer != null) {
             onBufferedUpdate(bufferedPercent());
@@ -56,14 +56,14 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
         playbackPollHandler.removeCallbacks(null);
     }
 
-    public void clear() {
-        stopBufferingPolling();
-        stopPlaybackPolling();
-        this.playbackPollHandler.removeCallbacks(null);
-        this.bufferingPollHandler.removeCallbacks(null);
-    }
+//    void clear() {
+//        stopBufferingPolling();
+//        stopPlaybackPolling();
+//        this.playbackPollHandler.removeCallbacks(null);
+//        this.bufferingPollHandler.removeCallbacks(null);
+//    }
 
-    public void stopBufferingPolling() {
+    void stopBufferingPolling() {
         isPollingBuffering = false;
         bufferingPollHandler.removeCallbacks(null);
     }
@@ -215,25 +215,25 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
 //        }
 //    }
 
-    public void onMediaPeriodCreated(int windowIndex) {
+    void onMediaPeriodCreated(int windowIndex) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) {
             listener.onMediaPeriodCreated(windowIndex);
         }
     }
 
-    public void onPlaybackUpdate(long position, long audioLength) {
+    void onPlaybackUpdate(long position, long audioLength) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) {
             listener.onPlaybackUpdate(position, audioLength);
         }
     }
 
-    public void onBufferedUpdate(int percent) {
+    void onBufferedUpdate(int percent) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) {
             listener.onBufferedUpdate(percent);
         }
     }
 
-    public void onPlayerStatus(String message) {
+    void onPlayerStatus(String message) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) listener.onPlayerStatus(message);
     }
 }

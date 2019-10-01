@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Song {
+final class Song {
     private String key;
     private String title;
     private String artists;
@@ -21,7 +21,7 @@ public class Song {
     static String song_album_art_url_tag = "art_url";
     static String song_url_tag = "url";
 
-    public Song(String key, String title, String artist, String album, String album_art_url, String url) {
+    Song(String key, String title, String artist, String album, String album_art_url, String url) {
         this.key = key;
         this.title = title;
         this.artists = artist;
@@ -30,31 +30,31 @@ public class Song {
         this.url = url;
     }
 
-    public String getKey() {
+    String getKey() {
         return key;
     }
 
-    public String getUri() {
+    String getUri() {
         return url;
     }
 
-    public String getAlbumArtUri() {
+    String getAlbumArtUri() {
         return album_art_url;
     }
 
-    public String getAlbum() {
+    String getAlbum() {
         return album;
     }
 
-    public String getArtist() {
+    String getArtist() {
         return artists;
     }
 
-    public String getTitle() {
+    String getTitle() {
         return title;
     }
 
-    public static JSONObject toJson(Song song) {
+    static JSONObject toJson(Song song) {
         JSONObject objectMap = new JSONObject();
 
         try {
@@ -71,7 +71,7 @@ public class Song {
         return objectMap;
     }
 
-    public static Song fromJson(JSONObject jsonObject) {
+    static Song fromJson(JSONObject jsonObject) {
         try {
             String key = jsonObject.getString(Song.song_key_tag);
             String title = jsonObject.getString(Song.song_title_tag);
@@ -87,7 +87,7 @@ public class Song {
         return null;
     }
 
-    public static Map<String, Object> toMap(Song song) {
+    static Map<String, Object> toMap(Song song) {
         Map<String, Object> songMap = new HashMap<>();
         songMap.put(song_key_tag, song.key);
         songMap.put(song_title_tag, song.title);

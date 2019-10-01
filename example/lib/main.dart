@@ -4,7 +4,7 @@ import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 import 'package:flutter_media_plugin_example/songs.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
-
+import 'package:flutter_media_plugin/download_listener.dart';
 import 'package:flutter_media_plugin/video_player.dart';
 
 AudioPlayer _audioPlayer;
@@ -33,6 +33,7 @@ class _MyAppState extends State<MyApp> {
   Widget _bufferingWidget;
 
   ExoPlayerListener _exoPlayerListener;
+  DownloadListener _downloadListener;
   VideoExoPlayerListener _videoExoPlayerListener;
   Playlist playlist;
 
@@ -62,13 +63,20 @@ class _MyAppState extends State<MyApp> {
       onRepeatModeChanged: _onRepeatModeChanged,
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
     );
+    _audioPlayer.addExoPlayerListener(
+      _exoPlayerListener,
+    );
+
+    _downloadListener = DownloadListener(onDownloadChanged: (state) {
+      print('Flutter main $state');
+    });
+
+    FlutterMediaPlugin.addDownloadListener(_downloadListener);
+
     _videoExoPlayerListener =
         VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
     _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
-    _audioPlayer.addExoPlayerListener(
-      _exoPlayerListener,
-    );
     _setIcons();
     _bufferingWidget = SizedBox(
       height: 0,
@@ -86,6 +94,7 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     super.dispose();
     _audioPlayer.removeExoPlayerListener(_exoPlayerListener);
+    FlutterMediaPlugin.removeDownloadListener(_downloadListener);
     _videoPlayer.removeVideoExoPlayer(_videoExoPlayerListener);
     print("Main dispose");
   }
@@ -302,6 +311,9 @@ class _MyAppState extends State<MyApp> {
               physics: ClampingScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
                 return ListTile(
+                  leading: IconButton(icon: Icon(Icons.file_download), onPressed: () {
+                    FlutterMediaPlugin.download(Samples.songs[index].url);
+                  },),
                   title: Text(
                     '${Samples.songs[index].title}',
                   ),
@@ -312,6 +324,9 @@ class _MyAppState extends State<MyApp> {
                   onLongPress: () {
                     _audioPlayer.addAndPlay(Samples.songs[index]);
                   },
+                  trailing: IconButton(icon: Icon(Icons.delete), onPressed: () {
+                    FlutterMediaPlugin.downloadRemove(Samples.songs[index].url);
+                  },),
                 );
               },
               itemCount: Samples.songs.length,

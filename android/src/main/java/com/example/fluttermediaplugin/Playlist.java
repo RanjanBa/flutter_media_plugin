@@ -2,17 +2,18 @@ package com.example.fluttermediaplugin;
 
 import android.net.Uri;
 import android.os.Handler;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MediaSourceEventListener;
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,35 +22,36 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Playlist {
+class Playlist {
     private static final String TAG = "Playlist";
     private static String PLAYLIST_NAME = "playlistName";
     private String playlistName;
     private ConcatenatingMediaSource concatenatingMediaSource;
     private ArrayList<Song> songs;
-    private DefaultDataSourceFactory dataSourceFactory;
+    private CacheDataSourceFactory cacheDataSourceFactory;
     private SimpleExoPlayer simpleExoPlayer;
 
-    public Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull MediaSourceEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
+    Playlist(String playlistName, @NonNull SimpleExoPlayer simpleExoPlayer, @NonNull MediaSourceEventListener playlistEventListener, @NonNull DefaultDataSourceFactory dataSourceFactory) {
         this.playlistName = playlistName;
         this.simpleExoPlayer = simpleExoPlayer;
         songs = new ArrayList<>();
+
+        cacheDataSourceFactory = new CacheDataSourceFactory(DownloadUtility.getDownloadCache(FlutterMediaPlugin.getInstance().getRegistrar().activeContext()), dataSourceFactory);
         concatenatingMediaSource = new ConcatenatingMediaSource();
         concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
-        this.dataSourceFactory = dataSourceFactory;
     }
 
-    public Song getSongAtIndex(int index) {
+    Song getSongAtIndex(int index) {
         if (getSize() <= 0 && index >= getSize())
             return null;
         return songs.get(index);
     }
 
-    public int getSize() {
+    int getSize() {
         return songs.size() != concatenatingMediaSource.getSize() ? -1 : concatenatingMediaSource.getSize();
     }
 
-    public void skipToIndex(int index) {
+    void skipToIndex(int index) {
         if (index >= concatenatingMediaSource.getSize()) {
             Log.w(TAG, "can't skip to index " + index);
             return;
@@ -57,25 +59,25 @@ public class Playlist {
         simpleExoPlayer.seekTo(index, 0);
     }
 
-    public void skipToPrevious() {
+    void skipToPrevious() {
         if (simpleExoPlayer.getPreviousWindowIndex() >= 0) {
             simpleExoPlayer.seekTo(simpleExoPlayer.getPreviousWindowIndex(), 0);
         }
     }
 
-    public void skipToNext() {
+    void skipToNext() {
         if (simpleExoPlayer.getNextWindowIndex() >= 0) {
             simpleExoPlayer.seekTo(simpleExoPlayer.getNextWindowIndex(), 0);
         }
     }
 
-    public void prepare() {
+    void prepare() {
         if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
             simpleExoPlayer.prepare(concatenatingMediaSource);
         }
     }
 
-    public void addAndPlay(Song song) {
+    void addAndPlay(Song song) {
         prepare();
         //Log.d(TAG, "Song Added");
         addSong(song, new Runnable() {
@@ -88,28 +90,28 @@ public class Playlist {
         });
     }
 
-    public void addSong(Song song) {
+    void addSong(Song song) {
         songs.add(song);
         Uri uri = Uri.parse(song.getUri());
-        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource);
     }
 
     private void addSong(Song song, @NonNull Runnable actionOnCompletion) {
         songs.add(song);
         Uri uri = Uri.parse(song.getUri());
-        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource, new Handler(), actionOnCompletion);
     }
 
-    public void addSong(int index, Song song) {
+    void addSong(int index, Song song) {
         if (index > songs.size() && index >= concatenatingMediaSource.getSize()) {
             Log.w(TAG, index + " is greater than size of songs : " + songs.size());
             return;
         }
         songs.add(index, song);
         Uri uri = Uri.parse(song.getUri());
-        MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+        MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(index, mediaSource);
     }
 
@@ -124,16 +126,16 @@ public class Playlist {
 //        concatenatingMediaSource.addMediaSource(index, mediaSource, new Handler(), actionOnCompletion);
 //    }
 
-    public void addSongs(List<Song> songs) {
+    void addSongs(List<Song> songs) {
         for (int i = 0; i < songs.size(); i++) {
             this.songs.add(songs.get(i));
             Uri uri = Uri.parse(songs.get(i).getUri());
-            MediaSource mediaSource = new ExtractorMediaSource.Factory(dataSourceFactory).createMediaSource(uri);
+            MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
             concatenatingMediaSource.addMediaSource(mediaSource);
         }
     }
 
-    public void removeSong(Song song) {
+    void removeSong(Song song) {
         for (int i = 0; i < songs.size(); i++) {
             if (song.getKey().equals(songs.get(i).getKey())) {
                 return;
@@ -141,12 +143,12 @@ public class Playlist {
         }
     }
 
-    public void clear() {
+    void clear() {
         songs.clear();
         concatenatingMediaSource.clear();
     }
 
-    public static JSONObject toJson(Playlist playlist) {
+    static JSONObject toJson(Playlist playlist) {
         try {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(PLAYLIST_NAME, playlist.playlistName);
@@ -185,7 +187,7 @@ public class Playlist {
 //        return null;
 //    }
 
-    public static List<Song> songsFromPlaylistJson(JSONObject jsonObject) {
+    static List<Song> songsFromPlaylistJson(JSONObject jsonObject) {
         try {
             JSONArray jsonArray = jsonObject.getJSONArray("songs");
 

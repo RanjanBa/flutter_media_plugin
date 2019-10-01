@@ -10,13 +10,13 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IntDef;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.media.app.NotificationCompat.MediaStyle;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.Nullable;
+import androidx.annotation.IntDef;
+import androidx.annotation.StringRes;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.google.android.exoplayer2.C;
@@ -208,7 +208,7 @@ public class PlayerNotificationManager {
     /**
      * Receives a {@link Bitmap}.
      */
-    public final class BitmapCallback {
+    final class BitmapCallback {
         private final int notificationTag;
 
         /**
@@ -223,7 +223,7 @@ public class PlayerNotificationManager {
          *
          * @param bitmap The bitmap to use as the large icon of the notification.
          */
-        public void onBitmap(final Bitmap bitmap) {
+        void onBitmap(final Bitmap bitmap) {
             if (bitmap != null) {
                 mainHandler.post(new Runnable() {
                     @Override
@@ -242,35 +242,35 @@ public class PlayerNotificationManager {
     /**
      * The action which starts playback.
      */
-    public static final String ACTION_PLAY = "com.google.android.exoplayer.play";
+    static final String ACTION_PLAY = "com.google.android.exoplayer.play";
     /**
      * The action which pauses playback.
      */
-    public static final String ACTION_PAUSE = "com.google.android.exoplayer.pause";
+    static final String ACTION_PAUSE = "com.google.android.exoplayer.pause";
     /**
      * The action which skips to the previous window.
      */
-    public static final String ACTION_PREVIOUS = "com.google.android.exoplayer.prev";
+    static final String ACTION_PREVIOUS = "com.google.android.exoplayer.prev";
     /**
      * The action which skips to the next window.
      */
-    public static final String ACTION_NEXT = "com.google.android.exoplayer.next";
+    static final String ACTION_NEXT = "com.google.android.exoplayer.next";
     /**
      * The action which fast forwards.
      */
-    public static final String ACTION_FAST_FORWARD = "com.google.android.exoplayer.ffwd";
+    static final String ACTION_FAST_FORWARD = "com.google.android.exoplayer.ffwd";
     /**
      * The action which rewinds.
      */
-    public static final String ACTION_REWIND = "com.google.android.exoplayer.rewind";
+    static final String ACTION_REWIND = "com.google.android.exoplayer.rewind";
     /**
      * The action which cancels the notification and stops playback.
      */
-    public static final String ACTION_STOP = "com.google.android.exoplayer.stop";
+    static final String ACTION_STOP = "com.google.android.exoplayer.stop";
     /**
      * The extra key of the instance id of the player notification manager.
      */
-    public static final String EXTRA_INSTANCE_ID = "INSTANCE_ID";
+    static final String EXTRA_INSTANCE_ID = "INSTANCE_ID";
 
     /**
      * Visibility of notification on the lock screen. One of {@link
@@ -284,7 +284,7 @@ public class PlayerNotificationManager {
             NotificationCompat.VISIBILITY_PUBLIC,
             NotificationCompat.VISIBILITY_SECRET
     })
-    public @interface Visibility {
+    @interface Visibility {
     }
 
     /**
@@ -302,17 +302,17 @@ public class PlayerNotificationManager {
             NotificationCompat.PRIORITY_LOW,
             NotificationCompat.PRIORITY_MIN
     })
-    public @interface Priority {
+    @interface Priority {
     }
 
     /**
      * The default fast forward increment, in milliseconds.
      */
-    public static final int DEFAULT_FAST_FORWARD_MS = 15000;
+    static final int DEFAULT_FAST_FORWARD_MS = 15000;
     /**
      * The default rewind increment, in milliseconds.
      */
-    public static final int DEFAULT_REWIND_MS = 5000;
+    static final int DEFAULT_REWIND_MS = 5000;
 
     private static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
 
@@ -375,7 +375,7 @@ public class PlayerNotificationManager {
      * @param notificationId          The id of the notification.
      * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
      */
-    public static PlayerNotificationManager createWithNotificationChannel(
+    static PlayerNotificationManager createWithNotificationChannel(
             Context context,
             String channelId,
             @StringRes int channelName,
@@ -396,7 +396,7 @@ public class PlayerNotificationManager {
      * @param notificationId          The id of the notification.
      * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
      */
-    public PlayerNotificationManager(
+    PlayerNotificationManager(
             Context context,
             String channelId,
             int notificationId,
@@ -419,7 +419,7 @@ public class PlayerNotificationManager {
      * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
      * @param customActionReceiver    The {@link CustomActionReceiver}.
      */
-    public PlayerNotificationManager(
+    PlayerNotificationManager(
             Context context,
             String channelId,
             int notificationId,
@@ -522,7 +522,7 @@ public class PlayerNotificationManager {
      *
      * @param notificationListener The {@link NotificationListener}.
      */
-    public final void setNotificationListener(NotificationListener notificationListener) {
+    final void setNotificationListener(NotificationListener notificationListener) {
         this.notificationListener = notificationListener;
     }
 
@@ -532,7 +532,7 @@ public class PlayerNotificationManager {
      * @param fastForwardMs The fast forward increment in milliseconds. A value of zero will cause the
      *                      fast forward action to be disabled.
      */
-    public final void setFastForwardIncrementMs(long fastForwardMs) {
+    final void setFastForwardIncrementMs(long fastForwardMs) {
         if (this.fastForwardMs == fastForwardMs) {
             return;
         }
@@ -546,7 +546,7 @@ public class PlayerNotificationManager {
      * @param rewindMs The rewind increment in milliseconds. A value of zero will cause the rewind
      *                 action to be disabled.
      */
-    public final void setRewindIncrementMs(long rewindMs) {
+    final void setRewindIncrementMs(long rewindMs) {
         if (this.rewindMs == rewindMs) {
             return;
         }
@@ -559,7 +559,7 @@ public class PlayerNotificationManager {
      *
      * @param useNavigationActions Whether to use navigation actions or not.
      */
-    public final void setUseNavigationActions(boolean useNavigationActions) {
+    final void setUseNavigationActions(boolean useNavigationActions) {
         if (this.useNavigationActions != useNavigationActions) {
             this.useNavigationActions = useNavigationActions;
             invalidate();

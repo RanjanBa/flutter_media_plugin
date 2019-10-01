@@ -4,6 +4,7 @@
 
     <application>
         <service android:name=".MediaPlayerNotificationService" />
+        <service android:name=".MediaDownloadService"/>
         <receiver android:name=".PlayerNotificationManager$NotificationBroadcastReceiver"/>
     </application>
 </manifest>

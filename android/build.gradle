@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.5.0'
     }
 }
 
@@ -22,7 +22,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 21
@@ -34,10 +34,10 @@ android {
 }
 
 dependencies {
-    implementation 'com.google.android.exoplayer:extension-mediasession:2.9.6'
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.9.6'
+    implementation 'com.google.android.exoplayer:extension-mediasession:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-core:2.10.0'
     implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.9.6'
-    implementation 'com.google.android.exoplayer:exoplayer-dash:2.9.6'
-    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.9.6'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-dash:2.10.0'
+    implementation 'com.google.android.exoplayer:exoplayer-smoothstreaming:2.10.0'
 }
