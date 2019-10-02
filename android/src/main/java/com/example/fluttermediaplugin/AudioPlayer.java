@@ -34,7 +34,6 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 
 class AudioPlayer {
     private static final String TAG = "AudioPlayer";
-//    private static int playerId = -1;
 
     private AudioExoPlayerListener audioEventListener;
     private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;

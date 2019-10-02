@@ -38,7 +38,7 @@ public class MediaDownloadService extends DownloadService {
 
     @Override
     protected DownloadManager getDownloadManager() {
-        return DownloadUtility.getDownloadManager(this);
+        return FlutterMediaPlugin.getInstance().getDownloadUtility().getDownloadManager(this);
     }
 
     @Nullable

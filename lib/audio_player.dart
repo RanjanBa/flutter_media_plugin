@@ -144,6 +144,7 @@ class AudioPlayer {
         }
         break;
       default:
+        print("Audio Method not implemented");
         break;
     }
   }

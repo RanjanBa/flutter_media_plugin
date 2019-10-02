@@ -1,10 +1,10 @@
 class DownloadListener {
-  final Function(int) _onDownloadChanged;
+  final Function(int, String) _onDownloadChanged;
   DownloadListener({onDownloadChanged}): _onDownloadChanged = onDownloadChanged;
 
-  void onPlayerStateChanged(int state) {
+  void onDownloadChanged(int state, String id) {
     if (_onDownloadChanged != null) {
-      _onDownloadChanged(state);
+      _onDownloadChanged(state, id);
     }
   }
 }

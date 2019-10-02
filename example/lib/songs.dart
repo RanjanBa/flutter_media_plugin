@@ -10,7 +10,7 @@ class Samples {
       album_art_url:
           "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/arts%2Fsiriywi?alt=media&token=69c215a9-22d1-4a21-9eb3-f01a362ccd4b",
       url:
-          "http://bodosong.in/siteuploads/files/sfd3/1451/Siriywi_(Bitu)(Bodosong.In).mp3",
+          "http://bodosong.in/siteuploads/files/sfd3/1451/Siriywi_(Bitu)(Bodosong.In).mp3"
     ),
     Song(
       key: "key2",

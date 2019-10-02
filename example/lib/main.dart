@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
@@ -41,8 +43,6 @@ class _MyAppState extends State<MyApp> {
   String _uri =
       "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
 
-  //"https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
-
   int _textureId;
   int _repeatMode = 0;
   bool _shuffleModeEnabled = false;
@@ -67,8 +67,8 @@ class _MyAppState extends State<MyApp> {
       _exoPlayerListener,
     );
 
-    _downloadListener = DownloadListener(onDownloadChanged: (state) {
-      print('Flutter main $state');
+    _downloadListener = DownloadListener(onDownloadChanged: (state, id) {
+      print('Flutter main $state $id');
     });
 
     FlutterMediaPlugin.addDownloadListener(_downloadListener);
@@ -311,9 +311,6 @@ class _MyAppState extends State<MyApp> {
               physics: ClampingScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
                 return ListTile(
-                  leading: IconButton(icon: Icon(Icons.file_download), onPressed: () {
-                    FlutterMediaPlugin.download(Samples.songs[index].url);
-                  },),
                   title: Text(
                     '${Samples.songs[index].title}',
                   ),
@@ -324,9 +321,25 @@ class _MyAppState extends State<MyApp> {
                   onLongPress: () {
                     _audioPlayer.addAndPlay(Samples.songs[index]);
                   },
-                  trailing: IconButton(icon: Icon(Icons.delete), onPressed: () {
-                    FlutterMediaPlugin.downloadRemove(Samples.songs[index].url);
-                  },),
+                  trailing: FutureBuilder<bool>(
+                    future: FlutterMediaPlugin.isDownloaded(Samples.songs[index].url),
+                    builder: (context, snapshot) {
+                      if(snapshot.hasData) {
+                        print('data ${snapshot.data}');
+                          if(snapshot.data == false)
+                            return IconButton(icon: Icon(Icons.file_download), onPressed: () {
+                              FlutterMediaPlugin.download(Samples.songs[index].url);
+                            },);
+                          else {
+                            return IconButton(icon: Icon(Icons.delete), onPressed: () {
+                              FlutterMediaPlugin.downloadRemove(Samples.songs[index].url);
+                            },);
+                          }
+                      } else {
+                        return CircularProgressIndicator();
+                      }
+                    },
+                  ),
                 );
               },
               itemCount: Samples.songs.length,

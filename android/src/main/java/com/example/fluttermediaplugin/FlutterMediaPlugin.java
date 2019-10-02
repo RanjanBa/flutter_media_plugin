@@ -20,14 +20,11 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
 import org.json.JSONObject;
 
-import java.io.IOError;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -51,11 +48,13 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private Registrar registrar;
     private AudioPlayer audioPlayer;
     private VideoPlayer videoPlayer;
+    private DownloadUtility downloadUtility;
 
     private MethodChannel channel;
 
     private ExoPlayerListener audioExoPlayerListener;
     private ExoPlayerListener videoExoPlayerListener;
+    private DownloadManager.Listener downloadListener;
 
     static FlutterMediaPlugin getInstance() {
         if (instance == null) {
@@ -72,22 +71,16 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         return audioPlayer;
     }
 
+    DownloadUtility getDownloadUtility() {
+        return downloadUtility;
+    }
+
     private FlutterMediaPlugin(Registrar _registrar) {
         this.registrar = _registrar;
         final MethodChannel channel = new MethodChannel(registrar.messenger(), "flutter_media_plugin");
 
         channel.setMethodCallHandler(this);
         this.channel = channel;
-
-        DownloadUtility.getDownloadManager(_registrar.context()).addListener(new DownloadManager.Listener() {
-            @Override
-            public void onDownloadChanged(DownloadManager downloadManager, Download download) {
-                Log.d(TAG, "on download changed : " + download.state);
-                Map<String, Object> args = new HashMap<>();
-                args.put("state", download.state);
-                channel.invokeMethod("onDownloadChanged", args);
-            }
-        });
     }
 
     private void initializeAudioPlayer() {
@@ -96,7 +89,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
         audioPlayer = new AudioPlayer(registrar.activeContext());
 
-        audioExoPlayerListener = GetExoPlayerListener(true);
+        audioExoPlayerListener = getExoPlayerListener(true);
         audioPlayer.addExoPlayerListener(audioExoPlayerListener);
     }
 
@@ -121,11 +114,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private void initializeVideoPlayer() {
         videoPlayer = new VideoPlayer(registrar.activeContext());
 
-        videoExoPlayerListener = GetExoPlayerListener(false);
+        videoExoPlayerListener = getExoPlayerListener(false);
         videoPlayer.addExoPlayerListener(videoExoPlayerListener);
     }
 
-    private ExoPlayerListener GetExoPlayerListener(final boolean isAudio) {
+    private ExoPlayerListener getExoPlayerListener(final boolean isAudio) {
         return new ExoPlayerListener() {
             public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
                 Log.d(TAG, "onTimelineChanged");
@@ -262,6 +255,19 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         };
     }
 
+    private DownloadManager.Listener getDownloadManagerListener() {
+        return new DownloadManager.Listener() {
+            @Override
+            public void onDownloadChanged(DownloadManager downloadManager, Download download) {
+                Log.d(TAG, "on download changed : " + download.state);
+                Map<String, Object> args = new HashMap<>();
+                args.put("id", download.request.uri.toString());
+                args.put("state", download.state);
+                channel.invokeMethod("onDownloadChanged", args);
+            }
+        };
+    }
+
     void videoInitialize(long textureId, int height, int width, long duration) {
         Map<String, Object> reply = new HashMap<>();
         reply.put("textureId", textureId);
@@ -276,12 +282,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
      */
 
     public static void registerWith(@NonNull Registrar _registrar) {
-        try {
-            DownloadService.start(_registrar.context(), MediaDownloadService.class);
-        } catch (IllegalStateException e) {
-            DownloadService.startForeground(_registrar.context(), MediaDownloadService.class);
-        }
-
         if (instance == null) instance = new FlutterMediaPlugin(_registrar);
         else {
             instance.registrar = _registrar;
@@ -291,15 +291,26 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
             if (instance.audioPlayer != null) {
                 instance.audioPlayer.removeExoPlayerListener(instance.audioExoPlayerListener);
-                instance.audioExoPlayerListener = instance.GetExoPlayerListener(true);
+                instance.audioExoPlayerListener = instance.getExoPlayerListener(true);
                 instance.audioPlayer.addExoPlayerListener(instance.audioExoPlayerListener);
             }
 
             if (instance.videoPlayer != null) {
                 instance.videoPlayer.removeExoPlayerListener(instance.videoExoPlayerListener);
-                instance.videoExoPlayerListener = instance.GetExoPlayerListener(false);
+                instance.videoExoPlayerListener = instance.getExoPlayerListener(false);
                 instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
             }
+        }
+
+        if(instance.downloadUtility != null) {
+            instance.downloadUtility.getDownloadManager(instance.getRegistrar().activeContext()).removeListener(instance.downloadListener);
+            instance.downloadListener = instance.getDownloadManagerListener();
+            instance.downloadUtility.getDownloadManager(instance.getRegistrar().activeContext()).addListener(instance.downloadListener);
+        }
+        else {
+            instance.downloadUtility = new DownloadUtility(instance.getRegistrar().activeContext());
+            instance.downloadListener = instance.getDownloadManagerListener();
+            instance.downloadUtility.getDownloadManager(instance.getRegistrar().activeContext()).addListener(instance.downloadListener);
         }
     }
 
@@ -351,18 +362,30 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     Log.d(TAG, "Download tap");
                     String url = call.argument(Song.song_url_tag);
                     if (url != null) {
-                        DownloadRequest downloadRequest = new DownloadRequest(url, DownloadRequest.TYPE_PROGRESSIVE, Uri.parse(url), Collections.<StreamKey>emptyList(), null, null);
-                        DownloadService.sendAddDownload(getRegistrar().activeContext(), MediaDownloadService.class, downloadRequest, true);
+                        if(downloadUtility != null) {
+                            downloadUtility.startDownload(registrar.activeContext(), url, Uri.parse(url));
+                        }
                     }
                     result.success(null);
                     break;
                 }
                 case "downloadRemove": {
                     String url = call.argument(Song.song_url_tag);
-                    DownloadService.sendRemoveDownload(getRegistrar().activeContext(), MediaDownloadService.class, url, true);
+                    if(url != null && downloadUtility != null) {
+                        downloadUtility.removeDownload(registrar.activeContext(), url);
+                    }
                     result.success(null);
                     break;
                 }
+                case "isDownloaded":
+                    String url = call.argument(Song.song_url_tag);
+                    if(url != null && downloadUtility != null) {
+                        result.success(downloadUtility.isDownloaded(Uri.parse(url)));
+                    }
+                    else {
+                        result.success(false);
+                    }
+                    break;
             }
         }
     }

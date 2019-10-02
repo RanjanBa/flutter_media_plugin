@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
 import 'package:flutter_media_plugin/video_player.dart';
@@ -38,11 +40,17 @@ class FlutterMediaPlugin {
           }
         }
       } catch (e) {
-        if (call.method.compareTo("onDownloadChanged") == 0) {
-          int state = call.arguments["state"];
-          for (DownloadListener listener in _downloadListeners) {
-            listener.onPlayerStateChanged(state);
-          }
+        switch(call.method) {
+          case "onDownloadChanged":
+            int state = call.arguments["state"];
+            String id = call.arguments["id"];
+            for (DownloadListener listener in _downloadListeners) {
+              listener.onDownloadChanged(state, id);
+            }
+            break;
+          default:
+            print("Method not implemented");
+            break;
         }
       }
     });
@@ -79,6 +87,14 @@ class FlutterMediaPlugin {
         'downloadRemove',
         {
           C.song_url_tag: url,
+        });
+  }
+  
+  static Future<bool> isDownloaded(String url) async {
+    return await _channel.invokeMethod(
+        'isDownloaded',
+        {
+          C.song_url_tag: url
         });
   }
 }
