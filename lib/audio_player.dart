@@ -166,6 +166,7 @@ class AudioPlayer {
   }
 
   void stop() {
+    pause();
     channel.invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/stop");
   }
 
