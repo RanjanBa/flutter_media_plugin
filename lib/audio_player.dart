@@ -334,7 +334,7 @@ class Song {
   final String title;
   final String artists;
   final String album;
-  final String album_art_url; // ignore: non_constant_identifier_names
+  final String album_art_url;
   final String url;
 
   Song({
@@ -342,7 +342,7 @@ class Song {
     @required this.title,
     @required this.artists,
     @required this.album,
-    @required this.album_art_url, // ignore: non_constant_identifier_names
+    @required this.album_art_url,
     @required this.url,
   });
 
@@ -392,7 +392,7 @@ class C {
   static String song_album_tag = "album";
 
   // ignore: non_constant_identifier_names
-  static String song_album_art_url_tag = "art_url";
+  static String song_album_art_url_tag = "artUrl";
 
   // ignore: non_constant_identifier_names
   static String song_url_tag = "url";
