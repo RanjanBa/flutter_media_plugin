@@ -25,7 +25,7 @@ class VideoPlayer {
 
   void callMethod(String method, dynamic arguments) {
     switch (method) {
-      case "videoInitialize":
+      case "initialize":
         int textureId = arguments["textureId"];
         _width = arguments['width'];
         _height = arguments['height'];

@@ -44,8 +44,8 @@ class _MyAppState extends State<MyApp> {
   Playlist playlist;
 
 //  String _assetUri = "assets/videos/birwiBirwi.mp4";
-  String _uri =
-      "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2FBaidisina.mp4?alt=media&token=afd3ca71-6f49-4fd5-926c-b8a053c85d27";
+  String _videoUrl =
+      "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2Ftest.mp4?alt=media&token=d66bb13d-b9aa-4a2e-b572-59b63fdb1b6b";
 
   int _textureId;
   int _repeatMode = 0;
@@ -107,7 +107,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void addAndPlay() {
-    _videoPlayer.addAndPlay(TypeOfPlace.network, _uri);
+    _videoPlayer.addAndPlay(TypeOfPlace.network, _videoUrl);
   }
 
   void _setIcons() {

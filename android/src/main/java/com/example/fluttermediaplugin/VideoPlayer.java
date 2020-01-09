@@ -10,7 +10,6 @@ import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player.EventListener;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -33,29 +32,36 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.flutter.plugin.common.MethodChannel;
 import io.flutter.view.TextureRegistry;
 
+import static com.example.fluttermediaplugin.FlutterMediaPlugin.VIDEO_METHOD_TYPE;
 import static com.google.android.exoplayer2.C.CONTENT_TYPE_MOVIE;
 import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ALL;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 
 class VideoPlayer {
+    private static final String VIDEO_EXO_PLAYER_LISTENER_THREAD_NAME = "video_player_thread_name";
     private static String TAG = "VideoPlayer";
 
     private VideoExoPlayerListener videoExoPlayerListener;
-    private MediaExoPlayerListener mediaExoPlayerListener;
 
     private SimpleExoPlayer simpleExoPlayer;
     private Context context;
+    private MethodChannel channel;
 
     private Surface surface;
     private TextureRegistry.SurfaceTextureEntry textureEntry;
 
-    VideoPlayer(Context context) {
+    VideoPlayer(Context context, MethodChannel channel) {
         this.context = context;
+        this.channel = channel;
         initializeSimpleExoPlayer(context);
-        mediaExoPlayerListener = new MediaExoPlayerListener(simpleExoPlayer, "videoPlayer");
+        videoExoPlayerListener = new VideoExoPlayerListener();
     }
 
     private void initializeSimpleExoPlayer(Context context) {
@@ -80,17 +86,9 @@ class VideoPlayer {
         simpleExoPlayer.addVideoListener(new VideoListener() {
             @Override
             public void onSurfaceSizeChanged(int width, int height) {
-                videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
+                videoExoPlayerListener.initialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
             }
         });
-    }
-
-    void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-        mediaExoPlayerListener.addExoPlayerListener(exoPlayerListener);
-    }
-
-    void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-        mediaExoPlayerListener.removeExoPlayerListener(exoPlayerListener);
     }
 
     void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
@@ -151,6 +149,10 @@ class VideoPlayer {
         }
     }
 
+    void setChannel(MethodChannel channel) {
+        this.channel = channel;
+    }
+
     void setupVideoPlayer(
             @NonNull TextureRegistry.SurfaceTextureEntry textureEntry) {
         this.textureEntry = textureEntry;
@@ -168,7 +170,7 @@ class VideoPlayer {
                 width = simpleExoPlayer.getVideoFormat().height;
                 height = simpleExoPlayer.getVideoFormat().width;
             }
-            videoExoPlayerListener.videoInitialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
+            videoExoPlayerListener.initialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
         }
     }
 
@@ -209,60 +211,145 @@ class VideoPlayer {
         }
     }
 
-    private class VideoExoPlayerListener implements EventListener {
+    private class VideoExoPlayerListener extends MediaExoPlayerListener {
+        VideoExoPlayerListener() {
+            super(simpleExoPlayer, VIDEO_EXO_PLAYER_LISTENER_THREAD_NAME);
+        }
+
+        void initialize(long textureId, int height, int width, long duration) {
+            Map<String, Object> reply = new HashMap<>();
+            reply.put("textureId", textureId);
+            reply.put("width", width);
+            reply.put("height", height);
+            reply.put("duration", duration);
+            channel.invokeMethod(VIDEO_METHOD_TYPE + "/initialize", reply);
+        }
+
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            mediaExoPlayerListener.onTimelineChanged(timeline, manifest, reason);
+            Log.d(TAG, "onTimelineChanged");
+            super.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            mediaExoPlayerListener.onTracksChanged(trackGroups, trackSelections);
+            Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
+            super.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            mediaExoPlayerListener.onLoadingChanged(isLoading);
+            Log.d(TAG, "onLoadingChanged");
+            super.onLoadingChanged(isLoading);
         }
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            mediaExoPlayerListener.onPlayerStateChanged(playWhenReady, playbackState);
-            mediaExoPlayerListener.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            super.onPlayerStateChanged(playWhenReady, playbackState);
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("playWhenReady", playWhenReady);
+            args.put("playbackState", playbackState);
+            String method = VIDEO_METHOD_TYPE + "/onPlayerStateChanged";
+//                Log.d(TAG, "onPlayerStateChanged : " + playbackState + ", " + method);
+            channel.invokeMethod(method, args);
         }
 
         @Override
         public void onRepeatModeChanged(int repeatMode) {
-            mediaExoPlayerListener.onRepeatModeChanged(repeatMode);
+            super.onRepeatModeChanged(repeatMode);
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("repeatMode", repeatMode);
+            String method = VIDEO_METHOD_TYPE + "/onRepeatModeChanged";
+//                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
+            channel.invokeMethod(method, args);
         }
 
         @Override
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            mediaExoPlayerListener.onShuffleModeEnabledChanged(shuffleModeEnabled);
-        }
+            super.onShuffleModeEnabledChanged(shuffleModeEnabled);
 
-        @Override
-        public void onPlayerError(ExoPlaybackException error) {
-            mediaExoPlayerListener.onPlayerError(error);
+            Map<String, Object> args = new HashMap<>();
+            args.put("shuffleModeEnabled", shuffleModeEnabled);
+            String method = VIDEO_METHOD_TYPE + "/onShuffleModeEnabledChanged";
+//                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
+            channel.invokeMethod(method, args);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            mediaExoPlayerListener.onPositionDiscontinuity(reason);
+            Log.d(TAG, "onPositionDiscontinuity");
+            super.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            mediaExoPlayerListener.onPlaybackParametersChanged(playbackParameters);
+            Log.d(TAG, "onPlaybackParametersChanged");
+            super.onPlaybackParametersChanged(playbackParameters);
         }
 
         @Override
         public void onSeekProcessed() {
-            mediaExoPlayerListener.onSeekProcessed();
+            Log.d(TAG, "onSeekProcessed");
+            super.onSeekProcessed();
         }
 
-        void videoInitialize(long textureId, int height, int width, long duration) {
-            FlutterMediaPlugin.getInstance().videoInitialize(textureId, height, width, duration);
+        @Override
+        public void onMediaPeriodCreated(int windowIndex) {
+            Log.d(TAG, "onMediaPeriodCreated");
+
+            super.onMediaPeriodCreated(windowIndex);
+
+//            Map<String, Object> args = new HashMap<>();
+//            args.put("windowIndex", windowIndex);
+//            Song song = audioPlayer.getSongByIndex(windowIndex);
+//            if (song == null)
+//                return;
+//
+//            Map<String, Object> songMap = Song.toMap(song);
+//            args.put("currentPlayingSong", songMap);
+//            String method = VIDEO_METHOD_TYPE + "/onMediaPeriodCreated";
+//            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onPlaybackUpdate(long position, long audioLength) {
+            super.onPlaybackUpdate(position, audioLength);
+
+            //Log.d(TAG, "onPlaybackUpdate");
+            Map<String, Object> args = new HashMap<>();
+            args.put("position", position);
+            args.put("audioLength", audioLength);
+            String method = VIDEO_METHOD_TYPE + "/onPlaybackUpdate";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onBufferedUpdate(int percent) {
+            //Log.d(TAG, "onBufferedUpdate " + percent);
+            super.onBufferedUpdate(percent);
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("percent", percent);
+            String method = VIDEO_METHOD_TYPE + "/onBufferedUpdate";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onPlayerStatus(String message) {
+            super.onPlayerStatus(message);
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("message", message);
+            String method = VIDEO_METHOD_TYPE + "/onPlayerStatus";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onPlayerError(ExoPlaybackException error) {
+            Log.d(TAG, "onPlayerError");
+            super.onPlayerError(error);
         }
     }
 }

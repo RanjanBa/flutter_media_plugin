@@ -24,7 +24,8 @@ import java.util.List;
 
 class Playlist {
     private static final String TAG = "Playlist";
-    private static String PLAYLIST_NAME = "playlistName";
+    private static String PLAYLIST_ID= "audio_playlist";
+
     private String playlistName;
     private ConcatenatingMediaSource concatenatingMediaSource;
     private ArrayList<Song> songs;
@@ -151,7 +152,7 @@ class Playlist {
     static JSONObject toJson(Playlist playlist) {
         try {
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put(PLAYLIST_NAME, playlist.playlistName);
+            jsonObject.put(PLAYLIST_ID, playlist.playlistName);
             JSONArray jsonArraySongs = new JSONArray();
             for (Song song : playlist.songs) {
                 JSONObject json = Song.toJson(song);

@@ -29,6 +29,7 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.util.Assertions;
+import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.NotificationUtil;
 import com.google.android.exoplayer2.util.Util;
 
@@ -186,16 +187,7 @@ public class PlayerNotificationManager {
          */
         void onBitmap(final Bitmap bitmap) {
             if (bitmap != null) {
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (player != null
-                                && notificationTag == currentNotificationTag
-                                && isNotificationStarted) {
-                            updateNotification(bitmap);
-                        }
-                    }
-                });
+                updateNotification(bitmap);
             }
         }
     }

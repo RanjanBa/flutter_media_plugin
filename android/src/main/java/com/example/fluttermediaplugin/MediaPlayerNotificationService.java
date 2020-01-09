@@ -9,9 +9,12 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.IBinder;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+
 import android.support.v4.media.session.MediaSessionCompat;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 
@@ -19,8 +22,13 @@ import com.google.android.exoplayer2.Player;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.Stack;
 
 public class MediaPlayerNotificationService extends Service {
     private static final String TAG = "MediaPlayerNotification";
@@ -28,8 +36,15 @@ public class MediaPlayerNotificationService extends Service {
 
     private static MediaPlayerNotificationService instance;
 
-    private static HashMap<String, Bitmap> albumArts = new HashMap<>();
+    private static ArrayMap<String, Bitmap> albumArts = new ArrayMap<>();
     private MediaSessionCompat mediaSession;
+
+    private static void putBitmap(String url, Bitmap bitmap) {
+        if(albumArts.size() >= 10) {
+            albumArts.removeAt(albumArts.size() - 1);
+        }
+        albumArts.put(url, bitmap);
+    }
 
     private static Bitmap getBitmap(String key) {
         if (albumArts.containsKey(key)) {
@@ -131,6 +146,7 @@ public class MediaPlayerNotificationService extends Service {
                             loadImageAsync(uri, callback);
                             bitmap = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.music_notification_icon)).getBitmap();
                         }
+
                         return bitmap;
                     }
                 }
@@ -165,14 +181,15 @@ public class MediaPlayerNotificationService extends Service {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                 super.onLoadingComplete(imageUri, view, loadedImage);
-                Log.d(TAG, "Image loader completed");
-                if (loadedImage == null) {
-                    Log.d(TAG, "Image loaded is null");
-                } else {
-                    albumArts.put(imageUri, loadedImage);
+//                Log.d(TAG, "Image loader completed");
+                if (loadedImage != null) {
+                    putBitmap(imageUri, loadedImage);
                     callback.onBitmap(loadedImage);
-                    Log.d(TAG, "Image loaded is not null");
+//                    Log.d(TAG, "Image loaded is not null");
                 }
+//                else {
+//                    Log.d(TAG, "Image loaded is null");
+//                }
             }
         });
     }
@@ -188,9 +205,7 @@ public class MediaPlayerNotificationService extends Service {
             playerNotificationManager = null;
             mediaSession = null;
             instance = null;
-            if (albumArts != null) {
-                albumArts.clear();
-            }
+            albumArts.clear();
             stopSelf();
         }
     }
@@ -202,6 +217,7 @@ public class MediaPlayerNotificationService extends Service {
         if (playerNotificationManager != null) {
             playerNotificationManager.setPlayer(null);
         }
+        albumArts.clear();
         playerNotificationManager = null;
         mediaSession = null;
         instance = null;

@@ -25,7 +25,7 @@ class DownloadManager {
     switch(method) {
       case "onDownloadChanged":
         int state = arguments["state"];
-        String id = arguments["id"];
+        String id = arguments["url"];
         for (DownloadListener listener in _downloadListeners) {
           listener.onDownloadChanged(state, id);
         }

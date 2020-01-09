@@ -5,12 +5,7 @@ import androidx.annotation.NonNull;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.offline.Download;
-import com.google.android.exoplayer2.source.TrackGroupArray;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
@@ -36,9 +31,9 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private static final String TAG = "FlutterMediaPlugin";
     private static Pattern METHOD_NAME_MATCH = Pattern.compile("([^/]+)/([^/]+)");
 
-    private static String VIDEO_METHOD_TYPE = "VIDEO_TYPE";
-    private static String AUDIO_METHOD_TYPE = "AUDIO_TYPE";
-    private static String DOWNLOAD_METHOD_TYPE = "DOWNLOAD_TYPE";
+    static String VIDEO_METHOD_TYPE = "VIDEO_TYPE";
+    static String AUDIO_METHOD_TYPE = "AUDIO_TYPE";
+    static String DOWNLOAD_METHOD_TYPE = "DOWNLOAD_TYPE";
 
     private static FlutterMediaPlugin instance;
 
@@ -49,8 +44,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
     private MethodChannel channel;
 
-    private ExoPlayerListener audioExoPlayerListener;
-    private ExoPlayerListener videoExoPlayerListener;
     private com.google.android.exoplayer2.offline.DownloadManager.Listener exoPlayerDownloadManagerListener;
 
     static FlutterMediaPlugin getInstance() {
@@ -84,173 +77,13 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(registrar.context()).build();
         ImageLoader.getInstance().init(config);
 
-        audioPlayer = new AudioPlayer(registrar.activeContext());
-
-        audioExoPlayerListener = getExoPlayerListener(true);
-        audioPlayer.addExoPlayerListener(audioExoPlayerListener);
-    }
-
-    private void sendAudioInitialization(Result result) {
-        int playbackState = audioPlayer.getSimpleExoPlayer().getPlaybackState();
-        boolean playWhenReady = audioPlayer.getSimpleExoPlayer().getPlayWhenReady();
-        Map<String, Object> args = new HashMap<>();
-        args.put("playWhenReady", playWhenReady);
-        args.put("playbackState", playbackState);
-
-        Song song = audioPlayer.getSongByIndex(audioPlayer.getSimpleExoPlayer().getCurrentWindowIndex());
-        if (song == null) {
-            args.put("currentPlayingSong", null);
-        } else {
-            Map<String, Object> songMap = Song.toMap(song);
-            args.put("currentPlayingSong", songMap);
-        }
-        result.success(args);
+        audioPlayer = new AudioPlayer(registrar.activeContext(), channel);
     }
 
     private void initializeVideoPlayer() {
-        videoPlayer = new VideoPlayer(registrar.activeContext());
-
-        videoExoPlayerListener = getExoPlayerListener(false);
-        videoPlayer.addExoPlayerListener(videoExoPlayerListener);
+        videoPlayer = new VideoPlayer(registrar.activeContext(), channel);
     }
 
-    private ExoPlayerListener getExoPlayerListener(final boolean isAudio) {
-        return new ExoPlayerListener() {
-            public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-                Log.d(TAG, "onTimelineChanged");
-            }
-
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-                Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
-            }
-
-            public void onLoadingChanged(boolean isLoading) {
-                Log.d(TAG, "onLoadingChanged");
-            }
-
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-                Map<String, Object> args = new HashMap<>();
-                args.put("playWhenReady", playWhenReady);
-                args.put("playbackState", playbackState);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onPlayerStateChanged";
-//                Log.d(TAG, "onPlayerStateChanged : " + playbackState + ", " + method);
-                channel.invokeMethod(method, args);
-            }
-
-            public void onRepeatModeChanged(int repeatMode) {
-                Map<String, Object> args = new HashMap<>();
-                args.put("repeatMode", repeatMode);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onRepeatModeChanged";
-//                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
-                channel.invokeMethod(method, args);
-            }
-
-            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-                Map<String, Object> args = new HashMap<>();
-                args.put("shuffleModeEnabled", shuffleModeEnabled);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onShuffleModeEnabledChanged";
-//                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
-                channel.invokeMethod(method, args);
-            }
-
-            public void onPositionDiscontinuity(int reason) {
-                Log.d(TAG, "onPositionDiscontinuity");
-            }
-
-            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-                Log.d(TAG, "onPlaybackParametersChanged");
-            }
-
-            public void onSeekProcessed() {
-                Log.d(TAG, "onSeekProcessed");
-            }
-
-            public void onMediaPeriodCreated(int windowIndex) {
-                Log.d(TAG, "onMediaPeriodCreated");
-                Map<String, Object> args = new HashMap<>();
-                args.put("windowIndex", windowIndex);
-                Song song = audioPlayer.getSongByIndex(windowIndex);
-                if (song == null)
-                    return;
-
-                Map<String, Object> songMap = Song.toMap(song);
-                args.put("currentPlayingSong", songMap);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onMediaPeriodCreated";
-                channel.invokeMethod(method, args);
-            }
-
-            public void onPlaybackUpdate(long position, long audioLength) {
-                //Log.d(TAG, "onPlaybackUpdate");
-                Map<String, Object> args = new HashMap<>();
-                args.put("position", position);
-                args.put("audioLength", audioLength);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onPlaybackUpdate";
-//                Log.d(TAG, "Playback update");
-                channel.invokeMethod(method, args);
-            }
-
-            public void onBufferedUpdate(int percent) {
-                //Log.d(TAG, "onBufferedUpdate " + percent);
-                Map<String, Object> args = new HashMap<>();
-                args.put("percent", percent);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onBufferedUpdate";
-                channel.invokeMethod(method, args);
-            }
-
-            public void onPlayerStatus(String message) {
-                Map<String, Object> args = new HashMap<>();
-                args.put("message", message);
-                String method;
-                if (isAudio) {
-                    method = AUDIO_METHOD_TYPE;
-                } else {
-                    method = VIDEO_METHOD_TYPE;
-                }
-                method += "/onPlayerStatus";
-                channel.invokeMethod(method, args);
-            }
-
-            public void onPlayerError(ExoPlaybackException error) {
-                Log.d(TAG, "onPlayerError");
-            }
-        };
-    }
 
     private com.google.android.exoplayer2.offline.DownloadManager.Listener getExoPlayerDownloadManagerListener() {
         return new com.google.android.exoplayer2.offline.DownloadManager.Listener() {
@@ -272,15 +105,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         };
     }
 
-    void videoInitialize(long textureId, int height, int width, long duration) {
-        Map<String, Object> reply = new HashMap<>();
-        reply.put("textureId", textureId);
-        reply.put("width", width);
-        reply.put("height", height);
-        reply.put("duration", duration);
-        channel.invokeMethod(VIDEO_METHOD_TYPE + "/videoInitialize", reply);
-    }
-
     /**
      * Plugin registration.
      */
@@ -294,15 +118,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             instance.channel = channel;
 
             if (instance.audioPlayer != null) {
-                instance.audioPlayer.removeExoPlayerListener(instance.audioExoPlayerListener);
-                instance.audioExoPlayerListener = instance.getExoPlayerListener(true);
-                instance.audioPlayer.addExoPlayerListener(instance.audioExoPlayerListener);
+                instance.audioPlayer.setChannel(channel);
             }
 
             if (instance.videoPlayer != null) {
-                instance.videoPlayer.removeExoPlayerListener(instance.videoExoPlayerListener);
-                instance.videoExoPlayerListener = instance.getExoPlayerListener(false);
-                instance.videoPlayer.addExoPlayerListener(instance.videoExoPlayerListener);
+                instance.videoPlayer.setChannel(channel);
             }
         }
 
@@ -318,7 +138,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     }
 
     @Override
-    public void onMethodCall(MethodCall call,@NonNull Result result) {
+    public void onMethodCall(MethodCall call, @NonNull Result result) {
         MethodTypeCall methodTypeCall = parseMethodName(call.method);
 //        Log.d(TAG, methodTypeCall.toString());
         if (methodTypeCall.methodType != null) {
@@ -329,7 +149,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                         result.success(null);
                     } else {
                         Log.d(TAG, "Already audioPlayer is initialized");
-                        sendAudioInitialization(result);
+                        audioPlayer.initialize(result);
                     }
                     return;
                 }
@@ -596,7 +416,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 Log.d(TAG, "Download tap");
                 String url = call.argument("url");
                 if (url != null) {
-                        downloadManager.startDownload(registrar.activeContext(), url, Uri.parse(url));
+                    downloadManager.startDownload(registrar.activeContext(), url, Uri.parse(url));
                 }
                 result.success(null);
                 break;
@@ -616,6 +436,9 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 } else {
                     result.success(false);
                 }
+                break;
+            default:
+                result.notImplemented();
                 break;
         }
     }
