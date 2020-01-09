@@ -235,7 +235,7 @@ class AudioPlayer {
             simpleExoPlayer.setPlayWhenReady(true);
         } else {
             audioExoPlayerListener.onPlayerStatus("Audio is already in playing state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
-            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+//            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
     }
 
@@ -244,7 +244,7 @@ class AudioPlayer {
             simpleExoPlayer.setPlayWhenReady(false);
         } else {
             audioExoPlayerListener.onPlayerStatus("Audio is already in paused state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
-            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+//            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
     }
 
