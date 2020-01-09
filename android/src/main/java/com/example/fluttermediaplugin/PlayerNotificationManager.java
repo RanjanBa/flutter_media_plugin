@@ -41,45 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * A notification manager to start, update and cancel a media style notification reflecting the
- * player state.
- * <p>
- * <p>The notification is cancelled when {@code null} is passed to {@link #setPlayer(Player)} or
- * when an intent with action {@link #ACTION_STOP} is received.
- * <p>
- * <p>If the player is released it must be removed from the manager by calling {@code
- * setPlayer(null)} which will cancel the notification.
- * <p>
- * <h3>Action customization</h3>
- * <p>
- * Standard playback actions can be shown or omitted as follows:
- * <p>
- * <ul>
- * <li><b>{@code useNavigationActions}</b> - Sets whether the navigation previous and next actions
- * are displayed.
- * <ul>
- * <li>Corresponding setter: {@link #setUseNavigationActions(boolean)}
- * </ul>
- * <li><b>{@code stopAction}</b> - Sets which stop action should be used. If set to null, the stop
- * action is not displayed.
- * <ul>
- * <li>Corresponding setter: {@link #setStopAction(String)}}
- * </ul>
- * <li><b>{@code rewindIncrementMs}</b> - Sets the rewind increment. If set to zero the rewind
- * action is not displayed.
- * <ul>
- * <li>Corresponding setter: {@link #setRewindIncrementMs(long)}
- * <li>Default: {@link #DEFAULT_REWIND_MS} (5000)
- * </ul>
- * <li><b>{@code fastForwardIncrementMs}</b> - Sets the fast forward increment. If set to zero the
- * fast forward action is not included in the notification.
- * <ul>
- * <li>Corresponding setter: {@link #setFastForwardIncrementMs(long)}}
- * <li>Default: {@link #DEFAULT_FAST_FORWARD_MS} (5000)
- * </ul>
- * </ul>
- */
 public class PlayerNotificationManager {
     /**
      * An adapter to provide content assets of the media currently playing.

@@ -44,7 +44,7 @@ class VideoPlayer {
     private static String TAG = "VideoPlayer";
 
     private VideoExoPlayerListener videoExoPlayerListener;
-    private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;
+    private MediaExoPlayerListener mediaExoPlayerListener;
 
     private SimpleExoPlayer simpleExoPlayer;
     private Context context;
@@ -55,7 +55,7 @@ class VideoPlayer {
     VideoPlayer(Context context) {
         this.context = context;
         initializeSimpleExoPlayer(context);
-        mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager(simpleExoPlayer, "videoPlayer");
+        mediaExoPlayerListener = new MediaExoPlayerListener(simpleExoPlayer, "videoPlayer");
     }
 
     private void initializeSimpleExoPlayer(Context context) {
@@ -86,11 +86,11 @@ class VideoPlayer {
     }
 
     void addExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerListener);
+        mediaExoPlayerListener.addExoPlayerListener(exoPlayerListener);
     }
 
     void removeExoPlayerListener(ExoPlayerListener exoPlayerListener) {
-        mediaPlayerExoPlayerListenerManager.removeExoPlayerListener(exoPlayerListener);
+        mediaExoPlayerListener.removeExoPlayerListener(exoPlayerListener);
     }
 
     void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
@@ -212,53 +212,53 @@ class VideoPlayer {
     private class VideoExoPlayerListener implements EventListener {
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            mediaPlayerExoPlayerListenerManager.onTimelineChanged(timeline, manifest, reason);
+            mediaExoPlayerListener.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            mediaPlayerExoPlayerListenerManager.onTracksChanged(trackGroups, trackSelections);
+            mediaExoPlayerListener.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            mediaPlayerExoPlayerListenerManager.onLoadingChanged(isLoading);
+            mediaExoPlayerListener.onLoadingChanged(isLoading);
         }
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
-            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(playWhenReady, playbackState);
-            mediaPlayerExoPlayerListenerManager.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaExoPlayerListener.onPlayerStateChanged(playWhenReady, playbackState);
+            mediaExoPlayerListener.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
         }
 
         @Override
         public void onRepeatModeChanged(int repeatMode) {
-            mediaPlayerExoPlayerListenerManager.onRepeatModeChanged(repeatMode);
+            mediaExoPlayerListener.onRepeatModeChanged(repeatMode);
         }
 
         @Override
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            mediaPlayerExoPlayerListenerManager.onShuffleModeEnabledChanged(shuffleModeEnabled);
+            mediaExoPlayerListener.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            mediaPlayerExoPlayerListenerManager.onPlayerError(error);
+            mediaExoPlayerListener.onPlayerError(error);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            mediaPlayerExoPlayerListenerManager.onPositionDiscontinuity(reason);
+            mediaExoPlayerListener.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            mediaPlayerExoPlayerListenerManager.onPlaybackParametersChanged(playbackParameters);
+            mediaExoPlayerListener.onPlaybackParametersChanged(playbackParameters);
         }
 
         @Override
         public void onSeekProcessed() {
-            mediaPlayerExoPlayerListenerManager.onSeekProcessed();
+            mediaExoPlayerListener.onSeekProcessed();
         }
 
         void videoInitialize(long textureId, int height, int width, long duration) {

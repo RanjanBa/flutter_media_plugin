@@ -37,8 +37,8 @@ import static com.google.android.exoplayer2.C.USAGE_MEDIA;
 class AudioPlayer {
     private static final String TAG = "AudioPlayer";
 
-    private AudioExoPlayerListener audioEventListener;
-    private MediaPlayerExoPlayerListenerManager mediaPlayerExoPlayerListenerManager;
+    private AudioExoPlayerListener audioExoPlayerListener;
+    private MediaExoPlayerListener mediaExoPlayerListener;
     private SimpleExoPlayer simpleExoPlayer;
 
     private boolean isShowingNotification = false;
@@ -60,7 +60,7 @@ class AudioPlayer {
 
     AudioPlayer(@NonNull Context context) {
         initSimpleExoPlayer(context);
-        mediaPlayerExoPlayerListenerManager = new MediaPlayerExoPlayerListenerManager(simpleExoPlayer, "audioPlayer");
+        mediaExoPlayerListener = new MediaExoPlayerListener(simpleExoPlayer, "audioPlayer");
     }
 
     private void initSimpleExoPlayer(Context context) {
@@ -84,7 +84,7 @@ class AudioPlayer {
         MediaSourceEventListener playlistEventListener = new MediaSourceEventListener() {
             @Override
             public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
-                mediaPlayerExoPlayerListenerManager.onMediaPeriodCreated(windowIndex);
+                mediaExoPlayerListener.onMediaPeriodCreated(windowIndex);
                 Log.d(TAG + "CC", "onMediaPeriodCreated : " + windowIndex);
             }
 
@@ -130,15 +130,15 @@ class AudioPlayer {
         };
         playlist = new Playlist("currentPlaylist", simpleExoPlayer, playlistEventListener, dataSourceFactory);
 
-        if (audioEventListener == null) {
-            audioEventListener = new AudioExoPlayerListener();
+        if (audioExoPlayerListener == null) {
+            audioExoPlayerListener = new AudioExoPlayerListener();
         }
-        simpleExoPlayer.addListener(audioEventListener);
+        simpleExoPlayer.addListener(audioExoPlayerListener);
     }
 
     void release() {
         if (simpleExoPlayer != null) {
-            simpleExoPlayer.removeListener(audioEventListener);
+            simpleExoPlayer.removeListener(audioExoPlayerListener);
             simpleExoPlayer.release();
         }
 
@@ -146,18 +146,18 @@ class AudioPlayer {
         if (MediaPlayerNotificationService.getInstance() != null) {
             MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setPlayer(null);
         }
-        audioEventListener = null;
+        audioExoPlayerListener = null;
     }
 
     void stop() {
         simpleExoPlayer.stop(false);
-        mediaPlayerExoPlayerListenerManager.stopBufferingPolling();
-        mediaPlayerExoPlayerListenerManager.stopPlaybackPolling();
-        mediaPlayerExoPlayerListenerManager.onBufferedUpdate(0);
-        mediaPlayerExoPlayerListenerManager.onPlaybackUpdate(0, 0);
+        mediaExoPlayerListener.stopBufferingPolling();
+        mediaExoPlayerListener.stopPlaybackPolling();
+        mediaExoPlayerListener.onBufferedUpdate(0);
+        mediaExoPlayerListener.onPlaybackUpdate(0, 0);
         if (simpleExoPlayer != null) {
-            mediaPlayerExoPlayerListenerManager.onPlayerStatus("stop player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
-            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+            mediaExoPlayerListener.onPlayerStatus("stop player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
+            mediaExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
         if (MediaPlayerNotificationService.getInstance() != null)
             MediaPlayerNotificationService.getInstance().stopService(true);
@@ -165,11 +165,11 @@ class AudioPlayer {
     }
 
     void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
+        mediaExoPlayerListener.addExoPlayerListener(exoPlayerMediaListener);
     }
 
     void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-        mediaPlayerExoPlayerListenerManager.addExoPlayerListener(exoPlayerMediaListener);
+        mediaExoPlayerListener.addExoPlayerListener(exoPlayerMediaListener);
     }
 
     private void showAudioPlayerNotification() {
@@ -213,8 +213,8 @@ class AudioPlayer {
         if (!simpleExoPlayer.getPlayWhenReady()) {
             simpleExoPlayer.setPlayWhenReady(true);
         } else {
-            mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already playing player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
-            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+            mediaExoPlayerListener.onPlayerStatus("Already playing player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
 //            Log.d(TAG, "Already playing");
         }
 
@@ -224,8 +224,8 @@ class AudioPlayer {
         if (simpleExoPlayer.getPlayWhenReady()) {
             simpleExoPlayer.setPlayWhenReady(false);
         } else {
-            mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already paused, player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
-            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+            mediaExoPlayerListener.onPlayerStatus("Already paused, player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
 //            Log.d(TAG, "Already paused");
         }
     }
@@ -318,17 +318,17 @@ class AudioPlayer {
     private class AudioExoPlayerListener implements EventListener {
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            mediaPlayerExoPlayerListenerManager.onTimelineChanged(timeline, manifest, reason);
+            mediaExoPlayerListener.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            mediaPlayerExoPlayerListenerManager.onTracksChanged(trackGroups, trackSelections);
+            mediaExoPlayerListener.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            mediaPlayerExoPlayerListenerManager.onLoadingChanged(isLoading);
+            mediaExoPlayerListener.onLoadingChanged(isLoading);
         }
 
         @Override
@@ -349,38 +349,38 @@ class AudioPlayer {
                 }
             }
 
-            mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(playWhenReady, playbackState);
-            mediaPlayerExoPlayerListenerManager.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
+            mediaExoPlayerListener.onPlayerStateChanged(playWhenReady, playbackState);
+            mediaExoPlayerListener.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
         }
 
         @Override
         public void onRepeatModeChanged(int repeatMode) {
-            mediaPlayerExoPlayerListenerManager.onRepeatModeChanged(repeatMode);
+            mediaExoPlayerListener.onRepeatModeChanged(repeatMode);
         }
 
         @Override
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            mediaPlayerExoPlayerListenerManager.onShuffleModeEnabledChanged(shuffleModeEnabled);
+            mediaExoPlayerListener.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            mediaPlayerExoPlayerListenerManager.onPlayerError(error);
+            mediaExoPlayerListener.onPlayerError(error);
         }
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            mediaPlayerExoPlayerListenerManager.onPositionDiscontinuity(reason);
+            mediaExoPlayerListener.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            mediaPlayerExoPlayerListenerManager.onPlaybackParametersChanged(playbackParameters);
+            mediaExoPlayerListener.onPlaybackParametersChanged(playbackParameters);
         }
 
         @Override
         public void onSeekProcessed() {
-            mediaPlayerExoPlayerListenerManager.onSeekProcessed();
+            mediaExoPlayerListener.onSeekProcessed();
         }
     }
 }

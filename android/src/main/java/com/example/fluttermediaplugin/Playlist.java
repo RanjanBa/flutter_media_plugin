@@ -36,7 +36,7 @@ class Playlist {
         this.simpleExoPlayer = simpleExoPlayer;
         songs = new ArrayList<>();
 
-        cacheDataSourceFactory = new CacheDataSourceFactory(DownloadUtility.getDownloadCache(FlutterMediaPlugin.getInstance().getRegistrar().activeContext()), dataSourceFactory);
+        cacheDataSourceFactory = new CacheDataSourceFactory(DownloadManager.getDownloadCache(FlutterMediaPlugin.getInstance().getRegistrar().activeContext()), dataSourceFactory);
         concatenatingMediaSource = new ConcatenatingMediaSource();
         concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
     }

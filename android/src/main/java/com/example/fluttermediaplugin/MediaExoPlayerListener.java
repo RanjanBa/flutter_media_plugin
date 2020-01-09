@@ -18,16 +18,16 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-public class MediaPlayerExoPlayerListenerManager implements EventListener {
+public class MediaExoPlayerListener implements EventListener {
     private static String TAG = "MediaPlayerManager";
-    private final Set<ExoPlayerListener> exoPlayerMediaListeners = new CopyOnWriteArraySet<>();
+    private final Set<ExoPlayerListener> mediaExoPlayerListeners = new CopyOnWriteArraySet<>();
     private Handler playbackPollHandler;
     private Handler bufferingPollHandler;
     private boolean isPollingPlayback = false;
     private boolean isPollingBuffering = false;
     private SimpleExoPlayer simpleExoPlayer;
 
-    MediaPlayerExoPlayerListenerManager(@NonNull SimpleExoPlayer simpleExoPlayer, @NonNull String handlerThreadName) {
+    MediaExoPlayerListener(@NonNull SimpleExoPlayer simpleExoPlayer, @NonNull String handlerThreadName) {
         this.simpleExoPlayer = simpleExoPlayer;
         HandlerThread playbackHandlerThread = new HandlerThread(handlerThreadName + "playback");
         playbackHandlerThread.start();
@@ -39,11 +39,11 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
     }
 
     void addExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-        exoPlayerMediaListeners.add(exoPlayerMediaListener);
+        mediaExoPlayerListeners.add(exoPlayerMediaListener);
     }
 
     void removeExoPlayerListener(@NonNull ExoPlayerListener exoPlayerMediaListener) {
-        exoPlayerMediaListeners.remove(exoPlayerMediaListener);
+        mediaExoPlayerListeners.remove(exoPlayerMediaListener);
     }
 
     void stopPlaybackPolling() {
@@ -114,14 +114,14 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
 
     @Override
     public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onTimelineChanged(timeline, manifest, reason);
         }
     }
 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onTracksChanged(trackGroups, trackSelections);
         }
     }
@@ -132,7 +132,7 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
             startBufferPolling();
         }
 
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onLoadingChanged(isLoading);
         }
     }
@@ -140,7 +140,7 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         Log.d(TAG, "PlayWhenReady : " + playWhenReady + ", PlaybackState : " + playbackState);
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onPlayerStateChanged(playWhenReady, playbackState);
         }
 
@@ -163,71 +163,71 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
 
 
 
-        for (ExoPlayerListener listener : exoPlayerMediaListeners)
+        for (ExoPlayerListener listener : mediaExoPlayerListeners)
             listener.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
     }
 
     @Override
     public void onRepeatModeChanged(int repeatMode) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onRepeatModeChanged(repeatMode);
         }
     }
 
     @Override
     public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
     }
 
     @Override
     public void onPlayerError(ExoPlaybackException error) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onPlayerError(error);
         }
     }
 
     @Override
     public void onPositionDiscontinuity(int reason) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onPositionDiscontinuity(reason);
         }
     }
 
     @Override
     public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onPlaybackParametersChanged(playbackParameters);
         }
     }
 
     @Override
     public void onSeekProcessed() {
-        for (ExoPlayerListener eventListener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener eventListener : mediaExoPlayerListeners) {
             eventListener.onSeekProcessed();
         }
     }
 
     void onMediaPeriodCreated(int windowIndex) {
-        for (ExoPlayerListener listener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener listener : mediaExoPlayerListeners) {
             listener.onMediaPeriodCreated(windowIndex);
         }
     }
 
     void onPlaybackUpdate(long position, long audioLength) {
-        for (ExoPlayerListener listener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener listener : mediaExoPlayerListeners) {
             listener.onPlaybackUpdate(position, audioLength);
         }
     }
 
     void onBufferedUpdate(int percent) {
-        for (ExoPlayerListener listener : exoPlayerMediaListeners) {
+        for (ExoPlayerListener listener : mediaExoPlayerListeners) {
             listener.onBufferedUpdate(percent);
         }
     }
 
     void onPlayerStatus(String message) {
-        for (ExoPlayerListener listener : exoPlayerMediaListeners) listener.onPlayerStatus(message);
+        for (ExoPlayerListener listener : mediaExoPlayerListeners) listener.onPlayerStatus(message);
     }
 }

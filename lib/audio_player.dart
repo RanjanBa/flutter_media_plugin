@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_media_plugin/download_listener.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
 import 'package:flutter_media_plugin/playlist.dart';
@@ -39,7 +38,7 @@ class AudioPlayer {
 
   void _initialize() async {
     Map<dynamic, dynamic> arguments = await channel
-        .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/initialize');
+        .invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/initialize');
     print("initialize ${arguments.runtimeType}");
     if (arguments != null) {
       _playWhenReady = arguments["playWhenReady"];
@@ -145,7 +144,7 @@ class AudioPlayer {
         }
         break;
       default:
-        print("Audio Method not implemented");
+        print("Audio Method is not implemented");
         break;
     }
   }
@@ -159,20 +158,20 @@ class AudioPlayer {
   }
 
   void play() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/play');
+    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/play');
   }
 
   void pause() {
-    channel.invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/pause");
+    channel.invokeMethod("${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/pause");
   }
 
   void stop() {
-    channel.invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/stop");
+    channel.invokeMethod("${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/stop");
   }
 
   void addAndPlay(Song song) {
     channel.invokeMethod(
-      "${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/addAndPlay",
+      "${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/addAndPlay",
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
@@ -186,7 +185,7 @@ class AudioPlayer {
 
   void addSong(Song song) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/addSong',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/addSong',
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
@@ -200,7 +199,7 @@ class AudioPlayer {
 
   void playNext(Song song) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/playNext',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/playNext',
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
@@ -214,7 +213,7 @@ class AudioPlayer {
 
   void addSongAtIndex(int index, Song song) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/addSongAtIndex',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/addSongAtIndex',
       {
         'index': index,
         C.song_key_tag: song.key,
@@ -230,7 +229,7 @@ class AudioPlayer {
   Future<void> setPlaylist(Playlist playlist) async {
     String s = json.encode(playlist);
     await channel.invokeMethod(
-      "${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setPlaylist",
+      "${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/setPlaylist",
       {
         "playlist": s,
       },
@@ -239,7 +238,7 @@ class AudioPlayer {
 
   Future<Playlist> getPlaylist() async {
     String s = await channel
-        .invokeMethod("${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getPlaylist");
+        .invokeMethod("${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/getPlaylist");
     Map<String, dynamic> map = json.decode(s);
     Playlist playlist = Playlist.fromMap(map);
     return playlist;
@@ -247,7 +246,7 @@ class AudioPlayer {
 
   void removeSong(Song song) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/removeSong',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/removeSong',
       {
         C.song_key_tag: song.key,
         C.song_title_tag: song.title,
@@ -261,7 +260,7 @@ class AudioPlayer {
 
   void seekTo(int position) {
     channel.invokeMethod(
-      "${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/seekTo",
+      "${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/seekTo",
       {
         'position': position,
       },
@@ -271,7 +270,7 @@ class AudioPlayer {
   void setRepeatMode(int repeatMode) {
     if (repeatMode >= 0 && repeatMode <= 2) {
       channel.invokeMethod(
-        '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setRepeatMode',
+        '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/setRepeatMode',
         {
           'repeatMode': repeatMode,
         },
@@ -281,14 +280,14 @@ class AudioPlayer {
 
   Future<int> getRepeatMode() async {
     int mode = await channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getRepeatMode',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/getRepeatMode',
     );
     return mode;
   }
 
   void setShuffleModeEnabled(bool shuffleModeEnabled) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/setShuffleModeEnabled',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/setShuffleModeEnabled',
       {
         'shuffleModeEnabled': shuffleModeEnabled,
       },
@@ -297,23 +296,23 @@ class AudioPlayer {
 
   Future<bool> getShuffleModeEnabled() async {
     bool shuffleModeEnabled = await channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/getShuffleModeEnabled',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/getShuffleModeEnabled',
     );
     return shuffleModeEnabled;
   }
 
   void skipToNext() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/skipToNext');
+    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/skipToNext');
   }
 
   void skipToPrevious() {
     channel
-        .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/skipToPrevious');
+        .invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/skipToPrevious');
   }
 
   void skipToIndex(int index) {
     channel.invokeMethod(
-      '${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/skipToIndex',
+      '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/skipToIndex',
       {
         'index': index,
       },
@@ -322,11 +321,11 @@ class AudioPlayer {
 
   Future<void> clearPlaylist() async {
     await channel
-        .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/clearPlaylist');
+        .invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/clearPlaylist');
   }
 
   void release() {
-    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/release');
+    channel.invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/release');
   }
 }
 
@@ -335,6 +334,7 @@ class Song {
   final String title;
   final String artists;
   final String album;
+  // ignore: non_constant_identifier_names
   final String album_art_url;
   final String url;
 

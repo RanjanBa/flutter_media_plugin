@@ -216,7 +216,7 @@ public class MediaPlayerNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "on start command audio player");
+        Log.d(TAG, "on start method audio player");
         instantiateNotification();
         return START_STICKY;
     }

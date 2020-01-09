@@ -20,7 +20,7 @@ class VideoPlayer {
   int get duration => _duration;
 
   VideoPlayer({this.playerId, this.channel}) {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/initialize');
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/initialize');
   }
 
   void callMethod(String method, dynamic arguments) {
@@ -37,6 +37,9 @@ class VideoPlayer {
           }
         }
         break;
+      default:
+        print("Video Method is not implemented");
+        break;
     }
   }
 
@@ -51,7 +54,7 @@ class VideoPlayer {
   void addAndPlay(TypeOfPlace type, String uri) {
     String path = type == TypeOfPlace.asset ? "asset" : "uri";
     channel.invokeMethod(
-      '${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/addAndPlay',
+      '${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/addAndPlay',
       {
         path: uri,
       },
@@ -59,15 +62,15 @@ class VideoPlayer {
   }
 
   void initSetTexture() {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/initSetTexture');
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/initSetTexture');
   }
 
   void play() {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/play');
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/play');
   }
 
   void pause() {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_MEDIA_TYPE}/pause');
+    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/pause');
   }
 }
 

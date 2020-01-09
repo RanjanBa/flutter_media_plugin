@@ -6,17 +6,20 @@ import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 import 'package:flutter_media_plugin_example/songs.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
-import 'package:flutter_media_plugin/download_listener.dart';
+import 'package:flutter_media_plugin/download_manager.dart';
 import 'package:flutter_media_plugin/video_player.dart';
 
 AudioPlayer _audioPlayer;
 VideoPlayer _videoPlayer;
+DownloadManager _downloadManager;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterMediaPlugin();
+
   _audioPlayer = FlutterMediaPlugin.audioPlayer;
   _videoPlayer = FlutterMediaPlugin.videoPlayer;
+  _downloadManager = FlutterMediaPlugin.downloadManager;
 
   runApp(MyApp());
 }
@@ -47,6 +50,7 @@ class _MyAppState extends State<MyApp> {
   int _textureId;
   int _repeatMode = 0;
   bool _shuffleModeEnabled = false;
+
   @override
   void initState() {
     super.initState();
@@ -72,7 +76,7 @@ class _MyAppState extends State<MyApp> {
       print('Flutter main $state $id');
     });
 
-    FlutterMediaPlugin.addDownloadListener(_downloadListener);
+    _downloadManager.addDownloadListener(_downloadListener);
 
     _videoExoPlayerListener =
         VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
@@ -95,7 +99,9 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     super.dispose();
     _audioPlayer.removeExoPlayerListener(_exoPlayerListener);
-    FlutterMediaPlugin.removeDownloadListener(_downloadListener);
+    if (_downloadManager != null) {
+      _downloadManager.removeDownloadListener(_downloadListener);
+    }
     _videoPlayer.removeVideoExoPlayer(_videoExoPlayerListener);
 //    print("Main dispose");
   }
@@ -288,11 +294,7 @@ class _MyAppState extends State<MyApp> {
                 child: Text("RepeatMode Change"),
               ),
             ),
-            Center(
-              child: Text(
-                "repeat mode : $_repeatMode"
-              )
-            ),
+            Center(child: Text("repeat mode : $_repeatMode")),
             Center(
               child: RaisedButton(
                 onPressed: () async {
@@ -302,11 +304,7 @@ class _MyAppState extends State<MyApp> {
                 child: Text("ShuffleMode Change"),
               ),
             ),
-            Center(
-                child: Text(
-                    "shuffle mode : $_shuffleModeEnabled"
-                )
-            ),
+            Center(child: Text("shuffle mode : $_shuffleModeEnabled")),
             ListView.builder(
               shrinkWrap: true,
               physics: ClampingScrollPhysics(),
@@ -323,19 +321,28 @@ class _MyAppState extends State<MyApp> {
                     _audioPlayer.addAndPlay(Samples.songs[index]);
                   },
                   trailing: FutureBuilder<bool>(
-                    future: FlutterMediaPlugin.isDownloaded(Samples.songs[index].url),
+                    future: _downloadManager.isDownloaded(
+                        Samples.songs[index].url),
                     builder: (context, snapshot) {
-                      if(snapshot.hasData) {
+                      if (snapshot.hasData) {
 //                        print('data ${snapshot.data}');
-                          if(snapshot.data == false)
-                            return IconButton(icon: Icon(Icons.file_download), onPressed: () {
-                              FlutterMediaPlugin.download(Samples.songs[index].url);
-                            },);
-                          else {
-                            return IconButton(icon: Icon(Icons.delete), onPressed: () {
-                              FlutterMediaPlugin.downloadRemove(Samples.songs[index].url);
-                            },);
-                          }
+                        if (snapshot.data == false)
+                          return IconButton(
+                            icon: Icon(Icons.file_download),
+                            onPressed: () {
+                              _downloadManager.download(
+                                  Samples.songs[index].url);
+                            },
+                          );
+                        else {
+                          return IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              _downloadManager.downloadRemove(
+                                  Samples.songs[index].url);
+                            },
+                          );
+                        }
                       } else {
                         return CircularProgressIndicator();
                       }
