@@ -18,7 +18,6 @@ class FlutterMediaPlugin {
 
   FlutterMediaPlugin() {
     _channel.setMethodCallHandler((MethodCall call) async {
-
       try {
         Match match = _regExp.firstMatch(call.method);
 
@@ -34,8 +33,8 @@ class FlutterMediaPlugin {
             if (_videoPlayer != null) {
               _videoPlayer.callMethod(method, call.arguments);
             }
-          } else if(methodType == DOWNLOAD_METHOD_TYPE) {
-            if(_downloadManager != null) {
+          } else if (methodType == DOWNLOAD_METHOD_TYPE) {
+            if (_downloadManager != null) {
               _downloadManager.callMethod(method, call.arguments);
             }
           }
@@ -47,16 +46,28 @@ class FlutterMediaPlugin {
   }
 
   static AudioPlayer get audioPlayer {
+    if (_audioPlayer != null) {
+      return _audioPlayer;
+    }
+
     return _audioPlayer =
         new AudioPlayer(playerId: "audioPlayer", channel: _channel);
   }
 
   static VideoPlayer get videoPlayer {
+    if (_videoPlayer != null) {
+      return _videoPlayer;
+    }
+
     return _videoPlayer =
         new VideoPlayer(playerId: "videoPlayer", channel: _channel);
   }
 
   static DownloadManager get downloadManager {
+    if (_downloadManager != null) {
+      return _downloadManager;
+    }
+
     return _downloadManager = new DownloadManager(channel: _channel);
   }
 }
