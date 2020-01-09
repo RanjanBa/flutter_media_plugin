@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Looper;
+
 import androidx.annotation.DrawableRes;
 import androidx.annotation.Nullable;
 import androidx.annotation.IntDef;
@@ -17,6 +18,7 @@ import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
+
 import android.support.v4.media.session.MediaSessionCompat;
 
 import com.google.android.exoplayer2.C;
@@ -29,7 +31,6 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.util.Assertions;
-import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.NotificationUtil;
 import com.google.android.exoplayer2.util.Util;
 
@@ -173,21 +174,16 @@ public class PlayerNotificationManager {
     final class BitmapCallback {
         private final int notificationTag;
 
-        /**
-         * Create the receiver.
-         */
         private BitmapCallback(int notificationTag) {
             this.notificationTag = notificationTag;
         }
 
-        /**
-         * Called when {@link Bitmap} is available.
-         *
-         * @param bitmap The bitmap to use as the large icon of the notification.
-         */
         void onBitmap(final Bitmap bitmap) {
             if (bitmap != null) {
-                updateNotification(bitmap);
+                if (player != null && notificationTag == currentNotificationTag && isNotificationStarted) {
+//                    Log.d("MediaPlayerNotification", "Update PlayerNotification");
+                    updateNotification(bitmap);
+                }
             }
         }
     }
@@ -195,35 +191,35 @@ public class PlayerNotificationManager {
     /**
      * The action which starts playback.
      */
-    static final String ACTION_PLAY = "com.google.android.exoplayer.play";
+    private static final String ACTION_PLAY = "com.google.android.exoplayer.play";
     /**
      * The action which pauses playback.
      */
-    static final String ACTION_PAUSE = "com.google.android.exoplayer.pause";
+    private static final String ACTION_PAUSE = "com.google.android.exoplayer.pause";
     /**
      * The action which skips to the previous window.
      */
-    static final String ACTION_PREVIOUS = "com.google.android.exoplayer.prev";
+    private static final String ACTION_PREVIOUS = "com.google.android.exoplayer.prev";
     /**
      * The action which skips to the next window.
      */
-    static final String ACTION_NEXT = "com.google.android.exoplayer.next";
+    private static final String ACTION_NEXT = "com.google.android.exoplayer.next";
     /**
      * The action which fast forwards.
      */
-    static final String ACTION_FAST_FORWARD = "com.google.android.exoplayer.ffwd";
+    private static final String ACTION_FAST_FORWARD = "com.google.android.exoplayer.ffwd";
     /**
      * The action which rewinds.
      */
-    static final String ACTION_REWIND = "com.google.android.exoplayer.rewind";
+    private static final String ACTION_REWIND = "com.google.android.exoplayer.rewind";
     /**
      * The action which cancels the notification and stops playback.
      */
-    static final String ACTION_STOP = "com.google.android.exoplayer.stop";
+    private static final String ACTION_STOP = "com.google.android.exoplayer.stop";
     /**
      * The extra key of the instance id of the player notification manager.
      */
-    static final String EXTRA_INSTANCE_ID = "INSTANCE_ID";
+    private static final String EXTRA_INSTANCE_ID = "INSTANCE_ID";
 
     /**
      * Visibility of notification on the lock screen. One of {@link
@@ -261,11 +257,11 @@ public class PlayerNotificationManager {
     /**
      * The default fast forward increment, in milliseconds.
      */
-    static final int DEFAULT_FAST_FORWARD_MS = 15000;
+    private static final int DEFAULT_FAST_FORWARD_MS = 15000;
     /**
      * The default rewind increment, in milliseconds.
      */
-    static final int DEFAULT_REWIND_MS = 5000;
+    private static final int DEFAULT_REWIND_MS = 5000;
 
     private static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
 

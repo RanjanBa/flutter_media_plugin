@@ -44,8 +44,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
     private MethodChannel channel;
 
-    private com.google.android.exoplayer2.offline.DownloadManager.Listener exoPlayerDownloadManagerListener;
-
     static FlutterMediaPlugin getInstance() {
         if (instance == null) {
             Log.e(TAG, "Flutter Media plugin instance is null");
@@ -84,27 +82,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         videoPlayer = new VideoPlayer(registrar.activeContext(), channel);
     }
 
-
-    private com.google.android.exoplayer2.offline.DownloadManager.Listener getExoPlayerDownloadManagerListener() {
-        return new com.google.android.exoplayer2.offline.DownloadManager.Listener() {
-            @Override
-            public void onInitialized(com.google.android.exoplayer2.offline.DownloadManager downloadManager) {
-                List<Download> downloads = downloadManager.getCurrentDownloads();
-            }
-
-            @Override
-            public void onDownloadChanged(com.google.android.exoplayer2.offline.DownloadManager downloadManager, Download download) {
-                Log.d(TAG, "on download changed : " + download.state);
-                Map<String, Object> args = new HashMap<>();
-                args.put("url", download.request.uri.toString());
-                args.put("state", download.state);
-                channel.invokeMethod(DOWNLOAD_METHOD_TYPE + "/onDownloadChanged", args);
-            }
-
-
-        };
-    }
-
     /**
      * Plugin registration.
      */
@@ -127,13 +104,9 @@ public class FlutterMediaPlugin implements MethodCallHandler {
         }
 
         if (instance.downloadManager != null) {
-            instance.downloadManager.removeDownloadListener(instance.exoPlayerDownloadManagerListener);
-            instance.exoPlayerDownloadManagerListener = instance.getExoPlayerDownloadManagerListener();
-            instance.downloadManager.addDownloadListener(instance.exoPlayerDownloadManagerListener);
+            instance.downloadManager.setChannel(instance.channel);
         } else {
-            instance.downloadManager = new DownloadManager(instance.getRegistrar().activeContext());
-            instance.exoPlayerDownloadManagerListener = instance.getExoPlayerDownloadManagerListener();
-            instance.downloadManager.addDownloadListener(instance.exoPlayerDownloadManagerListener);
+            instance.downloadManager = new DownloadManager(instance.getRegistrar().activeContext(), instance.channel);
         }
     }
 
@@ -181,9 +154,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 videoMethodCall(methodTypeCall.method, call, result);
             } else if (methodTypeCall.methodType.equals(DOWNLOAD_METHOD_TYPE)) {
                 if (downloadManager == null) {
-                    downloadManager = new DownloadManager(getRegistrar().activeContext());
-                    exoPlayerDownloadManagerListener = getExoPlayerDownloadManagerListener();
-                    downloadManager.addDownloadListener(exoPlayerDownloadManagerListener);
+                    downloadManager = new DownloadManager(getRegistrar().activeContext(), instance.channel);
                 }
 
                 downloadMethodCall(methodTypeCall.method, call, result);

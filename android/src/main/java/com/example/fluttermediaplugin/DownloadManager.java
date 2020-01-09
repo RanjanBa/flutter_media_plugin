@@ -25,7 +25,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import io.flutter.plugin.common.MethodChannel;
+
+import static com.example.fluttermediaplugin.FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE;
 import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_ACTION_FILE;
 import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_CONTENT_DIRECTORY;
 import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_TRACKER_ACTION_FILE;
@@ -37,9 +42,10 @@ final class DownloadManager {
     private static DatabaseProvider databaseProvider;
     private static File downloadDirectory;
 
-    private com.google.android.exoplayer2.offline.DownloadManager exoplayerDownloadManager;
+    private com.google.android.exoplayer2.offline.DownloadManager exoPlayerDownloadManager;
+    private com.google.android.exoplayer2.offline.DownloadManager.Listener exoPlayerDownloadManagerListener;
+
     private final HashMap<Uri, Download> downloads;
-    private DownloadIndex downloadIndex;
 
     private static synchronized DatabaseProvider getDatabaseProvider(Context context) {
         if (databaseProvider == null) {
@@ -90,12 +96,14 @@ final class DownloadManager {
         return downloadCache;
     }
 
-    DownloadManager(Context context) {
+    DownloadManager(Context context, final MethodChannel channel) {
         downloads = new HashMap<>();
-        exoplayerDownloadManager = getExoPlayerDownloadManager(context);
-        downloadIndex = exoplayerDownloadManager.getDownloadIndex();
+        exoPlayerDownloadManager = getExoPlayerDownloadManager(context);
+
+        DownloadIndex downloadIndex = exoPlayerDownloadManager.getDownloadIndex();
         loadDownloads(downloadIndex);
-        exoplayerDownloadManager.addListener(new com.google.android.exoplayer2.offline.DownloadManager.Listener() {
+
+        exoPlayerDownloadManagerListener = new com.google.android.exoplayer2.offline.DownloadManager.Listener() {
             @Override
             public void onDownloadChanged(com.google.android.exoplayer2.offline.DownloadManager downloadManager, Download download) {
                 if(download.state == Download.STATE_DOWNLOADING || download.state == Download.STATE_COMPLETED) {
@@ -106,13 +114,21 @@ final class DownloadManager {
                 else {
                     downloads.remove(download.request.uri);
                 }
+
+                Log.d(TAG, "on download changed : " + download.state);
+                Map<String, Object> args = new HashMap<>();
+                args.put("url", download.request.uri.toString());
+                args.put("state", download.state);
+                channel.invokeMethod(DOWNLOAD_METHOD_TYPE + "/onDownloadChanged", args);
             }
 
             @Override
             public void onDownloadRemoved(com.google.android.exoplayer2.offline.DownloadManager downloadManager, Download download) {
                 downloads.remove(download.request.uri);
             }
-        });
+        };
+
+        exoPlayerDownloadManager.addListener(exoPlayerDownloadManagerListener);
 
         try {
             DownloadService.start(FlutterMediaPlugin.getInstance().getRegistrar().activeContext(), MediaDownloadService.class);
@@ -132,8 +148,38 @@ final class DownloadManager {
         }
     }
 
+    void setChannel(final MethodChannel channel) {
+        exoPlayerDownloadManager.removeListener(exoPlayerDownloadManagerListener);
+        exoPlayerDownloadManagerListener = new com.google.android.exoplayer2.offline.DownloadManager.Listener() {
+            @Override
+            public void onDownloadChanged(com.google.android.exoplayer2.offline.DownloadManager downloadManager, Download download) {
+                if(download.state == Download.STATE_DOWNLOADING || download.state == Download.STATE_COMPLETED) {
+                    if(!downloads.containsKey(download.request.uri)) {
+                        downloads.put(download.request.uri, download);
+                    }
+                }
+                else {
+                    downloads.remove(download.request.uri);
+                }
+
+                Log.d(TAG, "on download changed : " + download.state);
+                Map<String, Object> args = new HashMap<>();
+                args.put("url", download.request.uri.toString());
+                args.put("state", download.state);
+                channel.invokeMethod(DOWNLOAD_METHOD_TYPE + "/onDownloadChanged", args);
+            }
+
+            @Override
+            public void onDownloadRemoved(com.google.android.exoplayer2.offline.DownloadManager downloadManager, Download download) {
+                downloads.remove(download.request.uri);
+            }
+        };
+
+        exoPlayerDownloadManager.addListener(exoPlayerDownloadManagerListener);
+    }
+
     com.google.android.exoplayer2.offline.DownloadManager getExoPlayerDownloadManager(Context context) {
-        if (exoplayerDownloadManager == null) {
+        if (exoPlayerDownloadManager == null) {
             DefaultDownloadIndex downloadIndex = new DefaultDownloadIndex(DownloadManager.getDatabaseProvider(context));
             upgradeActionFile(context,
                     DOWNLOAD_ACTION_FILE, downloadIndex, false);
@@ -141,20 +187,12 @@ final class DownloadManager {
                     DOWNLOAD_TRACKER_ACTION_FILE, downloadIndex, true);
             DownloaderConstructorHelper downloaderConstructorHelper =
                     new DownloaderConstructorHelper(getDownloadCache(context), buildHttpDataSourceFactory(context));
-            exoplayerDownloadManager =
+            exoPlayerDownloadManager =
                     new com.google.android.exoplayer2.offline.DownloadManager(
                             context, downloadIndex, new DefaultDownloaderFactory(downloaderConstructorHelper));
         }
 
-        return exoplayerDownloadManager;
-    }
-
-    void addDownloadListener(com.google.android.exoplayer2.offline.DownloadManager.Listener listener) {
-        exoplayerDownloadManager.addListener(listener);
-    }
-
-    void removeDownloadListener(com.google.android.exoplayer2.offline.DownloadManager.Listener listener) {
-        exoplayerDownloadManager.removeListener(listener);
+        return exoPlayerDownloadManager;
     }
 
     void startDownload(Context context,String id, Uri url) {
