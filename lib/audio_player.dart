@@ -60,7 +60,7 @@ class AudioPlayer {
         if (song != null) _currentPlayingSong = song;
       }
 
-      print("playWhenReady $_playWhenReady; playbackState $_playbackState");
+//      print("playWhenReady $_playWhenReady; playbackState $_playbackState");
     }
   }
 
@@ -93,7 +93,7 @@ class AudioPlayer {
       case "onPlayerStateChanged":
         bool playWhenReady = arguments["playWhenReady"];
         int playbackState = arguments["playbackState"];
-        //print("onPlayerStateChanged, $playWhenReady $playbackState");
+//        print("onPlayerStateChanged, $playWhenReady $playbackState");
         _playWhenReady = playWhenReady;
         _playbackState = playbackState;
         if (_playbackState == C.STATE_IDLE) {
@@ -102,6 +102,7 @@ class AudioPlayer {
         if (_playbackState == C.STATE_ENDED || _playbackState == C.STATE_IDLE) {
           _playbackPosition = 0;
           _playbackLength = 0;
+          pause();
         }
 
         for (ExoPlayerListener listener in _exoPlayerListeners) {
@@ -113,7 +114,7 @@ class AudioPlayer {
         int audioLength = arguments['audioLength'];
         _playbackLength = audioLength;
         _playbackPosition = position;
-        //print("flutter : ${call.method} $position");
+//        print("flutter : update playback $position");
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlaybackUpdate(position, audioLength);
         }
@@ -319,8 +320,8 @@ class AudioPlayer {
     );
   }
 
-  void clearPlaylist() {
-    channel
+  Future<void> clearPlaylist() async {
+    await channel
         .invokeMethod('${FlutterMediaPlugin.AUDIO_MEDIA_TYPE}/clearPlaylist');
   }
 

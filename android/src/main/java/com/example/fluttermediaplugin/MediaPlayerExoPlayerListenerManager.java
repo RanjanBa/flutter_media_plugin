@@ -31,12 +31,10 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
         this.simpleExoPlayer = simpleExoPlayer;
         HandlerThread playbackHandlerThread = new HandlerThread(handlerThreadName + "playback");
         playbackHandlerThread.start();
-        //playbackPollHandler = new Handler(playbackHandlerThread.getLooper());
         playbackPollHandler = new Handler(Looper.getMainLooper());
 
         HandlerThread bufferHandlerThread = new HandlerThread(handlerThreadName + "buffer");
         bufferHandlerThread.start();
-        //bufferingPollHandler = new Handler(bufferHandlerThread.getLooper());
         bufferingPollHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -163,6 +161,8 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
             stopBufferingPolling();
         }
 
+
+
         for (ExoPlayerListener listener : exoPlayerMediaListeners)
             listener.onPlayerStatus("player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
     }
@@ -208,12 +208,6 @@ public class MediaPlayerExoPlayerListenerManager implements EventListener {
             eventListener.onSeekProcessed();
         }
     }
-
-//    public void onPlaylistChanged(Playlist playlist) {
-//        for (ExoPlayerListener exoPlayerListener : exoPlayerMediaListeners) {
-//            exoPlayerListener.onPlaylistChanged(playlist);
-//        }
-//    }
 
     void onMediaPeriodCreated(int windowIndex) {
         for (ExoPlayerListener listener : exoPlayerMediaListeners) {

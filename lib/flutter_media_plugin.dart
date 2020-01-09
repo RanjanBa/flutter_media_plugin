@@ -27,8 +27,8 @@ class FlutterMediaPlugin {
           String mediaType, method;
           mediaType = match.group(1);
           method = match.group(2);
-          if (method != "onBufferedUpdate" && method != "onPlaybackUpdate")
-            print("Type : $mediaType Method : $method");
+//          if (method != "onBufferedUpdate" && method != "onPlaybackUpdate") {}
+//          print("Type : $mediaType Method : $method");
           if (mediaType == AUDIO_MEDIA_TYPE) {
             if (_audioPlayer != null) {
               _audioPlayer.callMethod(method, call.arguments);

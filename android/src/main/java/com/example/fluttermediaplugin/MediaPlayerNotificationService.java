@@ -123,13 +123,13 @@ public class MediaPlayerNotificationService extends Service {
                         if (song != null) {
                             uri = song.getAlbumArtUri();
                         } else {
-                            return ((BitmapDrawable) context.getResources().getDrawable(android.R.drawable.ic_dialog_dialer)).getBitmap();
+                            return ((BitmapDrawable) context.getResources().getDrawable(R.drawable.music_notification_icon)).getBitmap();
                         }
 
                         Bitmap bitmap = getBitmap(uri);
                         if (bitmap == null) {
                             loadImageAsync(uri, callback);
-                            bitmap = ((BitmapDrawable) context.getResources().getDrawable(android.R.drawable.ic_dialog_dialer)).getBitmap();
+                            bitmap = ((BitmapDrawable) context.getResources().getDrawable(R.drawable.music_notification_icon)).getBitmap();
                         }
                         return bitmap;
                     }
@@ -154,6 +154,8 @@ public class MediaPlayerNotificationService extends Service {
             }
         });
         playerNotificationManager.setPlayer(FlutterMediaPlugin.getInstance().getAudioPlayer().getSimpleExoPlayer());
+        playerNotificationManager.setFastForwardIncrementMs(0);
+        playerNotificationManager.setRewindIncrementMs(0);
         mediaSession.setActive(true);
         playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
     }

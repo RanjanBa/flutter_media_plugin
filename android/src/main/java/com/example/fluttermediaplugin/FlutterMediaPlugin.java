@@ -143,7 +143,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     method = VIDEO_MEDIA_TYPE;
                 }
                 method += "/onPlayerStateChanged";
-                Log.d(TAG, "onPlayerStateChanged : " + playbackState + ", " + method);
+//                Log.d(TAG, "onPlayerStateChanged : " + playbackState + ", " + method);
                 channel.invokeMethod(method, args);
             }
 
@@ -157,7 +157,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     method = VIDEO_MEDIA_TYPE;
                 }
                 method += "/onRepeatModeChanged";
-                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
+//                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
                 channel.invokeMethod(method, args);
             }
 
@@ -171,7 +171,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     method = VIDEO_MEDIA_TYPE;
                 }
                 method += "/onShuffleModeEnabledChanged";
-                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
+//                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
                 channel.invokeMethod(method, args);
             }
 
@@ -219,6 +219,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                     method = VIDEO_MEDIA_TYPE;
                 }
                 method += "/onPlaybackUpdate";
+//                Log.d(TAG, "Playback update");
                 channel.invokeMethod(method, args);
             }
 
@@ -317,7 +318,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     @Override
     public void onMethodCall(MethodCall call, Result result) {
         MediaMethodCall mediaMethodCall = parseMethodName(call.method);
-        Log.d(TAG, mediaMethodCall.toString());
+//        Log.d(TAG, mediaMethodCall.toString());
         if(mediaMethodCall.mediaType != null) {
             if (mediaMethodCall.mediaType.equals(AUDIO_MEDIA_TYPE)) {
                 if (mediaMethodCall.command.equals("initialize")) {

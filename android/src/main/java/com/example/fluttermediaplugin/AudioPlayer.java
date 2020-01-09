@@ -2,8 +2,10 @@ package com.example.fluttermediaplugin;
 
 import android.content.Context;
 import android.content.Intent;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import android.util.Log;
 
 import com.google.android.exoplayer2.C;
@@ -41,6 +43,7 @@ class AudioPlayer {
 
     private boolean isShowingNotification = false;
     private Playlist playlist;
+
     Playlist getPlaylist() {
         return playlist;
     }
@@ -203,7 +206,7 @@ class AudioPlayer {
     }
 
     void play() {
-        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE && simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED) {
             preparePlaylist();
         }
 
@@ -212,8 +215,9 @@ class AudioPlayer {
         } else {
             mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already playing player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
             mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+//            Log.d(TAG, "Already playing");
         }
-        Log.d(TAG, "Already playing");
+
     }
 
     void pause() {
@@ -222,7 +226,7 @@ class AudioPlayer {
         } else {
             mediaPlayerExoPlayerListenerManager.onPlayerStatus("Already paused, player state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
             mediaPlayerExoPlayerListenerManager.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
-            Log.d(TAG, "Already paused");
+//            Log.d(TAG, "Already paused");
         }
     }
 

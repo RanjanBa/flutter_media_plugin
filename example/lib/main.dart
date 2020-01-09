@@ -13,6 +13,7 @@ AudioPlayer _audioPlayer;
 VideoPlayer _videoPlayer;
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   FlutterMediaPlugin();
   _audioPlayer = FlutterMediaPlugin.audioPlayer;
   _videoPlayer = FlutterMediaPlugin.videoPlayer;
@@ -96,7 +97,7 @@ class _MyAppState extends State<MyApp> {
     _audioPlayer.removeExoPlayerListener(_exoPlayerListener);
     FlutterMediaPlugin.removeDownloadListener(_downloadListener);
     _videoPlayer.removeVideoExoPlayer(_videoExoPlayerListener);
-    print("Main dispose");
+//    print("Main dispose");
   }
 
   void addAndPlay() {
@@ -185,7 +186,7 @@ class _MyAppState extends State<MyApp> {
 
   void setCurrentSong(int windowIndex) async {
     Playlist playlist = await _audioPlayer.getPlaylist();
-    print("length ${playlist.getSize()}");
+//    print("length ${playlist.getSize()}");
     Song song = playlist.getSongAtIndex(windowIndex);
     if (song == null)
       currentlyPlayingSongTitle = "No Song";
@@ -325,7 +326,7 @@ class _MyAppState extends State<MyApp> {
                     future: FlutterMediaPlugin.isDownloaded(Samples.songs[index].url),
                     builder: (context, snapshot) {
                       if(snapshot.hasData) {
-                        print('data ${snapshot.data}');
+//                        print('data ${snapshot.data}');
                           if(snapshot.data == false)
                             return IconButton(icon: Icon(Icons.file_download), onPressed: () {
                               FlutterMediaPlugin.download(Samples.songs[index].url);

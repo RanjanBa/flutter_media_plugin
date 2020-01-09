@@ -30,7 +30,7 @@ class VideoPlayer {
         _width = arguments['width'];
         _height = arguments['height'];
         _duration = arguments['duration'];
-        print("textureId $textureId");
+//        print("textureId $textureId");
         for (VideoExoPlayerListener listener in _exoPlayerListeners) {
           if (listener.onVideoInitialize != null) {
             listener.onVideoInitialize(textureId);
