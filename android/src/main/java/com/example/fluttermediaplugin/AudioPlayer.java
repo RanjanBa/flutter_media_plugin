@@ -285,11 +285,14 @@ class AudioPlayer {
         playlist.addMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
     }
 
-    void addSong(@NonNull Song song, @NonNull final MethodChannel.Result result) {
+    void addSong(@NonNull Song song, final boolean shouldPlay, @NonNull final MethodChannel.Result result) {
         playlist.addMedia(song, new Runnable() {
             @Override
             public void run() {
                 result.success(null);
+                if(shouldPlay) {
+                    playlist.skipToIndex(playlist.getSize() - 1);
+                }
             }
         });
     }

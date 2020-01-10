@@ -161,11 +161,13 @@ class AudioPlayer {
     );
   }
 
-  Future<void> addSong(Song song) async{
-    Map<String, String> songMap = song.toJson();
+  Future<void> addSong(Song song, {bool shouldPlay = false}) async{
+    Map<String, dynamic> songMap = song.toJson();
     if (songMap == null) {
       return;
     }
+
+    songMap.putIfAbsent("shouldPlay", () => shouldPlay);
     await channel.invokeMethod(
       '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/addSong',
       songMap,

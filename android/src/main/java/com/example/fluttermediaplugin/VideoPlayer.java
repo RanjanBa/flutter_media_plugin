@@ -57,11 +57,20 @@ class VideoPlayer {
     private Surface surface;
     private TextureRegistry.SurfaceTextureEntry textureEntry;
 
-    VideoPlayer(Context context, MethodChannel channel) {
+    VideoPlayer(@NonNull Context context, TextureRegistry textures, @NonNull MethodChannel channel) {
         this.context = context;
         this.channel = channel;
+
         initializeSimpleExoPlayer(context);
-        videoExoPlayerListener = new VideoExoPlayerListener();
+
+        if(textures != null) {
+            TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
+            if (handle != null) {
+                textureEntry = handle;
+                surface = new Surface(textureEntry.surfaceTexture());
+                simpleExoPlayer.setVideoSurface(surface);
+            }
+        }
     }
 
     private void initializeSimpleExoPlayer(Context context) {
@@ -78,6 +87,7 @@ class VideoPlayer {
                 .build();
 
         simpleExoPlayer.setAudioAttributes(audioAttributes, true);
+
         if (videoExoPlayerListener == null) {
             videoExoPlayerListener = new VideoExoPlayerListener();
         }
@@ -86,33 +96,9 @@ class VideoPlayer {
         simpleExoPlayer.addVideoListener(new VideoListener() {
             @Override
             public void onSurfaceSizeChanged(int width, int height) {
-                videoExoPlayerListener.initialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
+                videoExoPlayerListener.onSurfaceSizeChanged(width, height);
             }
         });
-    }
-
-    void addAndPlay(String stringUri, TextureRegistry.SurfaceTextureEntry textureEntry) {
-        this.textureEntry = textureEntry;
-        Uri uri = Uri.parse(stringUri);
-
-        Log.d(TAG, "Uri : " + uri);
-
-        DataSource.Factory dataSourceFactory;
-
-        if (isFileOrAsset(uri)) {
-            Log.d(TAG, "file is in file or asset");
-            dataSourceFactory = new DataSource.Factory() {
-                @Override
-                public DataSource createDataSource() {
-                    return new AssetDataSource(FlutterMediaPlugin.getInstance().getRegistrar().context());
-                }
-            };
-        } else {
-            Log.d(TAG, "file is in network");
-            dataSourceFactory = new DefaultDataSourceFactory(context, "videoExoPlayer");
-        }
-        MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, context);
-        simpleExoPlayer.prepare(mediaSource);
     }
 
     private static boolean isFileOrAsset(Uri uri) {
@@ -149,29 +135,45 @@ class VideoPlayer {
         }
     }
 
+    void initialize(@NonNull MethodChannel.Result result) {
+        Map<String, Object> reply = new HashMap<>();
+        reply.put("textureId", textureEntry.id());
+        result.success(reply);
+    }
+
     void setChannel(MethodChannel channel) {
         this.channel = channel;
     }
 
-    void setupVideoPlayer(
-            @NonNull TextureRegistry.SurfaceTextureEntry textureEntry) {
-        this.textureEntry = textureEntry;
-        surface = new Surface(textureEntry.surfaceTexture());
-        simpleExoPlayer.setVideoSurface(surface);
+    void addAndPlay(String url, TextureRegistry textures) {
+        Uri uri = Uri.parse(url);
+        Log.d(TAG, "Uri : " + uri);
 
-        if (simpleExoPlayer.getVideoFormat() != null) {
-            Format videoFormat = simpleExoPlayer.getVideoFormat();
-            assert videoFormat != null;
-            int width = videoFormat.width;
-            int height = videoFormat.height;
-            int rotationDegrees = videoFormat.rotationDegrees;
-            // Switch the width/height if video was taken in portrait mode
-            if (rotationDegrees == 90 || rotationDegrees == 270) {
-                width = simpleExoPlayer.getVideoFormat().height;
-                height = simpleExoPlayer.getVideoFormat().width;
+        if(textures != null) {
+            TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
+            if (handle != null && handle != textureEntry) {
+                textureEntry = handle;
+                surface = new Surface(textureEntry.surfaceTexture());
+                simpleExoPlayer.setVideoSurface(surface);
+                videoExoPlayerListener.onTextureIdChanged(textureEntry.id());
             }
-            videoExoPlayerListener.initialize(textureEntry.id(), height, width, simpleExoPlayer.getDuration());
         }
+
+        DataSource.Factory dataSourceFactory;
+        if (isFileOrAsset(uri)) {
+            Log.d(TAG, "file is in file or asset");
+            dataSourceFactory = new DataSource.Factory() {
+                @Override
+                public DataSource createDataSource() {
+                    return new AssetDataSource(FlutterMediaPlugin.getInstance().getRegistrar().context());
+                }
+            };
+        } else {
+            Log.d(TAG, "file is in network");
+            dataSourceFactory = new DefaultDataSourceFactory(context, "videoExoPlayer");
+        }
+        MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, context);
+        simpleExoPlayer.prepare(mediaSource);
     }
 
     void play() {
@@ -216,13 +218,17 @@ class VideoPlayer {
             super(simpleExoPlayer, VIDEO_EXO_PLAYER_LISTENER_THREAD_NAME);
         }
 
-        void initialize(long textureId, int height, int width, long duration) {
-            Map<String, Object> reply = new HashMap<>();
-            reply.put("textureId", textureId);
-            reply.put("width", width);
-            reply.put("height", height);
-            reply.put("duration", duration);
-            channel.invokeMethod(VIDEO_METHOD_TYPE + "/initialize", reply);
+        void onTextureIdChanged(long id) {
+            Map<String, Object> args = new HashMap<>();
+            args.put("textureId", id);
+            channel.invokeMethod(VIDEO_METHOD_TYPE + "/onTextureIdChanged", args);
+        }
+
+        void onSurfaceSizeChanged(int width, int height) {
+            Map<String, Object> args = new HashMap<>();
+            args.put("width", width);
+            args.put("height", height);
+            channel.invokeMethod(VIDEO_METHOD_TYPE + "/onSurfaceSizeChanged", args);
         }
 
         @Override

@@ -14,31 +14,41 @@ class VideoPlayer {
   int get textureId => _textureId;
   final Set<VideoExoPlayerListener> _exoPlayerListeners = Set();
 
-  double get aspectRatio =>
-      _width != null && _height != null && _height > 0 ? _width / _height : 1.0;
-
   int get duration => _duration;
 
   VideoPlayer({this.playerId, this.channel}) {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/initialize');
+    _initialize();
+  }
+
+  void _initialize() async {
+    Map<dynamic, dynamic> arguments = await channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/initialize');
+//    print("initialize ${arguments.runtimeType}");
+    if (arguments != null) {
+      _textureId = arguments["textureId"];
+    }
   }
 
   void callMethod(String method, dynamic arguments) {
+//    print("Video method: $method");
     switch (method) {
-      case "initialize":
-        int textureId = arguments["textureId"];
+      case "onTextureIdChanged":
+        _textureId = arguments['textureId'];
+        for(VideoExoPlayerListener listener in _exoPlayerListeners) {
+          listener.onTextureIdChanged(_textureId);
+        }
+        break;
+      case "onSurfaceSizeChanged":
         _width = arguments['width'];
         _height = arguments['height'];
-        _duration = arguments['duration'];
 //        print("textureId $textureId");
         for (VideoExoPlayerListener listener in _exoPlayerListeners) {
-          if (listener.onVideoInitialize != null) {
-            listener.onVideoInitialize(textureId);
+          if (listener.onSurfaceSizeChanged != null) {
+            listener.onSurfaceSizeChanged(_width, _height);
           }
         }
         break;
       default:
-        print("Video Method is not implemented");
+//        print("Video Method is not implemented");
         break;
     }
   }
@@ -51,18 +61,14 @@ class VideoPlayer {
     _exoPlayerListeners.remove(videoExoPlayerListener);
   }
 
-  void addAndPlay(TypeOfPlace type, String uri) {
-    String path = type == TypeOfPlace.asset ? "asset" : "uri";
+  void addAndPlay(TypeOfPlace type, String url) {
+    String path = type == TypeOfPlace.asset ? "asset" : "url";
     channel.invokeMethod(
       '${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/addAndPlay',
       {
-        path: uri,
+        path: url,
       },
     );
-  }
-
-  void initSetTexture() {
-    channel.invokeMethod('${FlutterMediaPlugin.VIDEO_METHOD_TYPE}/initSetTexture');
   }
 
   void play() {
@@ -80,7 +86,8 @@ enum TypeOfPlace {
 }
 
 class VideoExoPlayerListener extends ExoPlayerListener {
-  final Function(int) onVideoInitialize;
+  final Function(int textureId) onTextureIdChanged;
+  final Function(int width, int height) onSurfaceSizeChanged;
 
   VideoExoPlayerListener({
     onPlayerStateChanged,
@@ -88,12 +95,13 @@ class VideoExoPlayerListener extends ExoPlayerListener {
     onBufferedUpdate,
     onMediaPeriodCreated,
     onPlayerStatus,
-    this.onVideoInitialize,
+    this.onSurfaceSizeChanged,
+    this.onTextureIdChanged,
   }) : super(
-    onPlayerStateChanged: onPlayerStateChanged,
-    onPlaybackUpdate: onPlaybackUpdate,
-    onBufferedUpdate: onBufferedUpdate,
-    onMediaPeriodCreated: onMediaPeriodCreated,
-    onPlayerStatus: onPlayerStatus,
-  );
+          onPlayerStateChanged: onPlayerStateChanged,
+          onPlaybackUpdate: onPlaybackUpdate,
+          onBufferedUpdate: onBufferedUpdate,
+          onMediaPeriodCreated: onMediaPeriodCreated,
+          onPlayerStatus: onPlayerStatus,
+        );
 }

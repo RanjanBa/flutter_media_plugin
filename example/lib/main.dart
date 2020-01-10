@@ -48,6 +48,7 @@ class _MyAppState extends State<MyApp> {
       "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2Ftest.mp4?alt=media&token=d66bb13d-b9aa-4a2e-b572-59b63fdb1b6b";
 
   int _textureId;
+  double _aspectRatio = 1.0;
   int _repeatMode = 0;
   bool _shuffleModeEnabled = false;
 
@@ -79,7 +80,7 @@ class _MyAppState extends State<MyApp> {
     _downloadManager.addDownloadListener(_downloadListener);
 
     _videoExoPlayerListener =
-        VideoExoPlayerListener(onVideoInitialize: _onVideoInitialized);
+        VideoExoPlayerListener(onTextureIdChanged: _onTextureIdChanged, onSurfaceSizeChanged: _onSurfaceSizeChanged);
     _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
     _setIcons();
@@ -106,10 +107,6 @@ class _MyAppState extends State<MyApp> {
 //    print("Main dispose");
   }
 
-  void addAndPlay() {
-    _videoPlayer.addAndPlay(TypeOfPlace.network, _videoUrl);
-  }
-
   void _setIcons() {
     if (_audioPlayer.playWhenReady) {
       _iconData = Icons.pause;
@@ -120,9 +117,14 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  void _onVideoInitialized(int textureId) {
+  void _onTextureIdChanged(int textureId) {
     _textureId = textureId;
     print("Texture id $_textureId");
+    setState(() {});
+  }
+
+  void _onSurfaceSizeChanged(int width, int height) {
+    _aspectRatio = width / height;
     setState(() {});
   }
 
@@ -216,14 +218,12 @@ class _MyAppState extends State<MyApp> {
             IconButton(
               icon: Icon(Icons.refresh),
               onPressed: () {
-                _videoPlayer.initSetTexture();
                 //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
               },
             ),
             IconButton(
               icon: Icon(Icons.playlist_add),
               onPressed: () {
-                addAndPlay();
                 //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
               },
             ),
@@ -359,7 +359,7 @@ class _MyAppState extends State<MyApp> {
               color: Colors.red,
               child: _textureId != null
                   ? AspectRatio(
-                      aspectRatio: _videoPlayer.aspectRatio,
+                      aspectRatio: _aspectRatio,
                       child: Texture(textureId: _textureId),
                     )
                   : Container(
@@ -369,6 +369,12 @@ class _MyAppState extends State<MyApp> {
             Wrap(
               alignment: WrapAlignment.center,
               children: <Widget>[
+                RaisedButton(
+                  child: Icon(Icons.cloud_download),
+                  onPressed: () {
+                    _videoPlayer.addAndPlay(TypeOfPlace.network, _videoUrl);
+                  },
+                ),
                 RaisedButton(
                   child: Icon(Icons.play_arrow),
                   onPressed: () {

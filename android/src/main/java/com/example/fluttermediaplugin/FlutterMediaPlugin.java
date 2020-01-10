@@ -13,7 +13,6 @@ import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +22,6 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-import io.flutter.view.TextureRegistry;
 
 /**
  * FlutterMediaPlugin
@@ -80,7 +78,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     }
 
     private void initializeVideoPlayer() {
-        videoPlayer = new VideoPlayer(registrar.activeContext(), channel);
+        videoPlayer = new VideoPlayer(registrar.activeContext(), registrar.textures(), channel);
     }
 
     /**
@@ -139,10 +137,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 if (methodTypeCall.method.equals("initialize")) {
                     if (videoPlayer == null) {
                         initializeVideoPlayer();
+                        result.success(null);
                     } else {
-                        Log.d(TAG, "Already audioPlayer is initialized");
+                        Log.d(TAG, "Already videoPlayer is initialized");
+                        videoPlayer.initialize(result);
                     }
-                    result.success(null);
                     return;
                 }
 
@@ -199,10 +198,13 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 break;
             }
             case "addSong": {
+                //noinspection ConstantConditions
+                boolean shouldPlay = call.argument("shouldPlay");
+
                 Map<String, String> stringMap = call.arguments();
                 Song song = Song.fromMap(stringMap);
                 if(song != null) {
-                    audioPlayer.addSong(song, result);
+                    audioPlayer.addSong(song, shouldPlay, result);
                 }else {
                     result.error("Song key", "Song key is not found", "Song key is not found");
                 }
@@ -320,39 +322,14 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private void videoMethodCall(String method, MethodCall call, Result result) {
         switch (method) {
             case "addAndPlay": {
-                TextureRegistry textures = registrar.textures();
-                if (textures == null) {
-                    result.error("no_activity", "video_player plugin requires a foreground activity", null);
-                    return;
-                }
-
-                TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
-                if (handle == null) {
-                    return;
-                }
-
-                String uri = call.argument("uri");
+                String url = call.argument("url");
                 String asset = call.argument("asset");
-                if (uri == null && asset != null) {
+                if (url == null && asset != null) {
                     String assetLookupKey = registrar.lookupKeyForAsset(asset);
                     Log.d(TAG, "asset : " + assetLookupKey);
-                    videoPlayer.addAndPlay("assets:///" + assetLookupKey, handle);
-                } else if (uri != null && asset == null) {
-                    videoPlayer.addAndPlay(uri, handle);
-                }
-                result.success(null);
-                break;
-            }
-            case "initSetTexture": {
-                TextureRegistry textures = registrar.textures();
-                if (textures == null) {
-                    result.error("no_activity", "video_player plugin requires a foreground activity", null);
-                    return;
-                }
-
-                TextureRegistry.SurfaceTextureEntry handle = textures.createSurfaceTexture();
-                if (handle != null) {
-                    videoPlayer.setupVideoPlayer(handle);
+                    videoPlayer.addAndPlay("assets:///" + assetLookupKey, registrar.textures());
+                } else if (url != null && asset == null) {
+                    videoPlayer.addAndPlay(url, registrar.textures());
                 }
                 result.success(null);
                 break;
