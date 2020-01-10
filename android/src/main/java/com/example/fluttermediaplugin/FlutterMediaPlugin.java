@@ -249,12 +249,17 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             }
             case "getPlaylist":
                 Log.d(TAG, "Json onPlaylistChanged");
-                JSONObject jsonObject = audioPlayer.getPlaylist().toJson();
-                if (jsonObject != null) {
-                    String playlistJson = jsonObject.toString();
-                    result.success(playlistJson);
-                } else {
-                    result.error("Playlist Object", "Json object playlist is null", null);
+                if(audioPlayer.getPlaylist() != null) {
+                    JSONObject jsonObject = audioPlayer.getPlaylist().toJson();
+                    if (jsonObject != null) {
+                        String playlistJson = jsonObject.toString();
+                        result.success(playlistJson);
+                    } else {
+                        result.error("Playlist Object", "Json object playlist is null", null);
+                    }
+                }
+                else {
+                    result.success(null);
                 }
                 break;
             case "clearPlaylist":

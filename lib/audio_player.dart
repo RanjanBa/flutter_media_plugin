@@ -188,6 +188,9 @@ class AudioPlayer {
   }
 
   Future<void> setPlaylist(Playlist playlist) async {
+    if(playlist == null) {
+      return;
+    }
     String playlistString = json.encode(playlist);
     await channel.invokeMethod(
       "${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/setPlaylist",
@@ -200,9 +203,12 @@ class AudioPlayer {
   Future<Playlist> getPlaylist() async {
     String playlistString = await channel
         .invokeMethod("${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/getPlaylist");
-    Map<String, dynamic> map = json.decode(playlistString);
-    Playlist playlist = Playlist.fromMap(map);
-    return playlist;
+    if(playlistString != null) {
+      Map<String, dynamic> map = json.decode(playlistString);
+      Playlist playlist = Playlist.fromMap(map);
+      return playlist;
+    }
+    return null;
   }
 
   void removeSong(Song song) {
