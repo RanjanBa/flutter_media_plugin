@@ -1,4 +1,6 @@
 import 'package:flutter_media_plugin/audio_player.dart';
+import 'package:flutter_media_plugin/song.dart';
+import 'package:flutter_media_plugin/utility.dart';
 
 class Playlist {
   String _playlistName;
@@ -65,8 +67,8 @@ class Playlist {
   }
 
   factory Playlist.fromMap(Map<String, dynamic> json) {
-    Playlist playlist = Playlist(json[C.playlist_name].toString());
-    List<dynamic> songs = json["songs"];
+    Playlist playlist = Playlist(json[Utility.playlist_name].toString());
+    List<dynamic> songs = json[Utility.media_playlist];
 
     for (Map<String, dynamic> map in songs) {
       Song song = Song.fromMap(map);
@@ -83,8 +85,8 @@ class Playlist {
     }
 
     return {
-      C.playlist_name: _playlistName,
-      'songs': songObject,
+      Utility.playlist_name: _playlistName,
+      Utility.media_playlist: songObject,
     };
   }
 }

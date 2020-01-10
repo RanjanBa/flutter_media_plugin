@@ -18,17 +18,16 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 
+import com.example.fluttermediaplugin.Media.Song;
 import com.google.android.exoplayer2.Player;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.Stack;
+
+import static com.example.fluttermediaplugin.Utility.Constants.MEDIA_SESSION_TAG;
+import static com.example.fluttermediaplugin.Utility.Constants.PLAYBACK_CHANNEL_ID;
+import static com.example.fluttermediaplugin.Utility.Constants.PLAYBACK_NOTIFICATION_ID;
 
 public class MediaPlayerNotificationService extends Service {
     private static final String TAG = "MediaPlayerNotification";
@@ -73,12 +72,12 @@ public class MediaPlayerNotificationService extends Service {
     private void instantiateNotification() {
         final Context context = FlutterMediaPlugin.getInstance().getRegistrar().activeContext();
         if (mediaSession == null) {
-            mediaSession = new MediaSessionCompat(context, StaticConst.MEDIA_SESSION_TAG);
+            mediaSession = new MediaSessionCompat(context, MEDIA_SESSION_TAG);
             mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
         }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
-                FlutterMediaPlugin.getInstance().getRegistrar().context(), StaticConst.PLAYBACK_CHANNEL_ID, R.string.exo_track_unknown, StaticConst.PLAYBACK_NOTIFICATION_ID, new PlayerNotificationManager.MediaDescriptionAdapter() {
+                FlutterMediaPlugin.getInstance().getRegistrar().context(), PLAYBACK_CHANNEL_ID, R.string.exo_track_unknown, PLAYBACK_NOTIFICATION_ID, new PlayerNotificationManager.MediaDescriptionAdapter() {
 
                     @Override
                     public String getCurrentContentTitle(Player player) {
@@ -181,15 +180,10 @@ public class MediaPlayerNotificationService extends Service {
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
                 super.onLoadingComplete(imageUri, view, loadedImage);
-//                Log.d(TAG, "Image loader completed");
                 if (loadedImage != null) {
                     putBitmap(imageUri, loadedImage);
                     callback.onBitmap(loadedImage);
-//                    Log.d(TAG, "Image loaded is not null");
                 }
-//                else {
-//                    Log.d(TAG, "Image loaded is null");
-//                }
             }
         });
     }

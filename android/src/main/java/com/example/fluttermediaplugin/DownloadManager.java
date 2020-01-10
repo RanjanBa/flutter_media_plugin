@@ -25,15 +25,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import io.flutter.plugin.common.MethodChannel;
 
 import static com.example.fluttermediaplugin.FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE;
-import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_ACTION_FILE;
-import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_CONTENT_DIRECTORY;
-import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_TRACKER_ACTION_FILE;
+import static com.example.fluttermediaplugin.Utility.Constants.DOWNLOAD_ACTION_FILE;
+import static com.example.fluttermediaplugin.Utility.Constants.DOWNLOAD_CONTENT_DIRECTORY;
+import static com.example.fluttermediaplugin.Utility.Constants.DOWNLOAD_TRACKER_ACTION_FILE;
 
 final class DownloadManager {
     private static final String TAG = "DownloadManager";

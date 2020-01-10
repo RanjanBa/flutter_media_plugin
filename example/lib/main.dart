@@ -1,13 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/playlist.dart';
-import 'package:flutter_media_plugin_example/songs.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
 import 'package:flutter_media_plugin/download_manager.dart';
 import 'package:flutter_media_plugin/video_player.dart';
+import 'package:flutter_media_plugin/song.dart';
+import 'package:flutter_media_plugin/utility.dart';
+import 'package:flutter_media_plugin_example/songs.dart';
 
 AudioPlayer _audioPlayer;
 VideoPlayer _videoPlayer;
@@ -90,7 +90,7 @@ class _MyAppState extends State<MyApp> {
 
     playlist = new Playlist("New Playlist");
 
-    for (Song s in Samples.songs) {
+    for (var s in Samples.songs) {
       playlist.addSong(s);
     }
   }
@@ -137,7 +137,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      if (playbackState == C.STATE_BUFFERING) {
+      if (playbackState == Utility.STATE_BUFFERING) {
         _bufferingWidget = Center(
           child: CircularProgressIndicator(),
         );
@@ -316,9 +316,7 @@ class _MyAppState extends State<MyApp> {
                   onTap: () async {
                     await _audioPlayer.setPlaylist(playlist);
                     _audioPlayer.skipToIndex(index);
-                  },
-                  onLongPress: () {
-                    _audioPlayer.addAndPlay(Samples.songs[index]);
+                    _audioPlayer.play();
                   },
                   trailing: FutureBuilder<bool>(
                     future: _downloadManager.isDownloaded(

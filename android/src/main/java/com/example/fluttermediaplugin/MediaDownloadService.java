@@ -19,8 +19,8 @@ import androidx.core.app.NotificationCompat;
 import com.google.android.exoplayer2.C;
 import java.util.List;
 
-import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_CHANNEL_ID;
-import static com.example.fluttermediaplugin.StaticConst.DOWNLOAD_NOTIFICATION_ID;
+import static com.example.fluttermediaplugin.Utility.Constants.DOWNLOAD_CHANNEL_ID;
+import static com.example.fluttermediaplugin.Utility.Constants.DOWNLOAD_NOTIFICATION_ID;
 
 public class MediaDownloadService extends DownloadService {
     private final class DownloadNotificationHelper {

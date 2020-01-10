@@ -1,4 +1,4 @@
-import 'package:flutter_media_plugin/audio_player.dart';
+import 'package:flutter_media_plugin/song.dart';
 
 class Samples {
   static List<Song> songs = [

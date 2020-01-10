@@ -5,13 +5,14 @@ import androidx.annotation.NonNull;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.android.exoplayer2.offline.Download;
+import com.example.fluttermediaplugin.Media.Song;
+import com.google.android.exoplayer2.Player;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -167,7 +168,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private void audioMethodCall(String method, MethodCall call, Result result) {
         switch (method) {
             case "play":
-                Log.d(TAG, "play");
+//                Log.d(TAG, "play");
                 audioPlayer.play();
                 if (videoPlayer != null) {
                     videoPlayer.pause();
@@ -175,7 +176,7 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 result.success(null);
                 break;
             case "pause":
-                Log.d(TAG, "pause");
+//                Log.d(TAG, "pause");
                 audioPlayer.pause();
                 result.success(null);
                 break;
@@ -185,85 +186,72 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 audioPlayer.seekTo(position);
                 result.success(null);
                 break;
-            case "addAndPlay": {
-                String key = call.argument(Song.song_key_tag);
-                String title = call.argument(Song.song_title_tag);
-                String artists = call.argument(Song.song_artists_tag);
-                String album = call.argument(Song.song_album_tag);
-                String album_art_url = call.argument(Song.song_album_art_url_tag);
-                String url = call.argument(Song.song_url_tag);
-                Log.d(TAG, "url : " + url);
-                Song song = new Song(key, title, artists, album, album_art_url, url);
-                audioPlayer.addAndPlay(song);
-                audioPlayer.play();
-                result.success(null);
+            case "playNext": {
+                Map<String, String> stringMap = call.arguments();
+                Song song = Song.fromMap(stringMap);
+                if(song != null) {
+                    audioPlayer.playNext(song);
+                    result.success(null);
+                }
+                else {
+                    result.error("Song key", "Song key is not found", "Song key is not found");
+                }
                 break;
             }
             case "addSong": {
-                String key = call.argument(Song.song_key_tag);
-                String title = call.argument(Song.song_title_tag);
-                String artists = call.argument(Song.song_artists_tag);
-                String album = call.argument(Song.song_album_tag);
-                String album_art_url = call.argument(Song.song_album_art_url_tag);
-                String url = call.argument(Song.song_url_tag);
-                Song song = new Song(key, title, artists, album, album_art_url, url);
-                audioPlayer.addSong(song);
-                result.success(null);
-                break;
-            }
-            case "playNext": {
-                String key = call.argument(Song.song_key_tag);
-                String title = call.argument(Song.song_title_tag);
-                String artists = call.argument(Song.song_artists_tag);
-                String album = call.argument(Song.song_album_tag);
-                String album_art_url = call.argument(Song.song_album_art_url_tag);
-                String url = call.argument(Song.song_url_tag);
-                Song song = new Song(key, title, artists, album, album_art_url, url);
-                audioPlayer.playNext(song);
-                result.success(null);
+                Map<String, String> stringMap = call.arguments();
+                Song song = Song.fromMap(stringMap);
+                if(song != null) {
+                    audioPlayer.addSong(song, result);
+                }else {
+                    result.error("Song key", "Song key is not found", "Song key is not found");
+                }
                 break;
             }
             case "addSongAtIndex": {
                 //noinspection ConstantConditions
                 int index = call.argument("index");
-                String key = call.argument(Song.song_key_tag);
-                String title = call.argument(Song.song_title_tag);
-                String artists = call.argument(Song.song_artists_tag);
-                String album = call.argument(Song.song_album_tag);
-                String album_art_url = call.argument(Song.song_album_art_url_tag);
-                String url = call.argument(Song.song_url_tag);
-                Song song = new Song(key, title, artists, album, album_art_url, url);
-                audioPlayer.addSongAtIndex(index, song);
-                result.success(null);
+
+                Map<String, String> stringMap = call.arguments();
+                Song song = Song.fromMap(stringMap);
+                if(song != null) {
+                    audioPlayer.addSongAtIndex(index, song, result);
+                }else {
+                    result.error("Song key", "Song key is not found", "Song key is not found");
+                }
                 break;
             }
             case "removeSong": {
-                String key = call.argument(Song.song_key_tag);
-                String title = call.argument(Song.song_title_tag);
-                String artists = call.argument(Song.song_artists_tag);
-                String album = call.argument(Song.song_album_tag);
-                String album_art_url = call.argument(Song.song_album_art_url_tag);
-                String url = call.argument(Song.song_url_tag);
-                Song song = new Song(key, title, artists, album, album_art_url, url);
-                audioPlayer.removeSong(song);
-                result.success(null);
+                Map<String, String> stringMap = call.arguments();
+                Song song = Song.fromMap(stringMap);
+                if(song != null) {
+                    audioPlayer.removeSong(song);
+                    result.success(null);
+                }
+                else {
+                    result.error("Song key", "Song key is not found", "Song key is not found");
+                }
                 break;
             }
             case "setPlaylist": {
                 String playlistStr = call.argument("playlist");
-                audioPlayer.setPlaylist(playlistStr);
-                audioPlayer.preparePlaylist();
-                result.success(null);
+
+                try {
+                    JSONObject playlistJsonObject = new JSONObject(playlistStr);
+                    audioPlayer.setPlaylist(playlistJsonObject, result);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    result.error("Set Playlist", e.getMessage(), null);
+                }
                 break;
             }
             case "getPlaylist":
                 Log.d(TAG, "Json onPlaylistChanged");
-                JSONObject jsonObject = Playlist.toJson(audioPlayer.getPlaylist());
+                JSONObject jsonObject = audioPlayer.getPlaylist().toJson();
                 if (jsonObject != null) {
                     String playlistJson = jsonObject.toString();
                     result.success(playlistJson);
                 } else {
-                    Log.d(TAG, "Json object playlist is null");
                     result.error("Playlist Object", "Json object playlist is null", null);
                 }
                 break;
@@ -274,8 +262,13 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             case "setRepeatMode": {
                 //noinspection ConstantConditions
                 int repeatMode = call.argument("repeatMode");
-                audioPlayer.setRepeatMode(repeatMode);
-                result.success(null);
+                if(repeatMode == Player.REPEAT_MODE_OFF || repeatMode == Player.REPEAT_MODE_ONE || repeatMode == Player.REPEAT_MODE_ALL) {
+                    audioPlayer.setRepeatMode(repeatMode);
+                    result.success(null);
+                }
+                else {
+                    result.error("Set Repeat", "Repeat value is " + repeatMode, null);
+                }
                 break;
             }
             case "getRepeatMode": {

@@ -273,7 +273,7 @@ public class PlayerNotificationManager {
     private final MediaDescriptionAdapter mediaDescriptionAdapter;
     private final @Nullable
     CustomActionReceiver customActionReceiver;
-    private final Handler mainHandler;
+//    private final Handler mainHandler;
     private final NotificationManagerCompat notificationManager;
     private final IntentFilter intentFilter;
     private final Player.EventListener playerListener;
@@ -381,7 +381,7 @@ public class PlayerNotificationManager {
         this.customActionReceiver = customActionReceiver;
         this.controlDispatcher = new DefaultControlDispatcher();
         instanceId = instanceIdCounter++;
-        mainHandler = new Handler(Looper.getMainLooper());
+//        mainHandler = new Handler(Looper.getMainLooper());
         notificationManager = NotificationManagerCompat.from(context);
         playerListener = new PlayerListener();
         notificationBroadcastReceiver = new NotificationBroadcastReceiver();
