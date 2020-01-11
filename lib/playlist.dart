@@ -11,7 +11,7 @@ class Playlist {
   List<Song> get songs => _songs;
 
   Playlist(this._playlistName) {
-    _songs = List();
+    _songs = new List();
   }
 
   int getSize() {
@@ -22,6 +22,9 @@ class Playlist {
   }
 
   void addSong(Song song) {
+    if(_songs == null) {
+      _songs = new List();
+    }
     _songs.add(song);
   }
 
