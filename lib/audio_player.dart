@@ -150,7 +150,7 @@ class AudioPlayer {
   }
 
   void playNext(Song song) {
-    Map<String, String> songMap = song.toJson();
+    Map<String, dynamic> songMap = song.toJson();
     if (songMap == null) {
       return;
     }

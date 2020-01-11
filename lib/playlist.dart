@@ -26,6 +26,10 @@ class Playlist {
   }
 
   void addSongAtIndex(int index, Song song) {
+    if(_songs == null) {
+      return;
+    }
+
     if (index > _songs.length) {
       return;
     }
@@ -34,6 +38,9 @@ class Playlist {
   }
 
   void removeSong(Song song) {
+    if(_songs == null) {
+      return;
+    }
     int index = -1;
     for (int i = 0; i < _songs.length; i++) {
       if (_songs[i].key == song.key) {
@@ -48,18 +55,25 @@ class Playlist {
   }
 
   void removeSongAtIndex(int index) {
+    if(_songs == null) {
+      return;
+    }
     if(index >= 0 && index < _songs.length) {
       _songs.removeAt(index);
     }
   }
 
   Song getSongAtIndex(int index) {
-    if (index < 0) return null;
+    if (index < 0 || _songs == null) return null;
     if (index >= _songs.length) return null;
     return _songs[index];
   }
 
   int isContainInPlaylist(Song song) {
+    if(_songs == null) {
+      return -1;
+    }
+
     for (int i = 0; i < _songs.length; i++) {
       if (song.key == _songs[i].key) {
         return i;
@@ -73,9 +87,11 @@ class Playlist {
     Playlist playlist = Playlist(json[Utility.playlist_name].toString());
     List<dynamic> songs = json[Utility.media_playlist];
 
-    for (Map<String, dynamic> map in songs) {
-      Song song = Song.fromMap(map);
-      playlist.addSong(song);
+    if(songs != null) {
+      for (Map<String, dynamic> map in songs) {
+        Song song = Song.fromMap(map);
+        playlist.addSong(song);
+      }
     }
     return playlist;
   }
