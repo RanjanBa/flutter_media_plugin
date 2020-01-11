@@ -1,10 +1,12 @@
-import 'package:flutter_media_plugin/audio_player.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_media_plugin/song.dart';
 import 'package:flutter_media_plugin/utility.dart';
 
 class Playlist {
   String _playlistName;
   List<Song> _songs;
+
+  final Set<PlaylistListener> _playlistListeners = Set();
 
   String get playlistName => _playlistName;
 
@@ -15,21 +17,32 @@ class Playlist {
   }
 
   int getSize() {
-    if(_songs == null) {
+    if (_songs == null) {
       return 0;
     }
     return _songs.length;
   }
 
+  void addPlaylistListener(PlaylistListener listener) {
+    _playlistListeners.add(listener);
+  }
+
+  void removePlaylistListener(PlaylistListener listener) {
+    _playlistListeners.remove(listener);
+  }
+
   void addSong(Song song) {
-    if(_songs == null) {
+    if (_songs == null) {
       _songs = new List();
     }
     _songs.add(song);
+    for (PlaylistListener listener in _playlistListeners) {
+      listener.onSongAdded(song, _songs.length - 1);
+    }
   }
 
   void addSongAtIndex(int index, Song song) {
-    if(_songs == null) {
+    if (_songs == null) {
       return;
     }
 
@@ -38,10 +51,13 @@ class Playlist {
     }
 
     _songs.insert(index, song);
+    for (PlaylistListener listener in _playlistListeners) {
+      listener.onSongAdded(song, index);
+    }
   }
 
   void removeSong(Song song) {
-    if(_songs == null) {
+    if (_songs == null) {
       return;
     }
     int index = -1;
@@ -58,11 +74,14 @@ class Playlist {
   }
 
   void removeSongAtIndex(int index) {
-    if(_songs == null) {
+    if (_songs == null) {
       return;
     }
-    if(index >= 0 && index < _songs.length) {
-      _songs.removeAt(index);
+    if (index >= 0 && index < _songs.length) {
+      Song song = _songs.removeAt(index);
+      for (PlaylistListener listener in _playlistListeners) {
+        listener.onSongAdded(song, index);
+      }
     }
   }
 
@@ -73,7 +92,7 @@ class Playlist {
   }
 
   int isContainInPlaylist(Song song) {
-    if(_songs == null) {
+    if (_songs == null) {
       return -1;
     }
 
@@ -90,7 +109,7 @@ class Playlist {
     Playlist playlist = Playlist(json[Utility.playlist_name].toString());
     List<dynamic> songs = json[Utility.media_playlist];
 
-    if(songs != null) {
+    if (songs != null) {
       for (Map<String, dynamic> map in songs) {
         Song song = Song.fromMap(map);
         playlist.addSong(song);
@@ -110,5 +129,26 @@ class Playlist {
       Utility.playlist_name: _playlistName,
       Utility.media_playlist: songObject,
     };
+  }
+}
+
+class PlaylistListener {
+  final Function(Song song, int index) _onSongAdded;
+  final Function(Song song, int index) _onSongRemoved;
+
+  PlaylistListener({onSongAdded, onSongRemove})
+      : _onSongRemoved = onSongRemove,
+        _onSongAdded = onSongAdded;
+
+  void onSongAdded(Song song, int index) {
+    if (_onSongAdded != null) {
+      _onSongAdded(song, index);
+    }
+  }
+
+  void onSongRemoved(Song song, int index) {
+    if (_onSongRemoved != null) {
+      _onSongRemoved(song, index);
+    }
   }
 }
