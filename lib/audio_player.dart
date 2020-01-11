@@ -41,7 +41,6 @@ class AudioPlayer {
   void _initialize() async {
     Map<dynamic, dynamic> arguments = await channel
         .invokeMethod('${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/initialize');
-    print("initialize ${arguments.runtimeType}");
     if (arguments != null) {
       _playWhenReady = arguments["playWhenReady"];
       _playbackState = arguments["playbackState"];
@@ -167,7 +166,7 @@ class AudioPlayer {
       return;
     }
 
-    songMap.putIfAbsent("shouldPlay", () => shouldPlay);
+    songMap.putIfAbsent("shouldPlay", () => shouldPlay ? 1 : 0);
     await channel.invokeMethod(
       '${FlutterMediaPlugin.AUDIO_METHOD_TYPE}/addSong',
       songMap,

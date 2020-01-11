@@ -199,12 +199,12 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             }
             case "addSong": {
                 //noinspection ConstantConditions
-                boolean shouldPlay = call.argument("shouldPlay");
+                int shouldPlay = call.argument("shouldPlay");
 
                 Map<String, String> stringMap = call.arguments();
                 Song song = Song.fromMap(stringMap);
                 if(song != null) {
-                    audioPlayer.addSong(song, shouldPlay, result);
+                    audioPlayer.addSong(song, shouldPlay == 1, result);
                 }else {
                     result.error("Song key", "Song key is not found", "Song key is not found");
                 }
