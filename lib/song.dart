@@ -20,7 +20,7 @@ class Song {
     @required this.url,
   });
 
-  Map<String, String> toJson() {
+  Map<String, dynamic> toJson() {
     return {
       Utility.song_key_tag: key,
       Utility.song_title_tag: title,
