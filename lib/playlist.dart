@@ -15,6 +15,9 @@ class Playlist {
   }
 
   int getSize() {
+    if(_song == null) {
+      return 0;
+    }
     return _songs.length;
   }
 
