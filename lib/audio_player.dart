@@ -154,10 +154,10 @@ class AudioPlayer {
         Map<String, dynamic> songMap = Map.from(arguments['song']);
         Song song = Song.fromMap(songMap);
         if (_currentPlaylist.playlistName == playlistName) {
-          _currentPlaylist.addMediaAtIndex(index, song);
           for (ExoPlayerListener listener in _exoPlayerListeners) {
             listener.onMediaAddedToPlaylist(playlistName, index, song);
           }
+          _currentPlaylist.addMediaAtIndex(index, song);
         } else {
           print("Audio Player: currentPlaylist name is not equal");
         }
@@ -167,9 +167,13 @@ class AudioPlayer {
         int index = arguments['index'];
         Map<String, dynamic> songMap = Map.from(arguments['song']);
         Song song = Song.fromMap(songMap);
-
-        for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onMediaRemovedFromPlaylist(playlistName, index, song);
+        if (_currentPlaylist.playlistName == playlistName) {
+          for (ExoPlayerListener listener in _exoPlayerListeners) {
+            listener.onMediaRemovedFromPlaylist(playlistName, index, song);
+          }
+          _currentPlaylist.removeMediaAtIndex(index);
+        } else {
+          print("Audio Player: currentPlaylist name is not equal");
         }
         break;
       default:

@@ -12,7 +12,7 @@ class ExoPlayerListener<T extends Media> {
   final Function(String) _onPlayerStatus;
   final Function(Playlist<T>) _onPlaylistChanged;
   final Function(String, int, T) _onMediaAddedToPlaylist;
-  final Function(String, int, T) _onSongRemovedFromPlaylist;
+  final Function(String, int, T) _onMediaRemovedFromPlaylist;
 
   ExoPlayerListener({
     onLoadingChanged,
@@ -25,7 +25,7 @@ class ExoPlayerListener<T extends Media> {
     onPlayerStatus,
     onPlaylistChanged,
     onMediaAddedToPlaylist,
-    onSongRemovedFromPlaylist,
+    onMediaRemovedFromPlaylist,
   })  : _onLoadingChanged = onLoadingChanged,
         _onPlayerStateChanged = onPlayerStateChanged,
         _onPlaybackUpdate = onPlaybackUpdate,
@@ -36,7 +36,7 @@ class ExoPlayerListener<T extends Media> {
         _onShuffleModeEnabledChanged = onShuffleModeEnabledChanged,
         _onPlaylistChanged = onPlaylistChanged,
         _onMediaAddedToPlaylist = onMediaAddedToPlaylist,
-        _onSongRemovedFromPlaylist = onSongRemovedFromPlaylist;
+        _onMediaRemovedFromPlaylist = onMediaRemovedFromPlaylist;
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
@@ -103,8 +103,8 @@ class ExoPlayerListener<T extends Media> {
   }
 
   void onMediaRemovedFromPlaylist(String playlistName, int index, T media) {
-    if (_onSongRemovedFromPlaylist != null) {
-      _onSongRemovedFromPlaylist(playlistName, index, media);
+    if (_onMediaRemovedFromPlaylist != null) {
+      _onMediaRemovedFromPlaylist(playlistName, index, media);
     }
   }
 
