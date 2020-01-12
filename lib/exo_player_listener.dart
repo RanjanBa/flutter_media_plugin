@@ -2,41 +2,41 @@ import 'package:flutter_media_plugin/media/media.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 
 class ExoPlayerListener<T extends Media> {
+  final Function(int, T) _onMediaPeriodCreated;
   final Function(bool) _onLoadingChanged;
   final Function(bool, int) _onPlayerStateChanged;
   final Function(int, int) _onPlaybackUpdate;
   final Function(int) _onBufferedUpdate;
-  final Function(int, T) _onMediaPeriodCreated;
   final Function(int) _onRepeatModeChanged;
   final Function(bool) _onShuffleModeEnabledChanged;
-  final Function(String) _onPlayerStatus;
   final Function(Playlist<T>) _onPlaylistChanged;
   final Function(String, int, T) _onMediaAddedToPlaylist;
   final Function(String, int, T) _onMediaRemovedFromPlaylist;
+  final Function(String) _onPlayerStatus;
 
   ExoPlayerListener({
-    onLoadingChanged,
-    onPlayerStateChanged,
-    onPlaybackUpdate,
-    onBufferedUpdate,
-    onMediaPeriodCreated,
-    onRepeatModeChanged,
-    onShuffleModeEnabledChanged,
-    onPlayerStatus,
-    onPlaylistChanged,
-    onMediaAddedToPlaylist,
-    onMediaRemovedFromPlaylist,
-  })  : _onLoadingChanged = onLoadingChanged,
+    Function(int, T) onMediaPeriodCreated,
+    Function(bool) onLoadingChanged,
+    Function(bool, int) onPlayerStateChanged,
+    Function(int, int) onPlaybackUpdate,
+    Function(int) onBufferedUpdate,
+    Function(int) onRepeatModeChanged,
+    Function(bool) onShuffleModeEnabledChanged,
+    Function(Playlist<T>) onPlaylistChanged,
+    Function(String, int, T) onMediaAddedToPlaylist,
+    Function(String, int, T) onMediaRemovedFromPlaylist,
+    Function(String) onPlayerStatus,
+  })  : _onMediaPeriodCreated = onMediaPeriodCreated,
+        _onLoadingChanged = onLoadingChanged,
         _onPlayerStateChanged = onPlayerStateChanged,
         _onPlaybackUpdate = onPlaybackUpdate,
         _onBufferedUpdate = onBufferedUpdate,
-        _onMediaPeriodCreated = onMediaPeriodCreated,
-        _onPlayerStatus = onPlayerStatus,
         _onRepeatModeChanged = onRepeatModeChanged,
         _onShuffleModeEnabledChanged = onShuffleModeEnabledChanged,
         _onPlaylistChanged = onPlaylistChanged,
         _onMediaAddedToPlaylist = onMediaAddedToPlaylist,
-        _onMediaRemovedFromPlaylist = onMediaRemovedFromPlaylist;
+        _onMediaRemovedFromPlaylist = onMediaRemovedFromPlaylist,
+        _onPlayerStatus = onPlayerStatus;
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 

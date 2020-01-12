@@ -77,12 +77,12 @@ class AudioPlayer {
             Map.from(arguments["currentPlayingSong"]);
         if (songMap != null) {
           int windowIndex = arguments["windowIndex"];
-          _currentIndex = windowIndex;
           Song song = Song.fromMap(songMap);
-          _currentSong = song;
           for (ExoPlayerListener listener in _exoPlayerListeners) {
             listener.onMediaPeriodCreated(windowIndex, song);
           }
+          _currentIndex = windowIndex;
+          _currentSong = song;
         } else {
           _currentSong = null;
         }
@@ -262,6 +262,7 @@ class AudioPlayer {
     );
   }
 
+  // add song at last position
   Future<bool> addSong(Song song, {bool shouldPlay = false}) async {
     if (_currentPlaylist == null) {
       return false;
