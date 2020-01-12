@@ -118,11 +118,12 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 if (methodTypeCall.method.equals("initialize")) {
                     if (audioPlayer == null) {
                         initializeAudioPlayer();
-                        result.success(null);
                     } else {
                         Log.d(TAG, "Already audioPlayer is initialized");
-                        audioPlayer.initialize(result);
+                        audioPlayer.initialize();
                     }
+
+                    result.success(null);
                     return;
                 }
 
@@ -137,11 +138,11 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 if (methodTypeCall.method.equals("initialize")) {
                     if (videoPlayer == null) {
                         initializeVideoPlayer();
-                        result.success(null);
                     } else {
                         Log.d(TAG, "Already videoPlayer is initialized");
-                        videoPlayer.initialize(result);
+                        videoPlayer.initialize();
                     }
+                    result.success(null);
                     return;
                 }
 
@@ -185,27 +186,55 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 audioPlayer.seekTo(position);
                 result.success(null);
                 break;
+            case "skipToNext":
+                audioPlayer.skipToNext();
+                result.success(null);
+                break;
+            case "skipToPrevious":
+                audioPlayer.skipToPrevious();
+                result.success(null);
+                break;
+            case "skipToIndex": {
+                //noinspection ConstantConditions
+                int index = call.argument("index");
+                audioPlayer.skipToIndex(index);
+                result.success(null);
+                break;
+            }
+            case "setRepeatMode": {
+                //noinspection ConstantConditions
+                int repeatMode = call.argument("repeatMode");
+                if(repeatMode == Player.REPEAT_MODE_OFF || repeatMode == Player.REPEAT_MODE_ONE || repeatMode == Player.REPEAT_MODE_ALL) {
+                    audioPlayer.setRepeatMode(repeatMode);
+                    result.success(null);
+                }
+                else {
+                    result.error("Set Repeat", "Repeat value is " + repeatMode, null);
+                }
+                break;
+            }
+            case "setShuffleModeEnabled": {
+                //noinspection ConstantConditions
+                boolean shuffleModeEnabled = call.argument("shuffleModeEnabled");
+                audioPlayer.setShuffleModeEnabled(shuffleModeEnabled);
+                result.success(null);
+                break;
+            }
+            case "stop":
+                audioPlayer.stop();
+                result.success(null);
+                break;
+            case "release":
+                audioPlayer.release();
+                result.success(null);
+                break;
             case "playNext": {
                 Map<String, String> stringMap = call.arguments();
                 Song song = Song.fromMap(stringMap);
                 if(song != null) {
-                    audioPlayer.playNext(song);
-                    result.success(null);
+                    result.success(audioPlayer.playNext(song));
                 }
                 else {
-                    result.error("Song key", "Song key is not found", "Song key is not found");
-                }
-                break;
-            }
-            case "addSong": {
-                //noinspection ConstantConditions
-                int shouldPlay = call.argument("shouldPlay");
-
-                Map<String, String> stringMap = call.arguments();
-                Song song = Song.fromMap(stringMap);
-                if(song != null) {
-                    audioPlayer.addSong(song, shouldPlay == 1, result);
-                }else {
                     result.error("Song key", "Song key is not found", "Song key is not found");
                 }
                 break;
@@ -213,22 +242,28 @@ public class FlutterMediaPlugin implements MethodCallHandler {
             case "addSongAtIndex": {
                 //noinspection ConstantConditions
                 int index = call.argument("index");
+                //noinspection ConstantConditions
+                int shouldPlay = call.argument("shouldPlay");
 
                 Map<String, String> stringMap = call.arguments();
                 Song song = Song.fromMap(stringMap);
                 if(song != null) {
-                    audioPlayer.addSongAtIndex(index, song, result);
+                    boolean isAdded = audioPlayer.addSongAtIndex(index, song, shouldPlay == 1);
+                    result.success(isAdded);
                 }else {
                     result.error("Song key", "Song key is not found", "Song key is not found");
                 }
                 break;
             }
-            case "removeSong": {
+            case "removeSongFromIndex": {
                 Map<String, String> stringMap = call.arguments();
                 Song song = Song.fromMap(stringMap);
+
                 if(song != null) {
-                    audioPlayer.removeSong(song);
-                    result.success(null);
+                    //noinspection ConstantConditions
+                    int index = call.argument("index");
+                    boolean isRemoved = audioPlayer.removeSongFromIndex(song, index);
+                    result.success(isRemoved);
                 }
                 else {
                     result.error("Song key", "Song key is not found", "Song key is not found");
@@ -247,77 +282,6 @@ public class FlutterMediaPlugin implements MethodCallHandler {
                 }
                 break;
             }
-            case "getPlaylist":
-                Log.d(TAG, "Json onPlaylistChanged");
-                if(audioPlayer.getPlaylist() != null) {
-                    JSONObject jsonObject = audioPlayer.getPlaylist().toJson();
-                    if (jsonObject != null) {
-                        String playlistJson = jsonObject.toString();
-                        result.success(playlistJson);
-                    } else {
-                        result.error("Playlist Object", "Json object playlist is null", null);
-                    }
-                }
-                else {
-                    result.success(null);
-                }
-                break;
-            case "clearPlaylist":
-                audioPlayer.clearPlaylist();
-                result.success(null);
-                break;
-            case "setRepeatMode": {
-                //noinspection ConstantConditions
-                int repeatMode = call.argument("repeatMode");
-                if(repeatMode == Player.REPEAT_MODE_OFF || repeatMode == Player.REPEAT_MODE_ONE || repeatMode == Player.REPEAT_MODE_ALL) {
-                    audioPlayer.setRepeatMode(repeatMode);
-                    result.success(null);
-                }
-                else {
-                    result.error("Set Repeat", "Repeat value is " + repeatMode, null);
-                }
-                break;
-            }
-            case "getRepeatMode": {
-                int repeatMode = audioPlayer.getRepeatMode();
-                result.success(repeatMode);
-                break;
-            }
-            case "setShuffleModeEnabled": {
-                //noinspection ConstantConditions
-                boolean shuffleModeEnabled = call.argument("shuffleModeEnabled");
-                audioPlayer.setShuffleModeEnabled(shuffleModeEnabled);
-                result.success(null);
-                break;
-            }
-            case "getShuffleModeEnabled": {
-                boolean shuffleModeEnabled = audioPlayer.getShuffleModeEnabled();
-                result.success(shuffleModeEnabled);
-                break;
-            }
-            case "skipToNext":
-                audioPlayer.skipToNext();
-                result.success(null);
-                break;
-            case "skipToPrevious":
-                audioPlayer.skipToPrevious();
-                result.success(null);
-                break;
-            case "skipToIndex": {
-                //noinspection ConstantConditions
-                int index = call.argument("index");
-                audioPlayer.skipToIndex(index);
-                result.success(null);
-                break;
-            }
-            case "stop":
-                audioPlayer.stop();
-                result.success(null);
-                break;
-            case "release":
-                audioPlayer.release();
-                result.success(null);
-                break;
             default:
                 result.notImplemented();
                 break;

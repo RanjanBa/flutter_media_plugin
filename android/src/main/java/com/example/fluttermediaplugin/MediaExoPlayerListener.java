@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.example.fluttermediaplugin.Media.Media;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -15,7 +16,7 @@ import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 
-public abstract class MediaExoPlayerListener implements Player.EventListener {
+public abstract class MediaExoPlayerListener<T extends Media> implements Player.EventListener {
     private static String TAG = "MediaPlayerManager";
     private Handler playbackPollHandler;
     private Handler bufferingPollHandler;
@@ -93,11 +94,33 @@ public abstract class MediaExoPlayerListener implements Player.EventListener {
         return simpleExoPlayer.getDuration();
     }
 
-    public void clear() {
+    void clear() {
         stopBufferingPolling();
         stopPlaybackPolling();
         this.playbackPollHandler.removeCallbacks(null);
         this.bufferingPollHandler.removeCallbacks(null);
+    }
+
+    void onPlaylistChanged(@NonNull Playlist<T> playlist) {
+    }
+
+    void onMediaAddedToPlaylist(String playlistName, int index, @NonNull T media) {
+    }
+
+    void onMediaRemovedFromPlaylist(String playlistName, int index, @NonNull T media) {
+    }
+
+
+    void onMediaPeriodCreated(int windowIndex) {
+    }
+
+    void onPlaybackUpdate(long position, long audioLength) {
+    }
+
+    void onBufferedUpdate(int percent) {
+    }
+
+    void onPlayerStatus(String message) {
     }
 
     @Override
@@ -161,17 +184,5 @@ public abstract class MediaExoPlayerListener implements Player.EventListener {
 
     @Override
     public void onSeekProcessed() {
-    }
-
-    void onMediaPeriodCreated(int windowIndex) {
-    }
-
-    void onPlaybackUpdate(long position, long audioLength) {
-    }
-
-    void onBufferedUpdate(int percent) {
-    }
-
-    void onPlayerStatus(String message) {
     }
 }

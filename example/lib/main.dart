@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
@@ -5,7 +6,7 @@ import 'package:flutter_media_plugin/playlist.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
 import 'package:flutter_media_plugin/download_manager.dart';
 import 'package:flutter_media_plugin/video_player.dart';
-import 'package:flutter_media_plugin/song.dart';
+import 'package:flutter_media_plugin/media/song.dart';
 import 'package:flutter_media_plugin/utility.dart';
 import 'package:flutter_media_plugin_example/songs.dart';
 
@@ -30,20 +31,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int _position = 0, _audioLength = 0, _percent = 0;
+  final _animatedListKey = GlobalKey<AnimatedListState>();
+  int _position = 0, _audioLength = 0, _bufferPercent = 0;
   String _message = "";
 
   IconData _iconData;
   Function _function;
 
   Widget _bufferingWidget;
+  String currentlyPlayingSongTitle = "";
+  Playlist<Song> _playlist;
 
-  ExoPlayerListener _exoPlayerListener;
+  ExoPlayerListener<Song> _exoPlayerListener;
   DownloadListener _downloadListener;
   VideoExoPlayerListener _videoExoPlayerListener;
-  Playlist playlist;
 
-//  String _assetUri = "assets/videos/birwiBirwi.mp4";
   String _videoUrl =
       "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2Ftest.mp4?alt=media&token=d66bb13d-b9aa-4a2e-b572-59b63fdb1b6b";
 
@@ -68,6 +70,44 @@ class _MyAppState extends State<MyApp> {
       onPlayerStatus: _onPlayerStatus,
       onRepeatModeChanged: _onRepeatModeChanged,
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
+      onPlaylistChanged: (Playlist<Song> playlist) {
+        int oldSize = _playlist != null ? _playlist.getSize() : -1;
+        int newSize = playlist != null ? playlist.getSize() : -1;
+
+        print("Main playlist changed old size: $oldSize and new size: $newSize");
+        if (_playlist != null) {
+          for (int i = _playlist.getSize() - 1; i >= 0; i--) {
+            _animatedListKey.currentState.removeItem(i,
+                (BuildContext context, Animation animation) {
+              return SlideTransition(
+                position: animation.drive(
+                  Tween(
+                    begin: Offset(1, 0),
+                    end: Offset(0, 0),
+                  ),
+                ),
+                child: Container(
+                  color: Colors.red,
+                  height: 60,
+                ),
+              );
+            }, duration: Duration(milliseconds: 1000));
+          }
+        }
+
+        if (playlist != null) {
+//          print('${playlist.playlistName} ${playlist.getSize()}');
+          for (int i = 0; i < playlist.getSize(); i++) {
+            _animatedListKey.currentState.insertItem(i);
+          }
+        }
+
+        _playlist = playlist;
+      },
+      onMediaAddedToPlaylist: (String playlistName, int index, Song song) {
+        print("main: added song index: $index");
+        _animatedListKey.currentState.insertItem(index);
+      },
     );
     _audioPlayer.addExoPlayerListener(
       _exoPlayerListener,
@@ -79,8 +119,9 @@ class _MyAppState extends State<MyApp> {
 
     _downloadManager.addDownloadListener(_downloadListener);
 
-    _videoExoPlayerListener =
-        VideoExoPlayerListener(onTextureIdChanged: _onTextureIdChanged, onSurfaceSizeChanged: _onSurfaceSizeChanged);
+    _videoExoPlayerListener = VideoExoPlayerListener(
+        onTextureIdChanged: _onTextureIdChanged,
+        onSurfaceSizeChanged: _onSurfaceSizeChanged);
     _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
     _setIcons();
@@ -88,12 +129,7 @@ class _MyAppState extends State<MyApp> {
       height: 0,
       width: 0,
     );
-
-    playlist = new Playlist("New Playlist");
-
-    for (var s in Samples.songs) {
-      playlist.addSong(s);
-    }
+    _playlist = _audioPlayer.currentPlayingPlaylist;
   }
 
   @override
@@ -128,13 +164,6 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _onPlayerStatus(String message) {
-    _message = message;
-    if (!mounted) return;
-
-    setState(() {});
-  }
-
   void _onPlayerStateChanged(bool playWhenReady, int playbackState) {
     if (!mounted) return;
 
@@ -163,21 +192,25 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onBufferedUpdate(int percent) {
-    _percent = percent;
+    _bufferPercent = percent;
 
     if (!mounted) return;
 
     setState(() {});
   }
 
-  String currentlyPlayingSongTitle = "";
-
-  void _onMediaPeriodCreated(int windowIndex) {
-    print("window index : $windowIndex");
+  void _onMediaPeriodCreated(int windowIndex, Song _currentPlayingSong) {
+//    print("window index : $windowIndex");
     if (!mounted) return;
     _audioLength = 0;
     _position = 0;
-    setCurrentSong(windowIndex);
+
+    if (_currentPlayingSong == null)
+      currentlyPlayingSongTitle = "No Song";
+    else
+      currentlyPlayingSongTitle = _currentPlayingSong.title;
+
+    setState(() {});
   }
 
   void _onRepeatModeChanged(int repeatMode) {
@@ -192,14 +225,10 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void setCurrentSong(int windowIndex) async {
-    Playlist playlist = await _audioPlayer.getPlaylist();
-//    print("length ${playlist.getSize()}");
-    Song song = playlist.getSongAtIndex(windowIndex);
-    if (song == null)
-      currentlyPlayingSongTitle = "No Song";
-    else
-      currentlyPlayingSongTitle = song.title;
+  void _onPlayerStatus(String message) {
+    _message = message;
+    if (!mounted) return;
+
     setState(() {});
   }
 
@@ -216,15 +245,17 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.refresh),
+              icon: Icon(Icons.playlist_play),
               onPressed: () {
-                //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
+                Playlist<Song> playlist = new Playlist<Song>("New Playlist");
+                Samples.songs.forEach((s) => playlist.addMedia(s));
+                _audioPlayer.setPlaylist(playlist);
               },
             ),
             IconButton(
-              icon: Icon(Icons.playlist_add),
+              icon: Icon(Icons.stop),
               onPressed: () {
-                //_audioPlayer.setPlaylistAndSongIndex(playlist, 0);
+                _audioPlayer.stop();
               },
             ),
           ],
@@ -285,26 +316,38 @@ class _MyAppState extends State<MyApp> {
             Center(
               child: Text(currentlyPlayingSongTitle),
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: () async {
+                    int cMode = _audioPlayer.repeatMode;
+                    _audioPlayer.setRepeatMode((cMode + 1) % 3);
+                  },
+                  child: Text("RepeatMode Change"),
+                ),
+                Text("repeat mode : $_repeatMode")
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                RaisedButton(
+                  onPressed: () async {
+                    bool cShuffle = _audioPlayer.shuffleModeEnabled;
+                    _audioPlayer.setShuffleModeEnabled(!cShuffle);
+                  },
+                  child: Text("ShuffleMode Change"),
+                ),
+                Text("shuffle mode : $_shuffleModeEnabled"),
+              ],
+            ),
             Center(
-              child: RaisedButton(
-                onPressed: () async {
-                  int cMode = await _audioPlayer.getRepeatMode();
-                  _audioPlayer.setRepeatMode((cMode + 1) % 3);
-                },
-                child: Text("RepeatMode Change"),
+              child: Text(
+                "Playlist",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
               ),
             ),
-            Center(child: Text("repeat mode : $_repeatMode")),
-            Center(
-              child: RaisedButton(
-                onPressed: () async {
-                  bool cShuffle = await _audioPlayer.getShuffleModeEnabled();
-                  _audioPlayer.setShuffleModeEnabled(!cShuffle);
-                },
-                child: Text("ShuffleMode Change"),
-              ),
-            ),
-            Center(child: Text("shuffle mode : $_shuffleModeEnabled")),
             ListView.builder(
               shrinkWrap: true,
               physics: ClampingScrollPhysics(),
@@ -313,14 +356,13 @@ class _MyAppState extends State<MyApp> {
                   title: Text(
                     '${Samples.songs[index].title}',
                   ),
-                  onTap: () async {
-                    await _audioPlayer.setPlaylist(playlist);
-                    _audioPlayer.skipToIndex(index);
-                    _audioPlayer.play();
+                  onTap: () {
+                    _audioPlayer.addSong(Samples.songs[index],
+                        shouldPlay: true);
                   },
                   trailing: FutureBuilder<bool>(
-                    future: _downloadManager.isDownloaded(
-                        Samples.songs[index].url),
+                    future:
+                        _downloadManager.isDownloaded(Samples.songs[index].url),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
 //                        print('data ${snapshot.data}');
@@ -328,16 +370,16 @@ class _MyAppState extends State<MyApp> {
                           return IconButton(
                             icon: Icon(Icons.file_download),
                             onPressed: () {
-                              _downloadManager.download(
-                                  Samples.songs[index].url);
+                              _downloadManager
+                                  .download(Samples.songs[index].url);
                             },
                           );
                         else {
                           return IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              _downloadManager.downloadRemove(
-                                  Samples.songs[index].url);
+                              _downloadManager
+                                  .downloadRemove(Samples.songs[index].url);
                             },
                           );
                         }
@@ -351,44 +393,80 @@ class _MyAppState extends State<MyApp> {
               itemCount: Samples.songs.length,
             ),
             Container(
-              child: Text(_message),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                _message,
+                style: TextStyle(fontSize: 20.0, fontStyle: FontStyle.italic),
+              ),
             ),
-            Container(
-              height: 600,
-              width: 50,
-              color: Colors.red,
-              child: _textureId != null
-                  ? AspectRatio(
-                      aspectRatio: _aspectRatio,
-                      child: Texture(textureId: _textureId),
-                    )
-                  : Container(
-                      color: Colors.blue,
+            Center(
+              child: Text(
+                "Playing Playlist",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+              ),
+            ),
+            AnimatedList(
+              key: _animatedListKey,
+              shrinkWrap: true,
+              physics: ClampingScrollPhysics(),
+              initialItemCount: _playlist != null ? _playlist.getSize() : 0,
+              itemBuilder:
+                  (BuildContext context, int index, Animation animation) {
+//                print(_playlist.getMediaAtIndex(index).title);
+                return SlideTransition(
+                  position: animation.drive(
+                    Tween(
+                      begin: Offset(1, 0),
+                      end: Offset(0, 0),
                     ),
+                  ),
+                  child: ListTile(
+                    title: Text(_playlist.getMediaAtIndex(index).title),
+                    subtitle: Text(_playlist.getMediaAtIndex(index).artists),
+                    onTap: () {
+                      _audioPlayer.skipToIndex(index);
+                    },
+                  ),
+                );
+              },
             ),
-            Wrap(
-              alignment: WrapAlignment.center,
-              children: <Widget>[
-                RaisedButton(
-                  child: Icon(Icons.cloud_download),
-                  onPressed: () {
-                    _videoPlayer.addAndPlay(TypeOfPlace.network, _videoUrl);
-                  },
-                ),
-                RaisedButton(
-                  child: Icon(Icons.play_arrow),
-                  onPressed: () {
-                    _videoPlayer.play();
-                  },
-                ),
-                RaisedButton(
-                  child: Icon(Icons.pause),
-                  onPressed: () {
-                    _videoPlayer.pause();
-                  },
-                ),
-              ],
-            )
+//            Container(
+//              height: 600,
+//              width: 50,
+//              color: Colors.red,
+//              child: _textureId != null
+//                  ? AspectRatio(
+//                      aspectRatio: _aspectRatio,
+//                      child: Texture(textureId: _textureId),
+//                    )
+//                  : Container(
+//                      color: Colors.blue,
+//                    ),
+//            ),
+//            Row(
+//              mainAxisAlignment: MainAxisAlignment.spaceAround,
+//              children: <Widget>[
+//                RaisedButton(
+//                  child: Icon(Icons.cloud_download),
+//                  onPressed: () {
+//                    _videoPlayer.addAndPlay(TypeOfPlace.network, _videoUrl);
+//                  },
+//                ),
+//                RaisedButton(
+//                  child: Icon(Icons.play_arrow),
+//                  onPressed: () {
+//                    _videoPlayer.play();
+//                  },
+//                ),
+//                RaisedButton(
+//                  child: Icon(Icons.pause),
+//                  onPressed: () {
+//                    _videoPlayer.pause();
+//                  },
+//                ),
+//              ],
+//            )
           ],
         ),
       ),

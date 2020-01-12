@@ -51,16 +51,6 @@ class AudioPlayer {
     private MediaSourceEventListener playlistEventListener;
     private DefaultDataSourceFactory dataSourceFactory;
 
-    Playlist getPlaylist() {
-        return playlist;
-    }
-
-    Song getSongByIndex(int index) {
-        if (playlist == null)
-            return null;
-        return playlist.getMediaAtIndex(index);
-    }
-
     SimpleExoPlayer getSimpleExoPlayer() {
         return simpleExoPlayer;
     }
@@ -86,13 +76,10 @@ class AudioPlayer {
 
         simpleExoPlayer.setAudioAttributes(audioAttributes, true);
 
-//        playerId = simpleExoPlayer.getAudioSessionId();
-
         playlistEventListener = new MediaSourceEventListener() {
             @Override
             public void onMediaPeriodCreated(int windowIndex, MediaSource.MediaPeriodId mediaPeriodId) {
                 audioExoPlayerListener.onMediaPeriodCreated(windowIndex);
-                Log.d(TAG + "CC", "onMediaPeriodCreated : " + windowIndex);
             }
 
             @Override
@@ -138,6 +125,7 @@ class AudioPlayer {
 
         audioExoPlayerListener = new AudioExoPlayerListener();
         simpleExoPlayer.addListener(audioExoPlayerListener);
+        audioExoPlayerListener.onInitialized();
     }
 
     private void showAudioPlayerNotification() {
@@ -150,54 +138,25 @@ class AudioPlayer {
         Util.startForegroundService(FlutterMediaPlugin.getInstance().getRegistrar().activeContext(), intent);
     }
 
-    void initialize(MethodChannel.Result result) {
-        if (simpleExoPlayer == null) {
-            return;
+    Song getSongByIndex(int index) {
+        if (playlist == null) {
+            return null;
+        }
+        if (index >= 0 && index < playlist.getSize()) {
+            return playlist.getMediaAtIndex(index);
         }
 
-        int playbackState = simpleExoPlayer.getPlaybackState();
-        boolean playWhenReady = simpleExoPlayer.getPlayWhenReady();
-        Map<String, Object> args = new HashMap<>();
-        args.put("playWhenReady", playWhenReady);
-        args.put("playbackState", playbackState);
+        return null;
+    }
 
-        Song song = getSongByIndex(simpleExoPlayer.getCurrentWindowIndex());
-        if (song != null) {
-            Map<String, Object> songMap = song.toMap();
-            args.put("currentPlayingSong", songMap);
+    void initialize() {
+        if (audioExoPlayerListener != null) {
+            audioExoPlayerListener.onInitialized();
         }
-        result.success(args);
     }
 
     void setChannel(MethodChannel channel) {
         this.channel = channel;
-    }
-
-    void release() {
-        if (simpleExoPlayer != null) {
-            simpleExoPlayer.removeListener(audioExoPlayerListener);
-            simpleExoPlayer.release();
-        }
-
-        this.playlist.clear();
-        if (MediaPlayerNotificationService.getInstance() != null) {
-            MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setPlayer(null);
-        }
-        audioExoPlayerListener = null;
-    }
-
-    void stop() {
-        simpleExoPlayer.stop(false);
-        audioExoPlayerListener.clear();
-        audioExoPlayerListener.onBufferedUpdate(0);
-        audioExoPlayerListener.onPlaybackUpdate(0, 0);
-        if (simpleExoPlayer != null) {
-            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
-            audioExoPlayerListener.onPlayerStatus("Audio is in stop state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
-        }
-        if (MediaPlayerNotificationService.getInstance() != null)
-            MediaPlayerNotificationService.getInstance().stopService(true);
-        playlist.clear();
     }
 
     void onNotificationStarted() {
@@ -207,11 +166,6 @@ class AudioPlayer {
     void onNotificationDestroyed() {
         isShowingNotification = false;
         stop();
-        playlist.clear();
-    }
-
-    void clearPlaylist() {
-        playlist.clear();
     }
 
     void play() {
@@ -244,126 +198,242 @@ class AudioPlayer {
         simpleExoPlayer.setRepeatMode(repeatMode);
     }
 
-    int getRepeatMode() {
-        return simpleExoPlayer.getRepeatMode();
-    }
-
     void setShuffleModeEnabled(boolean shuffleModeEnabled) {
         simpleExoPlayer.setShuffleModeEnabled(shuffleModeEnabled);
     }
 
-    boolean getShuffleModeEnabled() {
-        return simpleExoPlayer.getShuffleModeEnabled();
-    }
-
-    void skipToIndex(int index) {
-        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
-            return;
-        }
-        playlist.skipToIndex(index);
-    }
-
-    void skipToNext() {
-        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
-            return;
-        }
-        playlist.skipToNext();
-    }
-
-    void skipToPrevious() {
-        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
-            return;
-        }
-        playlist.skipToPrevious();
-    }
-
-    void playNext(@NonNull Song song) {
-        if(simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
-            return;
-        }
-
-        playlist.addMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex() + 1, song);
-    }
-
-    void addSong(@NonNull Song song, final boolean shouldPlay, @NonNull final MethodChannel.Result result) {
-        playlist.addMedia(song, new Runnable() {
-            @Override
-            public void run() {
-                result.success(null);
-                if(shouldPlay) {
-                    playlist.skipToIndex(playlist.getSize() - 1);
-                }
-            }
-        });
-    }
-
-    void addSongAtIndex(int index, @NonNull Song song, @NonNull final MethodChannel.Result result) {
-        playlist.addMediaAtIndex(index, song, new Runnable() {
-            @Override
-            public void run() {
-                result.success(null);
-            }
-        });
-    }
-
-    void setPlaylist(@NonNull JSONObject playlistJsonObject, MethodChannel.Result result) {
-        ArrayList<Song> songs = Playlist.songsFromJson(playlistJsonObject);
-        String playlistName = Playlist.playlistNameFromJson(playlistJsonObject);
-        if(playlist != null) {
-            playlist.clear();
-        }
-
-        if(songs != null && playlistName != null && songs.size() > 0) {
-            playlist = new Playlist<>(playlistName, simpleExoPlayer, playlistEventListener, dataSourceFactory);
-            playlist.prepare(songs, result);
-        }
-        else {
-            result.error("Playlist songs", "Media playlist songs is not found", "playlist is not found");
-        }
-    }
-
-    void removeSong(@NonNull  Song song) {
-        if(playlist == null) {
-            return;
-        }
-        playlist.removeSong(song);
-    }
-
     void seekTo(long position) {
-        if (simpleExoPlayer.getPlaybackState() == Player.STATE_ENDED || simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || playlist == null) {
             return;
         }
-        if (audioLength() > position) {
+        if (position >= 0 && position < simpleExoPlayer.getDuration()) {
             simpleExoPlayer.seekTo(position);
         }
 
         Log.d(TAG, "seek to " + position);
     }
 
-    private long audioLength() {
-        return simpleExoPlayer.getDuration();
+    void skipToIndex(int index) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || playlist == null) {
+            return;
+        }
+        playlist.skipToIndex(index);
     }
 
-    private class AudioExoPlayerListener extends MediaExoPlayerListener {
+    void skipToNext() {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || playlist == null) {
+            return;
+        }
+        playlist.skipToNext();
+    }
+
+    void skipToPrevious() {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || playlist == null) {
+            return;
+        }
+        playlist.skipToPrevious();
+    }
+
+    void stop() {
+        audioExoPlayerListener.clear();
+
+        audioExoPlayerListener.onBufferedUpdate(0);
+        audioExoPlayerListener.onPlaybackUpdate(0, 0);
+
+        simpleExoPlayer.stop(false);
+
+        if (MediaPlayerNotificationService.getInstance() != null)
+            MediaPlayerNotificationService.getInstance().stopService(true);
+
+        if (simpleExoPlayer != null) {
+            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
+            audioExoPlayerListener.onPlayerStatus("Audio is in stop state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
+        }
+
+        playlist.clear();
+        audioExoPlayerListener.onPlaylistChanged(playlist);
+    }
+
+    void release() {
+        stop();
+
+        simpleExoPlayer.removeListener(audioExoPlayerListener);
+        simpleExoPlayer.release();
+        audioExoPlayerListener = null;
+
+        if (MediaPlayerNotificationService.getInstance() != null) {
+            MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setPlayer(null);
+            MediaPlayerNotificationService.getInstance().stopService(true);
+        }
+    }
+
+    void setPlaylist(@NonNull JSONObject playlistJsonObject, MethodChannel.Result result) {
+        ArrayList<Song> songs = Playlist.songsFromJson(playlistJsonObject);
+        String playlistName = Playlist.playlistNameFromJson(playlistJsonObject);
+        if (playlist != null) {
+            playlist.clear();
+        }
+
+        if (playlistName != null && songs != null) {
+            playlist = new Playlist<>(playlistName, simpleExoPlayer, playlistEventListener, dataSourceFactory);
+            playlist.prepare(songs, result);
+
+            audioExoPlayerListener.onPlaylistChanged(playlist);
+            Log.d(TAG, "after media prepare size: " + playlist.getSize());
+        } else {
+            result.success(false);
+        }
+    }
+
+    boolean playNext(@NonNull Song song) {
+        if (simpleExoPlayer.getPlaybackState() == Player.STATE_IDLE || playlist == null) {
+            return false;
+        }
+
+        int index = simpleExoPlayer.getCurrentWindowIndex() + 1;
+        if (playlist.addMediaAtIndex(index, song)) {
+            audioExoPlayerListener.onMediaAddedToPlaylist(playlist.getPlaylistName(), index, song);
+            return true;
+        }
+
+        return false;
+    }
+
+    boolean addSongAtIndex(final int index, @NonNull Song song, final boolean shouldPlay) {
+        if (playlist == null) {
+            return false;
+        }
+        boolean isAdded = playlist.addMediaAtIndex(index, song, new Runnable() {
+            @Override
+            public void run() {
+                if (shouldPlay) {
+                    playlist.skipToIndex(index);
+                }
+            }
+        });
+
+        if (isAdded) {
+            audioExoPlayerListener.onMediaAddedToPlaylist(playlist.getPlaylistName(), index, song);
+        }
+
+        return isAdded;
+    }
+
+    boolean removeSongFromIndex(@NonNull Song song, int index) {
+        if (playlist == null) {
+            return false;
+        }
+
+        if (playlist.removeMediaAtIndex(song, index)) {
+            audioExoPlayerListener.onMediaRemovedFromPlaylist(playlist.getPlaylistName(), index, song);
+            return true;
+        }
+        return false;
+    }
+
+    private class AudioExoPlayerListener extends MediaExoPlayerListener<Song> {
         AudioExoPlayerListener() {
             super(simpleExoPlayer, AUDIO_EXO_PLAYER_LISTENER_THREAD_NAME);
         }
 
+        void onInitialized() {
+            if (simpleExoPlayer == null) {
+                return;
+            }
+
+            int playbackState = simpleExoPlayer.getPlaybackState();
+            boolean playWhenReady = simpleExoPlayer.getPlayWhenReady();
+            int repeatMode = simpleExoPlayer.getRepeatMode();
+            boolean shuffleModeEnabled = simpleExoPlayer.getShuffleModeEnabled();
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("playWhenReady", playWhenReady);
+            args.put("playbackState", playbackState);
+            args.put("repeatMode", repeatMode);
+            args.put("shuffleModeEnabled", shuffleModeEnabled);
+
+            Song song = playlist != null ? playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex()) : null;
+            if (song != null) {
+                Map<String, Object> songMap = song.toMap();
+                args.put("currentPlayingSong", songMap);
+            }
+
+            String method = AUDIO_METHOD_TYPE + "/onInitialized";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        void onPlaylistChanged(@NonNull Playlist<Song> playlist) {
+            JSONObject jsonObject = playlist.toJson();
+            if (jsonObject != null) {
+//                Log.d(TAG, "media size: " + playlist.getSize() + ", " + jsonObject.toString());
+                String playlistJson = jsonObject.toString();
+
+                Map<String, Object> args = new HashMap<>();
+                args.put("playlist", playlistJson);
+                String method = AUDIO_METHOD_TYPE + "/onPlaylistChanged";
+                channel.invokeMethod(method, args);
+            }
+        }
+
+        @Override
+        void onMediaAddedToPlaylist(String playlistName, int index, @NonNull Song media) {
+            Map<String, Object> songMap = media.toMap();
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("playlistName", playlistName);
+            args.put("index", index);
+            args.put("song", songMap);
+            String method = AUDIO_METHOD_TYPE + "/onMediaAddedToPlaylist";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        void onMediaRemovedFromPlaylist(String playlistName, int index, @NonNull Song media) {
+            Map<String, Object> songMap = media.toMap();
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("playlistName", playlistName);
+            args.put("index", index);
+            args.put("song", songMap);
+            String method = AUDIO_METHOD_TYPE + "/onMediaRemovedFromPlaylist";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onMediaPeriodCreated(int windowIndex) {
+            super.onMediaPeriodCreated(windowIndex);
+
+//            Log.d(TAG, "onMediaPeriodCreated");
+
+            Song song = playlist.getMediaAtIndex(windowIndex);
+            if (song == null)
+                return;
+
+            Map<String, Object> songMap = song.toMap();
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("windowIndex", windowIndex);
+            args.put("currentPlayingSong", songMap);
+            String method = AUDIO_METHOD_TYPE + "/onMediaPeriodCreated";
+            channel.invokeMethod(method, args);
+        }
+
         @Override
         public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-            Log.d(TAG, "onTimelineChanged");
+//            Log.d(TAG, "onTimelineChanged");
             super.onTimelineChanged(timeline, manifest, reason);
         }
 
         @Override
         public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-            Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
+//            Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
             super.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override
         public void onLoadingChanged(boolean isLoading) {
-            Log.d(TAG, "onLoadingChanged");
+//            Log.d(TAG, "onLoadingChanged");
             super.onLoadingChanged(isLoading);
         }
 
@@ -380,7 +450,7 @@ class AudioPlayer {
                 }
             } else {
                 if (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY) {
-                    Log.d(TAG, "Media Notification is null " + playbackState);
+//                    Log.d(TAG, "Media Notification is null " + playbackState);
                     showAudioPlayerNotification();
                 }
             }
@@ -419,13 +489,13 @@ class AudioPlayer {
 
         @Override
         public void onPositionDiscontinuity(int reason) {
-            Log.d(TAG, "onPositionDiscontinuity");
+//            Log.d(TAG, "onPositionDiscontinuity");
             super.onPositionDiscontinuity(reason);
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
-            Log.d(TAG, "onPlaybackParametersChanged");
+//            Log.d(TAG, "onPlaybackParametersChanged");
             super.onPlaybackParametersChanged(playbackParameters);
         }
 
@@ -433,23 +503,6 @@ class AudioPlayer {
         public void onSeekProcessed() {
             Log.d(TAG, "onSeekProcessed");
             super.onSeekProcessed();
-        }
-
-        @Override
-        public void onMediaPeriodCreated(int windowIndex) {
-            super.onMediaPeriodCreated(windowIndex);
-
-            Log.d(TAG, "onMediaPeriodCreated");
-            Map<String, Object> args = new HashMap<>();
-            args.put("windowIndex", windowIndex);
-            Song song = getSongByIndex(windowIndex);
-            if (song == null)
-                return;
-
-            Map<String, Object> songMap = song.toMap();
-            args.put("currentPlayingSong", songMap);
-            String method = AUDIO_METHOD_TYPE + "/onMediaPeriodCreated";
-            channel.invokeMethod(method, args);
         }
 
         @Override
@@ -488,8 +541,7 @@ class AudioPlayer {
 
         @Override
         public void onPlayerError(ExoPlaybackException error) {
-            Log.d(TAG, "onPlayerError");
-
+//            Log.d(TAG, "onPlayerError");
             super.onPlayerError(error);
         }
     }

@@ -46,21 +46,16 @@ class Playlist<T extends Media> {
         cacheDataSourceFactory = new CacheDataSourceFactory(DownloadManager.getDownloadCache(FlutterMediaPlugin.getInstance().getRegistrar().activeContext()), dataSourceFactory);
         concatenatingMediaSource = new ConcatenatingMediaSource();
         concatenatingMediaSource.addEventListener(new Handler(), playlistEventListener);
+        mediaList = new ArrayList<>();
     }
 
-    void prepare(ArrayList<T> mediaList, final MethodChannel.Result result) {
-        if(this.mediaList != null) {
-            this.mediaList.clear();
-        }else {
-            this.mediaList = new ArrayList<>();
-        }
-
+    void prepare(@NonNull ArrayList<T> mediaList, final MethodChannel.Result result) {
         for (int i = 0; i < mediaList.size(); i++) {
             if(i == mediaList.size() - 1) {
                 addMedia(mediaList.get(i), new Runnable() {
                     @Override
                     public void run() {
-                        result.success(null);
+                        result.success(true);
                     }
                 });
             }
@@ -73,7 +68,11 @@ class Playlist<T extends Media> {
     }
 
     int getSize() {
-        return mediaList.size() != concatenatingMediaSource.getSize() ? -1 : concatenatingMediaSource.getSize();
+        return mediaList.size();
+    }
+
+    String getPlaylistName() {
+        return playlistName;
     }
 
     T getMediaAtIndex(int index) {
@@ -109,44 +108,49 @@ class Playlist<T extends Media> {
         mediaList.add(media);
     }
 
-    void addMedia(@NonNull T media, @NonNull Runnable actionOnCompletion) {
+    private void addMedia(@NonNull T media, @NonNull Runnable actionOnCompletion) {
         Uri uri = Uri.parse(media.getUrl());
         MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(mediaSource, new Handler(), actionOnCompletion);
         mediaList.add(media);
     }
 
-    void addMediaAtIndex(int index,@NonNull T media) {
+    boolean addMediaAtIndex(int index,@NonNull T media) {
         if ((index > mediaList.size() && index > concatenatingMediaSource.getSize()) || index < 0) {
             Log.e(TAG, index + " is out of bound. MediaList size: " + mediaList.size());
-            return;
+            return false;
         }
 
         Uri uri = Uri.parse(media.getUrl());
         MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(index, mediaSource);
         mediaList.add(index, media);
+        return true;
     }
 
-    void addMediaAtIndex(int index, @NonNull T media, @NonNull Runnable actionOnCompletion) {
+    boolean addMediaAtIndex(int index, @NonNull T media, @NonNull Runnable actionOnCompletion) {
         if ((index > mediaList.size() && index > concatenatingMediaSource.getSize()) || index < 0) {
             Log.e(TAG, index + " is out of bound. MediaList size: " + mediaList.size());
-            return;
+            return false;
         }
 
         Uri uri = Uri.parse(media.getUrl());
         MediaSource mediaSource = new ProgressiveMediaSource.Factory(cacheDataSourceFactory).createMediaSource(uri);
         concatenatingMediaSource.addMediaSource(index, mediaSource, new Handler(), actionOnCompletion);
         mediaList.add(index, media);
+        return true;
     }
 
-    void removeSong(@NonNull T media) {
-        for (int i = 0; i < mediaList.size(); i++) {
-            if (media.getKey().equals(mediaList.get(i).getKey())) {
-                mediaList.remove(i);
-                return;
+    boolean removeMediaAtIndex(@NonNull T media, int index) {
+        if(index >= 0 && index < mediaList.size() && index < concatenatingMediaSource.getSize()) {
+            if(mediaList.get(index).getKey().equals(media.getKey())) {
+                mediaList.remove(index);
+                concatenatingMediaSource.removeMediaSource(index);
+                return true;
             }
         }
+
+        return false;
     }
 
     void clear() {
@@ -216,6 +220,6 @@ class Playlist<T extends Media> {
             e.printStackTrace();
         }
 
-        return null;
+        return new ArrayList<>();
     }
 }

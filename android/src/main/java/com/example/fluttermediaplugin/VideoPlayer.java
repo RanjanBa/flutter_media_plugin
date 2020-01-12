@@ -8,7 +8,6 @@ import android.view.Surface;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
@@ -71,6 +70,8 @@ class VideoPlayer {
                 simpleExoPlayer.setVideoSurface(surface);
             }
         }
+
+        videoExoPlayerListener.onInitialized();
     }
 
     private void initializeSimpleExoPlayer(Context context) {
@@ -135,10 +136,10 @@ class VideoPlayer {
         }
     }
 
-    void initialize(@NonNull MethodChannel.Result result) {
-        Map<String, Object> reply = new HashMap<>();
-        reply.put("textureId", textureEntry.id());
-        result.success(reply);
+    void initialize() {
+        if(videoExoPlayerListener != null) {
+            videoExoPlayerListener.onInitialized();
+        }
     }
 
     void setChannel(MethodChannel channel) {
@@ -216,6 +217,30 @@ class VideoPlayer {
     private class VideoExoPlayerListener extends MediaExoPlayerListener {
         VideoExoPlayerListener() {
             super(simpleExoPlayer, VIDEO_EXO_PLAYER_LISTENER_THREAD_NAME);
+        }
+
+        void onInitialized() {
+            if (simpleExoPlayer == null) {
+                return;
+            }
+
+            int playbackState = simpleExoPlayer.getPlaybackState();
+            boolean playWhenReady = simpleExoPlayer.getPlayWhenReady();
+            int repeatMode = simpleExoPlayer.getRepeatMode();
+            boolean shuffleModeEnabled = simpleExoPlayer.getShuffleModeEnabled();
+
+            Map<String, Object> args = new HashMap<>();
+            args.put("playWhenReady", playWhenReady);
+            args.put("playbackState", playbackState);
+            args.put("repeatMode", repeatMode);
+            args.put("shuffleModeEnabled", shuffleModeEnabled);
+
+            if(textureEntry != null) {
+                args.put("textureId", textureEntry.id());
+            }
+
+            String method = VIDEO_METHOD_TYPE + "/onInitialized";
+            channel.invokeMethod(method, args);
         }
 
         void onTextureIdChanged(long id) {
