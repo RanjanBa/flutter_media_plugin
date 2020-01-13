@@ -192,7 +192,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _onTracksChanged(int windowIndex, Song _currentPlayingSong) {
+  void _onTracksChanged(int windowIndex, int nextWindowIndex, Song _currentPlayingSong) {
 //    print("window index : $windowIndex");
     if (!mounted) return;
     _audioLength = 0;

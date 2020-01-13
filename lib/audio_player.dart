@@ -124,8 +124,7 @@ class AudioPlayer {
         }
 
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onTracksChanged(windowIndex, song,
-              nextWindowIndex: nextWindowIndex);
+          listener.onTracksChanged(windowIndex, nextWindowIndex, song);
         }
 
         _currentWindowIndex = windowIndex;
