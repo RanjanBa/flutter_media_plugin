@@ -352,20 +352,29 @@ class AudioPlayer {
             args.put("repeatMode", repeatMode);
             args.put("shuffleModeEnabled", shuffleModeEnabled);
 
-            if (playlist != null) {
+            int windowIndex = simpleExoPlayer.getCurrentWindowIndex();
+
+            if (playlist != null && playlist.getSize() > 0) {
                 JSONObject jsonObject = playlist.toJson();
                 if (jsonObject != null) {
                     String playlistJson = jsonObject.toString();
                     args.put("playlist", playlistJson);
-                }
 
-                Song song = playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex());
-                if (song != null) {
-                    Map<String, Object> songMap = song.toMap();
-                    args.put("playingSong", songMap);
+                    Song song = playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex());
+                    if (song != null) {
+                        Map<String, Object> songMap = song.toMap();
+                        args.put("playingSong", songMap);
+                    } else {
+                        windowIndex = -1;
+                    }
+                } else {
+                    windowIndex = -1;
                 }
+            } else {
+                windowIndex = -1;
             }
 
+            args.put("windowIndex", windowIndex);
             String method = AUDIO_METHOD_TYPE + "/onInitialized";
             channel.invokeMethod(method, args);
         }

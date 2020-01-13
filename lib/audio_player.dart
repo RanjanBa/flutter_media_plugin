@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
@@ -23,7 +22,7 @@ class AudioPlayer {
   int _playbackLength = 0;
   int _bufferingPercent = 0;
 
-  int _currentIndex;
+  int _currentWindowIndex = -1;
   Song _currentSong;
   Playlist<Song> _currentPlaylist;
 
@@ -43,7 +42,7 @@ class AudioPlayer {
 
   int get bufferingPercent => _bufferingPercent;
 
-  int get currentPlayingSongIndex => _currentIndex;
+  int get currentPlayingSongIndex => _currentWindowIndex;
 
   Song get currentPlayingSong => _currentSong;
 
@@ -65,11 +64,15 @@ class AudioPlayer {
         _playbackState = arguments['playbackState'];
         _repeatMode = arguments['repeatMode'];
         _shuffleModeEnabled = arguments['shuffleModeEnabled'];
+        _currentWindowIndex = arguments['windowIndex'];
 
         Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
         if (songMap != null) {
           Song song = Song.fromMap(songMap);
           _currentSong = song;
+        }
+        else {
+          _currentWindowIndex = -1;
         }
 
         String playlistString = arguments['playlist'];
@@ -91,11 +94,18 @@ class AudioPlayer {
         Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
         int windowIndex = arguments['windowIndex'];
         Song song = Song.fromMap(songMap);
+
+        if(_currentSong != null) {
+          if(windowIndex == _currentWindowIndex && song.key == _currentSong.key) {
+            return;
+          }
+        }
+
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onTracksChanged(windowIndex, song);
         }
 
-        _currentIndex = windowIndex;
+        _currentWindowIndex = windowIndex;
         _currentSong = song;
 //        print("Audio Player: onTracksChanged windowIndex $windowIndex");
         break;
@@ -120,6 +130,7 @@ class AudioPlayer {
 
         if (_playbackState == Utility.STATE_IDLE) {
           _currentSong = null;
+          _currentWindowIndex = -1;
         }
 
         _playWhenReady = playWhenReady;
@@ -170,7 +181,14 @@ class AudioPlayer {
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlaylistChanged(playlist);
         }
-        _currentPlaylist = playlist;
+        if(playlist.getSize() <= 0) {
+          _currentPlaylist = null;
+          _currentSong = null;
+          _currentWindowIndex = -1;
+        }
+        else {
+          _currentPlaylist = playlist;
+        }
         break;
       case "onMediaAddedToPlaylist":
         String playlistName = arguments['playlistName'];
