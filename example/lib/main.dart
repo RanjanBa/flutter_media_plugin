@@ -40,7 +40,6 @@ class _MyAppState extends State<MyApp> {
 
   Widget _bufferingWidget;
   String currentlyPlayingSongTitle = "";
-  Playlist<Song> _playlist;
 
   ExoPlayerListener<Song> _exoPlayerListener;
   DownloadListener _downloadListener;
@@ -71,38 +70,33 @@ class _MyAppState extends State<MyApp> {
       onRepeatModeChanged: _onRepeatModeChanged,
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
       onPlaylistChanged: (Playlist<Song> playlist) {
-        int oldSize = _playlist != null ? _playlist.getSize() : -1;
         int newSize = playlist != null ? playlist.getSize() : -1;
+        print(
+            "Main playlist changed old size: ${_audioPlayer.playlistSize} and new size: $newSize");
 
-        print("Main playlist changed old size: $oldSize and new size: $newSize");
-        if (_playlist != null) {
-          for (int i = _playlist.getSize() - 1; i >= 0; i--) {
-            _animatedListKey.currentState.removeItem(i,
-                (BuildContext context, Animation animation) {
-              return SlideTransition(
-                position: animation.drive(
-                  Tween(
-                    begin: Offset(1, 0),
-                    end: Offset(0, 0),
-                  ),
+        for (int i = _audioPlayer.playlistSize - 1; i >= 0; i--) {
+          _animatedListKey.currentState.removeItem(i,
+              (BuildContext context, Animation animation) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: Offset(1, 0),
+                  end: Offset(0, 0),
                 ),
-                child: Container(
-                  color: Colors.red,
-                  height: 60,
-                ),
-              );
-            }, duration: Duration(milliseconds: 1000));
-          }
+              ),
+              child: Container(
+                color: Colors.red,
+                height: 60,
+              ),
+            );
+          }, duration: Duration(milliseconds: 1000));
         }
 
         if (playlist != null) {
-//          print('${playlist.playlistName} ${playlist.getSize()}');
           for (int i = 0; i < playlist.getSize(); i++) {
             _animatedListKey.currentState.insertItem(i);
           }
         }
-
-        _playlist = playlist;
       },
       onMediaAddedToPlaylist: (String playlistName, int index, Song song) {
         print("main: added song index: $index");
@@ -129,7 +123,6 @@ class _MyAppState extends State<MyApp> {
       height: 0,
       width: 0,
     );
-    _playlist = _audioPlayer.currentPlayingPlaylist;
   }
 
   @override
@@ -410,10 +403,14 @@ class _MyAppState extends State<MyApp> {
               key: _animatedListKey,
               shrinkWrap: true,
               physics: ClampingScrollPhysics(),
-              initialItemCount: _playlist != null ? _playlist.getSize() : 0,
+              initialItemCount:
+                  _audioPlayer.playlistSize > 0 ? _audioPlayer.playlistSize : 0,
               itemBuilder:
                   (BuildContext context, int index, Animation animation) {
 //                print(_playlist.getMediaAtIndex(index).title);
+                Song song = _audioPlayer.getSongAtIndex(index);
+                String title = song != null ? song.title : "No song found";
+                String artists = song != null ? song.artists : "No song found";
                 return SlideTransition(
                   position: animation.drive(
                     Tween(
@@ -422,8 +419,8 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                   child: ListTile(
-                    title: Text(_playlist.getMediaAtIndex(index).title),
-                    subtitle: Text(_playlist.getMediaAtIndex(index).artists),
+                    title: Text(title),
+                    subtitle: Text(artists),
                     onTap: () {
                       _audioPlayer.skipToIndex(index);
                     },

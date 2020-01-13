@@ -46,7 +46,27 @@ class AudioPlayer {
 
   Song get currentPlayingSong => _currentSong;
 
-  Playlist<Song> get currentPlayingPlaylist => _currentPlaylist;
+  int get playlistSize {
+    if(_currentPlaylist == null) {
+      return -1;
+    }
+    return _currentPlaylist.getSize();
+  }
+
+  String get playlistName {
+    if(_currentPlaylist == null) {
+      return "";
+    }
+
+    return _currentPlaylist.playlistName;
+  }
+
+  Song getSongAtIndex(int index) {
+    if(_currentPlaylist == null) {
+      return null;
+    }
+    return _currentPlaylist.getMediaAtIndex(index);
+  }
 
   AudioPlayer({this.playerId, this.channel}) {
     _initialize();
@@ -73,6 +93,7 @@ class AudioPlayer {
         }
         else {
           _currentWindowIndex = -1;
+          _currentSong = null;
         }
 
         String playlistString = arguments['playlist'];
@@ -80,8 +101,6 @@ class AudioPlayer {
           Map<String, dynamic> map = json.decode(playlistString);
           Playlist<Song> playlist = Playlist.songsPlaylistFromMap(map);
           _currentPlaylist = playlist;
-        } else {
-          _currentPlaylist = null;
         }
         break;
       case "onMediaPeriodCreated":
