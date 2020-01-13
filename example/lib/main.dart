@@ -206,13 +206,13 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _onRepeatModeChanged(int repeatMode) {
+  void _onRepeatModeChanged(int repeatMode, int nextWindowIndex) {
     setState(() {
       _repeatMode = repeatMode;
     });
   }
 
-  void _onShuffleModeEnabledChanged(bool shuffleModeEnabled) {
+  void _onShuffleModeEnabledChanged(bool shuffleModeEnabled, int nextWindowIndex) {
     setState(() {
       _shuffleModeEnabled = shuffleModeEnabled;
     });

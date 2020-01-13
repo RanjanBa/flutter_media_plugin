@@ -489,10 +489,12 @@ class AudioPlayer {
         public void onRepeatModeChanged(int repeatMode) {
             super.onRepeatModeChanged(repeatMode);
 
+            int nextWindowIndex = simpleExoPlayer.getNextWindowIndex();
+
             Map<String, Object> args = new HashMap<>();
             args.put("repeatMode", repeatMode);
+            args.put("nextWindowIndex", nextWindowIndex);
             String method = AUDIO_METHOD_TYPE + "/onRepeatModeChanged";
-//                Log.d(TAG, "onRepeatModeChanged : " + repeatMode + ", " + method);
             channel.invokeMethod(method, args);
         }
 
@@ -500,10 +502,13 @@ class AudioPlayer {
         public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
             super.onShuffleModeEnabledChanged(shuffleModeEnabled);
 
+            int nextWindowIndex = simpleExoPlayer.getNextWindowIndex();
+
             Map<String, Object> args = new HashMap<>();
             args.put("shuffleModeEnabled", shuffleModeEnabled);
+            args.put("nextWindowIndex", nextWindowIndex);
+
             String method = AUDIO_METHOD_TYPE + "/onShuffleModeEnabledChanged";
-//                Log.d(TAG, "onShuffleModeEnabledChanged : " + shuffleModeEnabled + ", " + method);
             channel.invokeMethod(method, args);
         }
 

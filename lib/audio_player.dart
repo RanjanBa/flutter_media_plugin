@@ -42,7 +42,7 @@ class AudioPlayer {
 
   int get bufferingPercent => _bufferingPercent;
 
-  int get currentPlayingSongIndex => _currentWindowIndex;
+  int get currentWindowIndex => _currentWindowIndex;
 
   int get nextWindowIndex => _nextWindowIndex;
 
@@ -177,18 +177,25 @@ class AudioPlayer {
         break;
       case "onRepeatModeChanged":
         int repeatMode = arguments['repeatMode'];
+        int nextWindowIndex = arguments['nextWindowIndex'];
+
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onRepeatModeChanged(repeatMode);
+          listener.onRepeatModeChanged(repeatMode, nextWindowIndex);
         }
+
         _repeatMode = repeatMode;
+        _nextWindowIndex = nextWindowIndex;
         break;
       case "onShuffleModeEnabledChanged":
         bool shuffleModeEnabled = arguments['shuffleModeEnabled'];
+        int nextWindowIndex = arguments['nextWindowIndex'];
+
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onShuffleModeEnabledChanged(shuffleModeEnabled);
+          listener.onShuffleModeEnabledChanged(shuffleModeEnabled, nextWindowIndex);
         }
 
         _shuffleModeEnabled = shuffleModeEnabled;
+        _nextWindowIndex = nextWindowIndex;
         break;
       case "onPlayerStatus":
         String message = arguments['message'];

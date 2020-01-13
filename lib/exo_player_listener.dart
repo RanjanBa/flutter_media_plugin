@@ -8,8 +8,8 @@ class ExoPlayerListener<T extends Media> {
   final Function(bool, int) _onPlayerStateChanged;
   final Function(int, int) _onPlaybackUpdate;
   final Function(int) _onBufferedUpdate;
-  final Function(int) _onRepeatModeChanged;
-  final Function(bool) _onShuffleModeEnabledChanged;
+  final Function(int, int) _onRepeatModeChanged;
+  final Function(bool, int) _onShuffleModeEnabledChanged;
   final Function(Playlist<T>) _onPlaylistChanged;
   final Function(String, int, T) _onMediaAddedToPlaylist;
   final Function(String, int, T) _onMediaRemovedFromPlaylist;
@@ -22,8 +22,8 @@ class ExoPlayerListener<T extends Media> {
     Function(bool, int) onPlayerStateChanged,
     Function(int, int) onPlaybackUpdate,
     Function(int) onBufferedUpdate,
-    Function(int) onRepeatModeChanged,
-    Function(bool) onShuffleModeEnabledChanged,
+    Function(int, int) onRepeatModeChanged,
+    Function(bool, int) onShuffleModeEnabledChanged,
     Function(Playlist<T>) onPlaylistChanged,
     Function(String, int, T) onMediaAddedToPlaylist,
     Function(String, int, T) onMediaRemovedFromPlaylist,
@@ -79,15 +79,15 @@ class ExoPlayerListener<T extends Media> {
     }
   }
 
-  void onRepeatModeChanged(int repeatMode) {
+  void onRepeatModeChanged(int repeatMode, int nextWindowIndex) {
     if (_onRepeatModeChanged != null) {
-      _onRepeatModeChanged(repeatMode);
+      _onRepeatModeChanged(repeatMode, nextWindowIndex);
     }
   }
 
-  void onShuffleModeEnabledChanged(bool shuffleModeEnabled) {
+  void onShuffleModeEnabledChanged(bool shuffleModeEnabled, int nextWindowIndex) {
     if (_onShuffleModeEnabledChanged != null) {
-      _onShuffleModeEnabledChanged(shuffleModeEnabled);
+      _onShuffleModeEnabledChanged(shuffleModeEnabled, nextWindowIndex);
     }
   }
 
