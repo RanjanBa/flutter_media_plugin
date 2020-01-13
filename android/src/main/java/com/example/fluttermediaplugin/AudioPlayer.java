@@ -352,10 +352,18 @@ class AudioPlayer {
             args.put("repeatMode", repeatMode);
             args.put("shuffleModeEnabled", shuffleModeEnabled);
 
-            Song song = playlist != null ? playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex()) : null;
-            if (song != null) {
-                Map<String, Object> songMap = song.toMap();
-                args.put("currentPlayingSong", songMap);
+            if (playlist != null) {
+                JSONObject jsonObject = playlist.toJson();
+                if (jsonObject != null) {
+                    String playlistJson = jsonObject.toString();
+                    args.put("playlist", playlistJson);
+                }
+
+                Song song = playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex());
+                if (song != null) {
+                    Map<String, Object> songMap = song.toMap();
+                    args.put("playingSong", songMap);
+                }
             }
 
             String method = AUDIO_METHOD_TYPE + "/onInitialized";
@@ -404,8 +412,24 @@ class AudioPlayer {
         public void onMediaPeriodCreated(int windowIndex) {
             super.onMediaPeriodCreated(windowIndex);
 
-//            Log.d(TAG, "onMediaPeriodCreated");
+            Map<String, Object> args = new HashMap<>();
+            args.put("windowIndex", windowIndex);
 
+            String method = AUDIO_METHOD_TYPE + "/onMediaPeriodCreated";
+            channel.invokeMethod(method, args);
+        }
+
+        @Override
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
+            super.onTimelineChanged(timeline, manifest, reason);
+//            Log.d(TAG, "onTimelineChanged");
+        }
+
+        @Override
+        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            super.onTracksChanged(trackGroups, trackSelections);
+
+            int windowIndex = simpleExoPlayer.getCurrentWindowIndex();
             Song song = playlist.getMediaAtIndex(windowIndex);
             if (song == null)
                 return;
@@ -414,21 +438,10 @@ class AudioPlayer {
 
             Map<String, Object> args = new HashMap<>();
             args.put("windowIndex", windowIndex);
-            args.put("currentPlayingSong", songMap);
-            String method = AUDIO_METHOD_TYPE + "/onMediaPeriodCreated";
+            args.put("playingSong", songMap);
+
+            String method = AUDIO_METHOD_TYPE + "/onTracksChanged";
             channel.invokeMethod(method, args);
-        }
-
-        @Override
-        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-//            Log.d(TAG, "onTimelineChanged");
-            super.onTimelineChanged(timeline, manifest, reason);
-        }
-
-        @Override
-        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-//            Log.d(TAG + "TRACK", "onTracksChanged " + trackGroups.length + ", " + trackSelections.length);
-            super.onTracksChanged(trackGroups, trackSelections);
         }
 
         @Override

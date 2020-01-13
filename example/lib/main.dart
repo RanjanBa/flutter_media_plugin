@@ -66,7 +66,7 @@ class _MyAppState extends State<MyApp> {
       onPlayerStateChanged: _onPlayerStateChanged,
       onPlaybackUpdate: _onPlaybackUpdate,
       onBufferedUpdate: _onBufferedUpdate,
-      onMediaPeriodCreated: _onMediaPeriodCreated,
+      onTracksChanged: _onTracksChanged,
       onPlayerStatus: _onPlayerStatus,
       onRepeatModeChanged: _onRepeatModeChanged,
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
@@ -199,7 +199,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _onMediaPeriodCreated(int windowIndex, Song _currentPlayingSong) {
+  void _onTracksChanged(int windowIndex, Song _currentPlayingSong) {
 //    print("window index : $windowIndex");
     if (!mounted) return;
     _audioLength = 0;

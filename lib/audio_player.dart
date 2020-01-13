@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
@@ -65,73 +66,96 @@ class AudioPlayer {
         _repeatMode = arguments['repeatMode'];
         _shuffleModeEnabled = arguments['shuffleModeEnabled'];
 
-        Map<String, dynamic> songMap =
-            Map.from(arguments['currentPlayingSong']);
+        Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
         if (songMap != null) {
           Song song = Song.fromMap(songMap);
-          if (song != null) _currentSong = song;
+          _currentSong = song;
+        }
+
+        String playlistString = arguments['playlist'];
+        if (playlistString != null) {
+          Map<String, dynamic> map = json.decode(playlistString);
+          Playlist<Song> playlist = Playlist.songsPlaylistFromMap(map);
+          _currentPlaylist = playlist;
+        } else {
+          _currentPlaylist = null;
         }
         break;
       case "onMediaPeriodCreated":
-        Map<String, dynamic> songMap =
-            Map.from(arguments["currentPlayingSong"]);
-        if (songMap != null) {
-          int windowIndex = arguments["windowIndex"];
-          Song song = Song.fromMap(songMap);
-          for (ExoPlayerListener listener in _exoPlayerListeners) {
-            listener.onMediaPeriodCreated(windowIndex, song);
-          }
-          _currentIndex = windowIndex;
-          _currentSong = song;
-        } else {
-          _currentSong = null;
+        int windowIndex = arguments['windowIndex'];
+        for (ExoPlayerListener listener in _exoPlayerListeners) {
+          listener.onMediaPeriodCreated(windowIndex);
         }
         break;
-      case "onPlayerStateChanged":
-        bool playWhenReady = arguments["playWhenReady"];
-        int playbackState = arguments["playbackState"];
-        _playWhenReady = playWhenReady;
-        _playbackState = playbackState;
-        if (_playbackState == Utility.STATE_IDLE) {
-          _currentSong = null;
+      case "onTracksChanged":
+        Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
+        int windowIndex = arguments['windowIndex'];
+        Song song = Song.fromMap(songMap);
+        for (ExoPlayerListener listener in _exoPlayerListeners) {
+          listener.onTracksChanged(windowIndex, song);
         }
+
+        _currentIndex = windowIndex;
+        _currentSong = song;
+//        print("Audio Player: onTracksChanged windowIndex $windowIndex");
+        break;
+      case "onPlayerStateChanged":
+        bool playWhenReady = arguments['playWhenReady'];
+        int playbackState = arguments['playbackState'];
+
         if (_playbackState == Utility.STATE_ENDED ||
             _playbackState == Utility.STATE_IDLE) {
           _playbackPosition = 0;
           _playbackLength = 0;
+
+          for (ExoPlayerListener listener in _exoPlayerListeners) {
+            listener.onPlaybackUpdate(_playbackPosition, _playbackLength);
+          }
           pause();
         }
 
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlayerStateChanged(playWhenReady, playbackState);
         }
+
+        if (_playbackState == Utility.STATE_IDLE) {
+          _currentSong = null;
+        }
+
+        _playWhenReady = playWhenReady;
+        _playbackState = playbackState;
         break;
       case "onPlaybackUpdate":
         int position = arguments['position'];
         int audioLength = arguments['audioLength'];
-        _playbackLength = audioLength;
-        _playbackPosition = position;
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlaybackUpdate(position, audioLength);
         }
+
+        _playbackPosition = position;
+        _playbackLength = audioLength;
         break;
       case "onBufferedUpdate":
-        _bufferingPercent = arguments['percent'];
+        int percent = arguments['percent'];
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onBufferingUpdate(_bufferingPercent);
+          listener.onBufferingUpdate(percent);
         }
+        _bufferingPercent = percent;
         break;
       case "onRepeatModeChanged":
-        _repeatMode = arguments['repeatMode'];
+        int repeatMode = arguments['repeatMode'];
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onRepeatModeChanged(_repeatMode);
+          listener.onRepeatModeChanged(repeatMode);
         }
+        _repeatMode = repeatMode;
         break;
       case "onShuffleModeEnabledChanged":
-        _shuffleModeEnabled = arguments['shuffleModeEnabled'];
+        bool shuffleModeEnabled = arguments['shuffleModeEnabled'];
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onShuffleModeEnabledChanged(_shuffleModeEnabled);
+          listener.onShuffleModeEnabledChanged(shuffleModeEnabled);
         }
+
+        _shuffleModeEnabled = shuffleModeEnabled;
         break;
       case "onPlayerStatus":
         String message = arguments['message'];

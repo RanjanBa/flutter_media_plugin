@@ -2,7 +2,8 @@ import 'package:flutter_media_plugin/media/media.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 
 class ExoPlayerListener<T extends Media> {
-  final Function(int, T) _onMediaPeriodCreated;
+  final Function(int) _onMediaPeriodCreated;
+  final Function(int, T) _onTracksChanged;
   final Function(bool) _onLoadingChanged;
   final Function(bool, int) _onPlayerStateChanged;
   final Function(int, int) _onPlaybackUpdate;
@@ -15,7 +16,8 @@ class ExoPlayerListener<T extends Media> {
   final Function(String) _onPlayerStatus;
 
   ExoPlayerListener({
-    Function(int, T) onMediaPeriodCreated,
+    Function(int) onMediaPeriodCreated,
+    Function(int, T) onTracksChanged,
     Function(bool) onLoadingChanged,
     Function(bool, int) onPlayerStateChanged,
     Function(int, int) onPlaybackUpdate,
@@ -27,6 +29,7 @@ class ExoPlayerListener<T extends Media> {
     Function(String, int, T) onMediaRemovedFromPlaylist,
     Function(String) onPlayerStatus,
   })  : _onMediaPeriodCreated = onMediaPeriodCreated,
+        _onTracksChanged = onTracksChanged,
         _onLoadingChanged = onLoadingChanged,
         _onPlayerStateChanged = onPlayerStateChanged,
         _onPlaybackUpdate = onPlaybackUpdate,
@@ -40,17 +43,21 @@ class ExoPlayerListener<T extends Media> {
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
-//  void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {}
+  void onTracksChanged(int windowIndex, T song) {
+    if (_onTracksChanged != null) {
+      _onTracksChanged(windowIndex, song);
+    }
+  }
+
+  void onMediaPeriodCreated(int windowIndex) {
+    if (_onMediaPeriodCreated != null) {
+      _onMediaPeriodCreated(windowIndex);
+    }
+  }
 
   void onLoadingChanged(bool isLoading) {
     if (_onLoadingChanged != null) {
       _onLoadingChanged(isLoading);
-    }
-  }
-
-  void onMediaPeriodCreated(int windowIndex, T media) {
-    if (_onMediaPeriodCreated != null) {
-      _onMediaPeriodCreated(windowIndex, media);
     }
   }
 
@@ -84,12 +91,6 @@ class ExoPlayerListener<T extends Media> {
     }
   }
 
-  void onPlayerStatus(String message) {
-    if (_onPlayerStatus != null) {
-      _onPlayerStatus(message);
-    }
-  }
-
   void onPlaylistChanged(Playlist<T> playlist) {
     if (_onPlaylistChanged != null) {
       _onPlaylistChanged(playlist);
@@ -105,6 +106,12 @@ class ExoPlayerListener<T extends Media> {
   void onMediaRemovedFromPlaylist(String playlistName, int index, T media) {
     if (_onMediaRemovedFromPlaylist != null) {
       _onMediaRemovedFromPlaylist(playlistName, index, media);
+    }
+  }
+
+  void onPlayerStatus(String message) {
+    if (_onPlayerStatus != null) {
+      _onPlayerStatus(message);
     }
   }
 
