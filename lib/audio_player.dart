@@ -22,7 +22,8 @@ class AudioPlayer {
   int _bufferingPercent = 0;
 
   int _currentWindowIndex = -1;
-  Song _currentSong;
+  int _nextWindowIndex = -1;
+
   Playlist<Song> _currentPlaylist;
 
   final Set<ExoPlayerListener<Song>> _exoPlayerListeners = Set();
@@ -43,17 +44,24 @@ class AudioPlayer {
 
   int get currentPlayingSongIndex => _currentWindowIndex;
 
-  Song get currentPlayingSong => _currentSong;
+  int get nextWindowIndex => _nextWindowIndex;
+
+  Song get currentPlayingSong {
+    if (_currentPlaylist == null) {
+      return null;
+    }
+    return _currentPlaylist.getMediaAtIndex(_currentWindowIndex);
+  }
 
   int get playlistSize {
-    if(_currentPlaylist == null) {
+    if (_currentPlaylist == null) {
       return -1;
     }
     return _currentPlaylist.getSize();
   }
 
   String get playlistName {
-    if(_currentPlaylist == null) {
+    if (_currentPlaylist == null) {
       return "";
     }
 
@@ -61,14 +69,10 @@ class AudioPlayer {
   }
 
   Song getSongAtIndex(int index) {
-    if(_currentPlaylist == null) {
+    if (_currentPlaylist == null) {
       return null;
     }
     return _currentPlaylist.getMediaAtIndex(index);
-  }
-
-  int getIndexOfSongFromPlaylist(Song song) {
-
   }
 
   AudioPlayer({this.playerId, this.channel}) {
@@ -88,22 +92,16 @@ class AudioPlayer {
         _repeatMode = arguments['repeatMode'];
         _shuffleModeEnabled = arguments['shuffleModeEnabled'];
         _currentWindowIndex = arguments['windowIndex'];
-
-        Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
-        if (songMap != null) {
-          Song song = Song.fromMap(songMap);
-          _currentSong = song;
-        }
-        else {
-          _currentWindowIndex = -1;
-          _currentSong = null;
-        }
+        _nextWindowIndex = arguments['nextWindowIndex'];
 
         String playlistString = arguments['playlist'];
         if (playlistString != null) {
           Map<String, dynamic> map = json.decode(playlistString);
           Playlist<Song> playlist = Playlist.songsPlaylistFromMap(map);
           _currentPlaylist = playlist;
+        } else {
+          _currentWindowIndex = -1;
+          _nextWindowIndex = -1;
         }
         break;
       case "onMediaPeriodCreated":
@@ -115,20 +113,23 @@ class AudioPlayer {
       case "onTracksChanged":
         Map<String, dynamic> songMap = Map.from(arguments['playingSong']);
         int windowIndex = arguments['windowIndex'];
+        int nextWindowIndex = arguments['nextWindowIndex'];
         Song song = Song.fromMap(songMap);
 
-        if(_currentSong != null) {
-          if(windowIndex == _currentWindowIndex && song.key == _currentSong.key) {
+        if (currentPlayingSong != null) {
+          if (windowIndex == _currentWindowIndex &&
+              currentPlayingSong.key == song.key) {
             return;
           }
         }
 
         for (ExoPlayerListener listener in _exoPlayerListeners) {
-          listener.onTracksChanged(windowIndex, song);
+          listener.onTracksChanged(windowIndex, song,
+              nextWindowIndex: nextWindowIndex);
         }
 
         _currentWindowIndex = windowIndex;
-        _currentSong = song;
+        _nextWindowIndex = nextWindowIndex;
 //        print("Audio Player: onTracksChanged windowIndex $windowIndex");
         break;
       case "onPlayerStateChanged":
@@ -151,8 +152,8 @@ class AudioPlayer {
         }
 
         if (_playbackState == Utility.STATE_IDLE) {
-          _currentSong = null;
           _currentWindowIndex = -1;
+          _nextWindowIndex = -1;
         }
 
         _playWhenReady = playWhenReady;
@@ -203,12 +204,11 @@ class AudioPlayer {
         for (ExoPlayerListener listener in _exoPlayerListeners) {
           listener.onPlaylistChanged(playlist);
         }
-        if(playlist.getSize() <= 0) {
+        if (playlist.getSize() <= 0) {
           _currentPlaylist = null;
-          _currentSong = null;
           _currentWindowIndex = -1;
-        }
-        else {
+          _nextWindowIndex = -1;
+        } else {
           _currentPlaylist = playlist;
         }
         break;
@@ -326,7 +326,7 @@ class AudioPlayer {
     );
   }
 
-  // add song at last position
+// add song at last position
   Future<bool> addSong(Song song, {bool shouldPlay = false}) async {
     if (_currentPlaylist == null) {
       return false;

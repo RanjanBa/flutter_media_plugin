@@ -359,14 +359,6 @@ class AudioPlayer {
                 if (jsonObject != null) {
                     String playlistJson = jsonObject.toString();
                     args.put("playlist", playlistJson);
-
-                    Song song = playlist.getMediaAtIndex(simpleExoPlayer.getCurrentWindowIndex());
-                    if (song != null) {
-                        Map<String, Object> songMap = song.toMap();
-                        args.put("playingSong", songMap);
-                    } else {
-                        windowIndex = -1;
-                    }
                 } else {
                     windowIndex = -1;
                 }
@@ -375,6 +367,10 @@ class AudioPlayer {
             }
 
             args.put("windowIndex", windowIndex);
+
+            int nextWindowIndex = simpleExoPlayer.getNextWindowIndex();
+            args.put("nextWindowIndex", nextWindowIndex);
+
             String method = AUDIO_METHOD_TYPE + "/onInitialized";
             channel.invokeMethod(method, args);
         }
@@ -439,6 +435,7 @@ class AudioPlayer {
             super.onTracksChanged(trackGroups, trackSelections);
 
             int windowIndex = simpleExoPlayer.getCurrentWindowIndex();
+            int nextWindowIndex = simpleExoPlayer.getNextWindowIndex();
             Song song = playlist.getMediaAtIndex(windowIndex);
             if (song == null)
                 return;
@@ -447,6 +444,7 @@ class AudioPlayer {
 
             Map<String, Object> args = new HashMap<>();
             args.put("windowIndex", windowIndex);
+            args.put("nextWindowIndex", nextWindowIndex);
             args.put("playingSong", songMap);
 
             String method = AUDIO_METHOD_TYPE + "/onTracksChanged";

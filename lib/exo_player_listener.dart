@@ -2,8 +2,8 @@ import 'package:flutter_media_plugin/media/media.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 
 class ExoPlayerListener<T extends Media> {
-  final Function(int) _onMediaPeriodCreated;
-  final Function(int, T) _onTracksChanged;
+  final Function(int windowIndex) _onMediaPeriodCreated;
+  final Function(int windowIndex, T media, {int nextWindowIndex}) _onTracksChanged;
   final Function(bool) _onLoadingChanged;
   final Function(bool, int) _onPlayerStateChanged;
   final Function(int, int) _onPlaybackUpdate;
@@ -17,7 +17,7 @@ class ExoPlayerListener<T extends Media> {
 
   ExoPlayerListener({
     Function(int) onMediaPeriodCreated,
-    Function(int, T) onTracksChanged,
+    Function(int, T, {int nextWindowIndex}) onTracksChanged,
     Function(bool) onLoadingChanged,
     Function(bool, int) onPlayerStateChanged,
     Function(int, int) onPlaybackUpdate,
@@ -43,9 +43,9 @@ class ExoPlayerListener<T extends Media> {
 
 //  void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
-  void onTracksChanged(int windowIndex, T song) {
+  void onTracksChanged(int windowIndex, T song, {int nextWindowIndex}) {
     if (_onTracksChanged != null) {
-      _onTracksChanged(windowIndex, song);
+      _onTracksChanged(windowIndex, song, nextWindowIndex: nextWindowIndex);
     }
   }
 
