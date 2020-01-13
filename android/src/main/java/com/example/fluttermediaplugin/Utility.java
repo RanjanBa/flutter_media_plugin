@@ -1,9 +1,5 @@
 package com.example.fluttermediaplugin;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 public final class Utility {
     final class Constants {
         static final String PLAYBACK_CHANNEL_ID = "playback_channel";
@@ -17,7 +13,7 @@ public final class Utility {
     }
 
     public final class MediaIds {
-        public static final String KEY_TAG = "key";
+        public static final String KEY_TAG = "id";
         public static final String TITLE_TAG = "title";
         public static final String URL_TAG = "url";
         public static final String ALBUM_ART_URL_TAG = "artUrl";

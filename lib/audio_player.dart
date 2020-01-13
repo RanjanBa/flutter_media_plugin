@@ -1,11 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/exo_player_listener.dart';
 import 'package:flutter_media_plugin/playlist.dart';
-import 'dart:convert';
-
 import 'package:flutter_media_plugin/media/song.dart';
 import 'package:flutter_media_plugin/utility.dart';
 
@@ -66,6 +65,10 @@ class AudioPlayer {
       return null;
     }
     return _currentPlaylist.getMediaAtIndex(index);
+  }
+
+  int getIndexOfSongFromPlaylist(Song song) {
+
   }
 
   AudioPlayer({this.playerId, this.channel}) {
