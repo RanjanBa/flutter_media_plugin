@@ -11,13 +11,29 @@ class Song implements Media {
   final String _album_art_url;
   final String _url;
 
+  static String _capitalizeEveryWord(String str) {
+    bool isSpaceFound = true;
+    for(int i = 0; i < str.length; i++) {
+      if(isSpaceFound) {
+        str = str.substring(0, i) + str[i].toUpperCase() + str.substring(i + 1);
+        isSpaceFound = false;
+      }
+
+      if(str[i] == ' ') {
+        isSpaceFound = true;
+      }
+    }
+
+    return str;
+  }
+
   String get key => _key;
 
-  String get title => _title;
+  String get title => _capitalizeEveryWord(_title);
 
-  String get artists => _artists;
+  String get artists => _capitalizeEveryWord(_artists);
 
-  String get album => _album;
+  String get album => _capitalizeEveryWord(_album);
 
   // ignore: non_constant_identifier_names
   String get album_art_url => _album_art_url;

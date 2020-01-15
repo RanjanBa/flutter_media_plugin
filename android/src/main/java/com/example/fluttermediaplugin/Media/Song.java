@@ -20,6 +20,26 @@ public final class Song implements Media {
     private String album;
     private String album_art_url;
 
+    private static String capitalizeEveryWord(String str) {
+        boolean isSpaceFound = true;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+
+            if(isSpaceFound) {
+                String s = "" + c;
+                s = s.toUpperCase();
+
+                str = str.substring(0, i) + s + str.substring(i + 1);
+                isSpaceFound = false;
+            }
+            if(c == ' ') {
+                isSpaceFound = true;
+            }
+        }
+
+        return str;
+    }
+
     private Song(@NonNull String key, @NonNull String title, @NonNull String artist, @NonNull String album, @NonNull String album_art_url, @NonNull String url) {
         this.key = key;
         this.title = title;
@@ -36,7 +56,7 @@ public final class Song implements Media {
 
     @Override
     public String getTitle() {
-        return title;
+        return capitalizeEveryWord(title);
     }
 
     @Override
@@ -49,11 +69,11 @@ public final class Song implements Media {
     }
 
     public String getAlbum() {
-        return album;
+        return capitalizeEveryWord(album);
     }
 
     public String getArtist() {
-        return artists;
+        return capitalizeEveryWord(artists);
     }
 
     public Map<String, Object> toMap() {
