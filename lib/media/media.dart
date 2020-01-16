@@ -1,3 +1,8 @@
+enum MediaType {
+  song,
+  video
+}
+
 abstract class Media {
   String _key;
   String _title;
@@ -6,6 +11,8 @@ abstract class Media {
   String get key => _key;
   String get title => _title;
   String get url => _url;
+
+
 
   Map<String, dynamic> toJson() {
     print("media.dart: Media to json");

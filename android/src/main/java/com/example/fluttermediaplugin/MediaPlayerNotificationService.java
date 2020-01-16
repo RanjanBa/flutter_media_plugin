@@ -39,7 +39,7 @@ public class MediaPlayerNotificationService extends Service {
     private MediaSessionCompat mediaSession;
 
     private static void putBitmap(String url, Bitmap bitmap) {
-        if(albumArts.size() >= 10) {
+        if (albumArts.size() >= 10) {
             albumArts.removeAt(albumArts.size() - 1);
         }
         albumArts.put(url, bitmap);
@@ -52,21 +52,18 @@ public class MediaPlayerNotificationService extends Service {
         return null;
     }
 
-    private boolean isServiceStarted = false;
+    private Notification notification;
+    private int notificationId;
 
     public static MediaPlayerNotificationService getInstance() {
         return instance;
-    }
-
-    public PlayerNotificationManager getPlayerNotificationManager() {
-        return playerNotificationManager;
     }
 
     @Override
     public void onCreate() {
         instance = this;
         super.onCreate();
-        Log.d(TAG, "Create media notification player");
+//        Log.d(TAG, "Create media notification player");
     }
 
     private void instantiateNotification() {
@@ -153,17 +150,18 @@ public class MediaPlayerNotificationService extends Service {
 
         playerNotificationManager.setNotificationListener(new PlayerNotificationManager.NotificationListener() {
             @Override
-            public void onNotificationStarted(int notificationId, Notification notification) {
-                Log.d(TAG, "Notification started");
-                startForeground(notificationId, notification);
-                isServiceStarted = true;
-                stopService(false);
+            public void onNotificationStarted(int id, Notification not) {
+//                Log.d(TAG, "Notification started");
+                notificationId = id;
+                notification = not;
+                startService();
                 FlutterMediaPlugin.getInstance().getAudioPlayer().onNotificationStarted();
             }
 
             @Override
             public void onNotificationCancelled(int notificationId) {
-                Log.d(TAG, "Notification canceled");
+//                Log.d(TAG, "Notification canceled");
+                notification = null;
                 FlutterMediaPlugin.getInstance().getAudioPlayer().onNotificationDestroyed();
                 stopSelf();
             }
@@ -188,10 +186,23 @@ public class MediaPlayerNotificationService extends Service {
         });
     }
 
-    public void stopService(boolean removeNotification) {
-        if (isServiceStarted) {
-            stopForeground(removeNotification);
+    public void startService() {
+        if (notification != null) {
+            if (playerNotificationManager != null) {
+                playerNotificationManager.setOngoing(true);
+            }
+            startForeground(notificationId, notification);
         }
+    }
+
+    public void stopService(boolean removeNotification) {
+//        playerNotificationManager.setPriority();
+        if (playerNotificationManager != null) {
+            playerNotificationManager.setOngoing(false);
+        }
+        stopForeground(removeNotification);
+
+
         if (removeNotification) {
             if (playerNotificationManager != null) {
                 playerNotificationManager.setPlayer(null);
@@ -207,7 +218,6 @@ public class MediaPlayerNotificationService extends Service {
     @Override
     public void onDestroy() {
         Log.d(TAG, "Service is destroyed");
-        isServiceStarted = false;
         if (playerNotificationManager != null) {
             playerNotificationManager.setPlayer(null);
         }
@@ -226,7 +236,7 @@ public class MediaPlayerNotificationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "on start method audio player");
+//        Log.d(TAG, "on start method audio player");
         instantiateNotification();
         return START_STICKY;
     }

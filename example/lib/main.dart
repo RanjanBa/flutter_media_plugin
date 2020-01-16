@@ -5,10 +5,13 @@ import 'package:flutter_media_plugin/flutter_media_plugin.dart';
 import 'package:flutter_media_plugin/playlist.dart';
 import 'package:flutter_media_plugin/audio_player.dart';
 import 'package:flutter_media_plugin/download_manager.dart';
+import 'package:flutter_media_plugin/download.dart';
 import 'package:flutter_media_plugin/video_player.dart';
 import 'package:flutter_media_plugin/media/song.dart';
 import 'package:flutter_media_plugin/utility.dart';
+import 'package:flutter_media_plugin_example/downloadedMediaListTile.dart';
 import 'package:flutter_media_plugin_example/songs.dart';
+import 'package:flutter_media_plugin/media/media.dart';
 
 AudioPlayer _audioPlayer;
 VideoPlayer _videoPlayer;
@@ -32,6 +35,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _animatedListKey = GlobalKey<AnimatedListState>();
+  final _downloadedAnimatedListKey = GlobalKey<AnimatedListState>();
+
   int _position = 0, _audioLength = 0, _bufferPercent = 0;
   String _message = "";
 
@@ -42,7 +47,7 @@ class _MyAppState extends State<MyApp> {
   String currentlyPlayingSongTitle = "";
 
   ExoPlayerListener<Song> _exoPlayerListener;
-  DownloadListener _downloadListener;
+  DownloadManagerListener _downloadListener;
   VideoExoPlayerListener _videoExoPlayerListener;
 
   String _videoUrl =
@@ -71,8 +76,8 @@ class _MyAppState extends State<MyApp> {
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
       onPlaylistChanged: (Playlist<Song> playlist) {
         int newSize = playlist != null ? playlist.getSize() : -1;
-        print(
-            "Main playlist changed old size: ${_audioPlayer.playlistSize} and new size: $newSize");
+//        print(
+//            "Main playlist changed old size: ${_audioPlayer.playlistSize} and new size: $newSize");
 
         for (int i = _audioPlayer.playlistSize - 1; i >= 0; i--) {
           _animatedListKey.currentState.removeItem(i,
@@ -99,7 +104,7 @@ class _MyAppState extends State<MyApp> {
         }
       },
       onMediaAddedToPlaylist: (String playlistName, int index, Song song) {
-        print("main: added song index: $index");
+//        print("main: added song index: $index");
         _animatedListKey.currentState.insertItem(index);
       },
     );
@@ -107,8 +112,24 @@ class _MyAppState extends State<MyApp> {
       _exoPlayerListener,
     );
 
-    _downloadListener = DownloadListener(onDownloadChanged: (state, id) {
-      print('Flutter main $state $id');
+    _downloadListener = DownloadManagerListener(onInitialized: () {
+      setState(() {});
+    }, onDownloadAdded: (index, download) {
+      _downloadedAnimatedListKey.currentState.insertItem(index);
+    }, onDownloadRemoved: (index, download) {
+      _downloadedAnimatedListKey.currentState.removeItem(
+        index,
+        (context, animation) {
+          return SlideTransition(
+            position:
+                animation.drive(Tween(begin: Offset(1, 0), end: Offset(0, 0))),
+            child: ListTile(
+              title: Text(download.media.title),
+              trailing: Icon(Icons.delete),
+            ),
+          );
+        },
+      );
     });
 
     _downloadManager.addDownloadListener(_downloadListener);
@@ -118,7 +139,7 @@ class _MyAppState extends State<MyApp> {
         onSurfaceSizeChanged: _onSurfaceSizeChanged);
     _videoPlayer.addVideoExoPlayer(_videoExoPlayerListener);
 
-    _setIcons();
+    _setIcons(_audioPlayer.playWhenReady);
     _bufferingWidget = SizedBox(
       height: 0,
       width: 0,
@@ -136,8 +157,8 @@ class _MyAppState extends State<MyApp> {
 //    print("Main dispose");
   }
 
-  void _setIcons() {
-    if (_audioPlayer.playWhenReady) {
+  void _setIcons(bool isPlaying) {
+    if (isPlaying) {
       _iconData = Icons.pause;
       _function = _audioPlayer.pause;
     } else {
@@ -148,7 +169,7 @@ class _MyAppState extends State<MyApp> {
 
   void _onTextureIdChanged(int textureId) {
     _textureId = textureId;
-    print("Texture id $_textureId");
+//    print("Texture id $_textureId");
     setState(() {});
   }
 
@@ -161,7 +182,7 @@ class _MyAppState extends State<MyApp> {
     if (!mounted) return;
 
     setState(() {
-      if (playbackState == Utility.STATE_BUFFERING) {
+      if (playbackState == ExoPlayerUtility.STATE_BUFFERING) {
         _bufferingWidget = Center(
           child: CircularProgressIndicator(),
         );
@@ -171,7 +192,7 @@ class _MyAppState extends State<MyApp> {
           width: 0,
         );
       }
-      _setIcons();
+      _setIcons(playWhenReady);
     });
   }
 
@@ -192,7 +213,8 @@ class _MyAppState extends State<MyApp> {
     setState(() {});
   }
 
-  void _onTracksChanged(int windowIndex, int nextWindowIndex, Song _currentPlayingSong) {
+  void _onTracksChanged(
+      int windowIndex, int nextWindowIndex, Song _currentPlayingSong) {
 //    print("window index : $windowIndex");
     if (!mounted) return;
     _audioLength = 0;
@@ -212,7 +234,8 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _onShuffleModeEnabledChanged(bool shuffleModeEnabled, int nextWindowIndex) {
+  void _onShuffleModeEnabledChanged(
+      bool shuffleModeEnabled, int nextWindowIndex) {
     setState(() {
       _shuffleModeEnabled = shuffleModeEnabled;
     });
@@ -353,32 +376,11 @@ class _MyAppState extends State<MyApp> {
                     _audioPlayer.addSong(Samples.songs[index],
                         shouldPlay: true);
                   },
-                  trailing: FutureBuilder<bool>(
-                    future:
-                        _downloadManager.isDownloaded(Samples.songs[index].url),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-//                        print('data ${snapshot.data}');
-                        if (snapshot.data == false)
-                          return IconButton(
-                            icon: Icon(Icons.file_download),
-                            onPressed: () {
-                              _downloadManager
-                                  .download(Samples.songs[index].url);
-                            },
-                          );
-                        else {
-                          return IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              _downloadManager
-                                  .downloadRemove(Samples.songs[index].url);
-                            },
-                          );
-                        }
-                      } else {
-                        return CircularProgressIndicator();
-                      }
+                  trailing: IconButton(
+                    icon: Icon(Icons.file_download),
+                    onPressed: () {
+                      _downloadManager.download(
+                          MediaType.song, Samples.songs[index]);
                     },
                   ),
                 );
@@ -425,6 +427,26 @@ class _MyAppState extends State<MyApp> {
                       _audioPlayer.skipToIndex(index);
                     },
                   ),
+                );
+              },
+            ),
+            Center(
+              child: Text(
+                "Downloaded Songs ${_downloadManager.downloadedSongSize}",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+              ),
+            ),
+            AnimatedList(
+              key: _downloadedAnimatedListKey,
+              shrinkWrap: true,
+              initialItemCount: _downloadManager.downloadedSongSize,
+              itemBuilder: (context, index, animation) {
+                Download<Media> download =
+                    _downloadManager.downloadedSongAtIndex(index);
+                return SlideTransition(
+                  position: animation
+                      .drive(Tween(begin: Offset(1, 0), end: Offset(0, 0))),
+                  child: DownloadedMediaListTile(download: download,),
                 );
               },
             ),

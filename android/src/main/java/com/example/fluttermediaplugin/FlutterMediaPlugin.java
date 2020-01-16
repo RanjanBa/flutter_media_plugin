@@ -5,7 +5,9 @@ import androidx.annotation.NonNull;
 import android.net.Uri;
 import android.util.Log;
 
+import com.example.fluttermediaplugin.Media.Media;
 import com.example.fluttermediaplugin.Media.Song;
+import com.example.fluttermediaplugin.Media.Video;
 import com.google.android.exoplayer2.Player;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
@@ -22,6 +24,10 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
+
+import static com.example.fluttermediaplugin.Utility.MediaIds.MEDIA_TYPE;
+import static com.example.fluttermediaplugin.Utility.MediaIds.SONG_MEDIA_TAG;
+import static com.example.fluttermediaplugin.Utility.MediaIds.VIDEO_MEDIA_TAG;
 
 /**
  * FlutterMediaPlugin
@@ -323,29 +329,71 @@ public class FlutterMediaPlugin implements MethodCallHandler {
     private void downloadMethodCall(String method, MethodCall call, Result result) {
         switch (method) {
             case "download": {
-                Log.d(TAG, "Download tap");
-                String url = call.argument("url");
-                if (url != null) {
-                    downloadManager.startDownload(registrar.activeContext(), url, Uri.parse(url));
+                String tag = call.argument(MEDIA_TYPE);
+                Map<String, String> stringMap = call.arguments();
+                if(tag == null) {
+                    result.error("Download", "Tag is null", "Tag should not be null");
+                    return;
+                }
+                if(tag.equals(SONG_MEDIA_TAG)) {
+                    Song song = Song.fromMap(stringMap);
+                    if (song != null) {
+                        downloadManager.startDownload(song);
+                    }
+                }
+                else if(tag.equals(VIDEO_MEDIA_TAG)) {
+                    Video video = Video.fromMap(stringMap);
+                    if (video != null) {
+                        downloadManager.startDownload(video);
+                    }
                 }
                 result.success(null);
                 break;
             }
             case "downloadRemove": {
-                String url = call.argument("url");
-                if (url != null) {
-                    downloadManager.removeDownload(registrar.activeContext(), url);
+                String tag = call.argument(MEDIA_TYPE);
+                Map<String, String> stringMap = call.arguments();
+                if(tag == null) {
+                    result.error("Download", "Tag is null", "Tag should not be null");
+                    return;
+                }
+                if(tag.equals(SONG_MEDIA_TAG)) {
+                    Song song = Song.fromMap(stringMap);
+                    if (song != null) {
+                        downloadManager.removeDownload(song);
+                    }
+                }
+                else if(tag.equals(VIDEO_MEDIA_TAG)) {
+                    Video video = Video.fromMap(stringMap);
+                    if (video != null) {
+                        downloadManager.removeDownload(video);
+                    }
                 }
                 result.success(null);
                 break;
             }
             case "isDownloaded":
-                String url = call.argument("url");
-                if (url != null) {
-                    result.success(downloadManager.isDownloaded(Uri.parse(url)));
-                } else {
-                    result.success(false);
+                String tag = call.argument(MEDIA_TYPE);
+                Map<String, String> stringMap = call.arguments();
+                if(tag == null) {
+                    result.error("Download", "Tag is null", "Tag should not be null");
+                    return;
                 }
+                if(tag.equals(SONG_MEDIA_TAG)) {
+                    Song song = Song.fromMap(stringMap);
+                    if (song != null) {
+                        result.success(downloadManager.isDownloaded(song));
+                        return;
+                    }
+                }
+                else if(tag.equals(VIDEO_MEDIA_TAG)) {
+                    Video video = Video.fromMap(stringMap);
+                    if (video != null) {
+                        result.success(downloadManager.isDownloaded(video));
+                        return;
+                    }
+                }
+                result.success(false);
                 break;
             default:
                 result.notImplemented();

@@ -13,6 +13,10 @@ public final class Utility {
     }
 
     public final class MediaIds {
+        public static final String MEDIA_TYPE = "mediaType";
+        public static final String SONG_MEDIA_TAG = "song";
+        public static final String VIDEO_MEDIA_TAG = "video";
+
         public static final String KEY_TAG = "id";
         public static final String TITLE_TAG = "title";
         public static final String URL_TAG = "url";

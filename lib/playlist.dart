@@ -85,8 +85,8 @@ class Playlist<T extends Media> {
   }
 
   static Playlist<Song> songsPlaylistFromMap(Map<String, dynamic> json) {
-    Playlist<Song> playlist = Playlist(json[Utility.playlist_name].toString());
-    List<dynamic> tempMediaList = json[Utility.media_playlist];
+    Playlist<Song> playlist = Playlist(json[FieldUtility.playlist_name].toString());
+    List<dynamic> tempMediaList = json[FieldUtility.media_playlist];
 
     if (tempMediaList != null) {
       for (Map<String, dynamic> map in tempMediaList) {
@@ -105,8 +105,8 @@ class Playlist<T extends Media> {
     }
 
     return {
-      Utility.playlist_name: _playlistName,
-      Utility.media_playlist: songObject,
+      FieldUtility.playlist_name: _playlistName,
+      FieldUtility.media_playlist: songObject,
     };
   }
 }

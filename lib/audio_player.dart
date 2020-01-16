@@ -135,8 +135,8 @@ class AudioPlayer {
         bool playWhenReady = arguments['playWhenReady'];
         int playbackState = arguments['playbackState'];
 
-        if (_playbackState == Utility.STATE_ENDED ||
-            _playbackState == Utility.STATE_IDLE) {
+        if (_playbackState == ExoPlayerUtility.STATE_ENDED ||
+            _playbackState == ExoPlayerUtility.STATE_IDLE) {
           _playbackPosition = 0;
           _playbackLength = 0;
 
@@ -150,7 +150,7 @@ class AudioPlayer {
           listener.onPlayerStateChanged(playWhenReady, playbackState);
         }
 
-        if (_playbackState == Utility.STATE_IDLE) {
+        if (_playbackState == ExoPlayerUtility.STATE_IDLE) {
           _currentWindowIndex = -1;
           _nextWindowIndex = -1;
         }

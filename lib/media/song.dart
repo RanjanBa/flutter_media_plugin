@@ -13,13 +13,13 @@ class Song implements Media {
 
   static String _capitalizeEveryWord(String str) {
     bool isSpaceFound = true;
-    for(int i = 0; i < str.length; i++) {
-      if(isSpaceFound) {
+    for (int i = 0; i < str.length; i++) {
+      if (isSpaceFound) {
         str = str.substring(0, i) + str[i].toUpperCase() + str.substring(i + 1);
         isSpaceFound = false;
       }
 
-      if(str[i] == ' ') {
+      if (str[i] == ' ') {
         isSpaceFound = true;
       }
     }
@@ -58,23 +58,23 @@ class Song implements Media {
   @override
   Map<String, dynamic> toJson() {
     return {
-      Utility.song_key_tag: key,
-      Utility.song_title_tag: title,
-      Utility.song_artists_tag: artists,
-      Utility.song_album_tag: album,
-      Utility.song_album_art_url_tag: album_art_url,
-      Utility.song_url_tag: url,
+      FieldUtility.song_key_tag: key,
+      FieldUtility.song_title_tag: title,
+      FieldUtility.song_artists_tag: artists,
+      FieldUtility.song_album_tag: album,
+      FieldUtility.song_album_art_url_tag: album_art_url,
+      FieldUtility.song_url_tag: url,
     };
   }
 
   @override
   factory Song.fromMap(Map<String, dynamic> map) {
-    String key = map[Utility.song_key_tag];
-    String title = map[Utility.song_title_tag];
-    String artists = map[Utility.song_artists_tag];
-    String album = map[Utility.song_album_tag];
-    String albumArtUrl = map[Utility.song_album_art_url_tag];
-    String url = map[Utility.song_url_tag];
+    String key = map[FieldUtility.song_key_tag];
+    String title = map[FieldUtility.song_title_tag];
+    String artists = map[FieldUtility.song_artists_tag];
+    String album = map[FieldUtility.song_album_tag];
+    String albumArtUrl = map[FieldUtility.song_album_art_url_tag];
+    String url = map[FieldUtility.song_url_tag];
     Song song = Song(key, title, artists, album, albumArtUrl, url);
     return song;
   }

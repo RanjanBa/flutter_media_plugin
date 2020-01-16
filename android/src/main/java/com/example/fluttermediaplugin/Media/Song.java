@@ -76,6 +76,7 @@ public final class Song implements Media {
         return capitalizeEveryWord(artists);
     }
 
+    @Override
     public Map<String, Object> toMap() {
         Map<String, Object> songMap = new HashMap<>();
         songMap.put(KEY_TAG, key);

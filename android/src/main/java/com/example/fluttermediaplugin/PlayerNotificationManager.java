@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.DrawableRes;
@@ -20,6 +19,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 
 import android.support.v4.media.session.MediaSessionCompat;
+import android.util.Log;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ControlDispatcher;
@@ -44,64 +44,14 @@ import java.util.List;
 import java.util.Map;
 
 public class PlayerNotificationManager {
-    /**
-     * An adapter to provide content assets of the media currently playing.
-     */
     public interface MediaDescriptionAdapter {
-
-        /**
-         * Gets the content title for the current media item.
-         * <p>
-         * <p>See {@link NotificationCompat.Builder#setContentTitle(CharSequence)}.
-         *
-         * @param player The {@link Player} for which a notification is being built.
-         */
         String getCurrentContentTitle(Player player);
-
-        /**
-         * Creates a content intent for the current media item.
-         * <p>
-         * <p>See {@link NotificationCompat.Builder#setContentIntent(PendingIntent)}.
-         *
-         * @param player The {@link Player} for which a notification is being built.
-         */
         @Nullable
         PendingIntent createCurrentContentIntent(Player player);
-
-        /**
-         * Gets the content text for the current media item.
-         * <p>
-         * <p>See {@link NotificationCompat.Builder#setContentText(CharSequence)}.
-         *
-         * @param player The {@link Player} for which a notification is being built.
-         */
         @Nullable
         String getCurrentContentText(Player player);
-
-        /**
-         * Gets the content sub text for the current media item.
-         * <p>
-         * <p>See {@link NotificationCompat.Builder#setSubText(CharSequence)}.
-         *
-         * @param player The {@link Player} for which a notification is being built.
-         **/
         @Nullable
         String getCurrentSubText(Player player);
-
-        /**
-         * Gets the large icon for the current media item.
-         * <p>
-         * <p>When a bitmap initially needs to be asynchronously loaded, a placeholder (or null) can be
-         * returned and the bitmap asynchronously passed to the {@link BitmapCallback} once it is
-         * loaded. Because the adapter may be called multiple times for the same media item, the bitmap
-         * should be cached by the app and whenever possible be returned synchronously at subsequent
-         * calls for the same media item.
-         * <p>
-         * <p>See {@link NotificationCompat.Builder#setLargeIcon(Bitmap)}.
-         *
-         * @param player   The {@link Player} for which a notification is being built.
-         * @param callback A {@link BitmapCallback} to provide a {@link Bitmap} asynchronously.
-         */
         @Nullable
         Bitmap getCurrentLargeIcon(Player player, BitmapCallback callback);
     }
@@ -151,20 +101,7 @@ public class PlayerNotificationManager {
      * A listener for start and cancellation of the notification.
      */
     public interface NotificationListener {
-
-        /**
-         * Called after the notification has been started.
-         *
-         * @param notificationId The id with which the notification has been posted.
-         * @param notification   The {@link Notification}.
-         */
         void onNotificationStarted(int notificationId, Notification notification);
-
-        /**
-         * Called after the notification has been cancelled.
-         *
-         * @param notificationId The id of the notification which has been cancelled.
-         */
         void onNotificationCancelled(int notificationId);
     }
 
@@ -172,16 +109,9 @@ public class PlayerNotificationManager {
      * Receives a {@link Bitmap}.
      */
     final class BitmapCallback {
-        private final int notificationTag;
-
-        private BitmapCallback(int notificationTag) {
-            this.notificationTag = notificationTag;
-        }
-
         void onBitmap(final Bitmap bitmap) {
             if (bitmap != null) {
-                if (player != null && notificationTag == currentNotificationTag && isNotificationStarted) {
-//                    Log.d("MediaPlayerNotification", "Update PlayerNotification");
+                if (player != null && isNotificationStarted) {
                     updateNotification(bitmap);
                 }
             }
@@ -273,7 +203,6 @@ public class PlayerNotificationManager {
     private final MediaDescriptionAdapter mediaDescriptionAdapter;
     private final @Nullable
     CustomActionReceiver customActionReceiver;
-//    private final Handler mainHandler;
     private final NotificationManagerCompat notificationManager;
     private final IntentFilter intentFilter;
     private final Player.EventListener playerListener;
@@ -827,7 +756,7 @@ public class PlayerNotificationManager {
         if (largeIcon == null) {
             largeIcon =
                     mediaDescriptionAdapter.getCurrentLargeIcon(
-                            player, new BitmapCallback(++currentNotificationTag));
+                            player, new BitmapCallback());
         }
         if (largeIcon != null) {
             builder.setLargeIcon(largeIcon);
@@ -944,9 +873,9 @@ public class PlayerNotificationManager {
         actions.put(
                 ACTION_FAST_FORWARD,
                 new NotificationCompat.Action(
-                        //R.drawable.exo_notification_fastforward,
+                        //R.drawable.exo_notification_fast_forward,
                         R.drawable.exo_icon_fastforward,
-                        context.getString(R.string.exo_controls_fastforward_description),
+                        context.getString(R.string.exo_controls_fast_forward_description),
                         createBroadcastIntent(ACTION_FAST_FORWARD, context, instanceId)));
         actions.put(
                 ACTION_PREVIOUS,

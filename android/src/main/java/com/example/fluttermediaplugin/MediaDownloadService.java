@@ -9,6 +9,7 @@ import com.google.android.exoplayer2.offline.DownloadManager;
 import com.google.android.exoplayer2.offline.DownloadService;
 import com.google.android.exoplayer2.scheduler.PlatformScheduler;
 import com.google.android.exoplayer2.scheduler.Scheduler;
+import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.NotificationUtil;
 import com.google.android.exoplayer2.util.Util;
 import android.app.PendingIntent;
@@ -125,7 +126,7 @@ public class MediaDownloadService extends DownloadService {
          * @param message       An optional message to display on the notification.
          * @return The notification.
          */
-        public Notification buildDownloadFailedNotification(
+        private Notification buildDownloadFailedNotification(
                 @DrawableRes int smallIcon, @Nullable PendingIntent contentIntent, @Nullable String message) {
             @StringRes int titleStringId = R.string.exo_download_failed;
             return buildEndStateNotification(smallIcon, contentIntent, message, titleStringId);
@@ -171,7 +172,7 @@ public class MediaDownloadService extends DownloadService {
         }
     }
 
-//    private static final String TAG = "MediaDownloadService";
+    private static final String TAG = "MediaDownloadService";
 
     private static final int JOB_ID = 1000;
     private static final int FOREGROUND_NOTIFICATION_ID = DOWNLOAD_NOTIFICATION_ID;
@@ -203,6 +204,8 @@ public class MediaDownloadService extends DownloadService {
 
     @Override
     protected Notification getForegroundNotification(List<Download> downloads) {
+//        Log.d(TAG, "Foreground notification");
+        FlutterMediaPlugin.getInstance().getDownloadManager().updateDownloads(downloads);
         return notificationHelper.buildProgressNotification(R.drawable.download, null, null, downloads);
     }
 

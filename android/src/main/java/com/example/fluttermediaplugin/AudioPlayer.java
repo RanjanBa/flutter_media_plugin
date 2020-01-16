@@ -181,7 +181,6 @@ class AudioPlayer {
             simpleExoPlayer.setPlayWhenReady(true);
         } else {
             audioExoPlayerListener.onPlayerStatus("Audio is already in playing state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady());
-//            audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
         }
     }
 
@@ -242,12 +241,13 @@ class AudioPlayer {
 
         simpleExoPlayer.stop(false);
 
-        if (MediaPlayerNotificationService.getInstance() != null)
-            MediaPlayerNotificationService.getInstance().stopService(true);
-
         if (simpleExoPlayer != null) {
             audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
             audioExoPlayerListener.onPlayerStatus("Audio is in stop state " + simpleExoPlayer.getPlaybackState() + ", " + simpleExoPlayer.getPlayWhenReady() + ", playlist length : " + playlist.getSize());
+        }
+
+        if (MediaPlayerNotificationService.getInstance() != null) {
+            MediaPlayerNotificationService.getInstance().stopService(true);
         }
 
         playlist.clear();
@@ -260,11 +260,6 @@ class AudioPlayer {
         simpleExoPlayer.removeListener(audioExoPlayerListener);
         simpleExoPlayer.release();
         audioExoPlayerListener = null;
-
-        if (MediaPlayerNotificationService.getInstance() != null) {
-            MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setPlayer(null);
-            MediaPlayerNotificationService.getInstance().stopService(true);
-        }
     }
 
     void setPlaylist(@NonNull JSONObject playlistJsonObject, MethodChannel.Result result) {
@@ -460,13 +455,10 @@ class AudioPlayer {
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
             if (MediaPlayerNotificationService.getInstance() != null) {
-                if (MediaPlayerNotificationService.getInstance().getPlayerNotificationManager() != null) {
-                    if (playWhenReady) {
-                        MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setOngoing(true);
-                    } else {
-                        MediaPlayerNotificationService.getInstance().stopService(false);
-                        MediaPlayerNotificationService.getInstance().getPlayerNotificationManager().setOngoing(false);
-                    }
+                if (playWhenReady) {
+                    MediaPlayerNotificationService.getInstance().startService();
+                } else {
+                    MediaPlayerNotificationService.getInstance().stopService(false);
                 }
             } else {
                 if (playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_READY) {
