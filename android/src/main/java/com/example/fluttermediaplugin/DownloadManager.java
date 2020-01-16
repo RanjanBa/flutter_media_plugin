@@ -165,6 +165,11 @@ final class DownloadManager {
         }
     }
 
+    void initialize() {
+        loadDownloads(exoPlayerDownloadManager.getDownloadIndex());
+        downloadManagerListener.onInitialized();
+    }
+
     private void loadDownloads(DownloadIndex downloadIndex) {
         try (DownloadCursor downloadCursor = downloadIndex.getDownloads()) {
             while (downloadCursor.moveToNext()) {

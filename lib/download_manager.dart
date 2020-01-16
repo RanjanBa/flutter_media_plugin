@@ -37,23 +37,16 @@ class DownloadManager {
   }
 
   DownloadManager({this.channel}) {
-//    _initialize();
+    _initialize();
   }
 
-  void _initialize() async {
-    Map<dynamic, dynamic> arguments = await channel
-        .invokeMethod('${FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE}/initialize');
-    print("initialize ${arguments.runtimeType}");
-    if (arguments != null) {
-      // TODO:
-      // get all downloaded songs or videos
-    }
+  void _initialize() {
+    channel.invokeMethod('${FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE}/initialize');
   }
 
   void callMethod(String method, dynamic arguments) {
     switch (method) {
       case "onInitialized":
-        print("download Initialized");
         _downloadedSongs.clear();
         _downloadedVideos.clear();
 
@@ -98,11 +91,11 @@ class DownloadManager {
 
           if (!isFound) {
             Download<Song> download =
-                Download(song, state, bytesDownloaded, percent);
+            Download(song, state, bytesDownloaded, percent);
             _downloadedSongs.add(download);
             int index = _downloadedSongs.length - 1;
             for (DownloadManagerListener listener
-                in _downloadManagerListeners) {
+            in _downloadManagerListeners) {
               listener.onDownloadAdded(index, download);
             }
           }
@@ -123,7 +116,7 @@ class DownloadManager {
             if (_downloadedSongs[i].media.key == song.key) {
               Download<Media> download = _downloadedSongs.removeAt(i);
               for (DownloadManagerListener listener
-                  in _downloadManagerListeners) {
+              in _downloadManagerListeners) {
                 listener.onDownloadRemoved(i, download);
               }
               break;
@@ -185,7 +178,8 @@ class DownloadManagerListener {
     Function() onInitialized,
     Function(int index, Download<Media>) onDownloadAdded,
     Function(int index, Download<Media>) onDownloadRemoved,
-  })  : _onInitialized = onInitialized,
+  })
+      : _onInitialized = onInitialized,
         _onDownloadAdded = onDownloadAdded,
         _onDownloadRemoved = onDownloadRemoved;
 

@@ -160,8 +160,21 @@ public class FlutterMediaPlugin implements MethodCallHandler {
 
                 videoMethodCall(methodTypeCall.method, call, result);
             } else if (methodTypeCall.methodType.equals(DOWNLOAD_METHOD_TYPE)) {
+                if (methodTypeCall.method.equals("initialize")) {
+                    if (downloadManager == null) {
+                        downloadManager = new DownloadManager(getRegistrar().activeContext(), instance.channel);
+                    } else {
+                        Log.d(TAG, "Already download manager is initialized");
+                        downloadManager.initialize();
+                    }
+                    result.success(null);
+                    return;
+                }
+
                 if (downloadManager == null) {
-                    downloadManager = new DownloadManager(getRegistrar().activeContext(), instance.channel);
+                    Log.d(TAG, "download manager is not initialized");
+                    result.success(null);
+                    return;
                 }
 
                 downloadMethodCall(methodTypeCall.method, call, result);
