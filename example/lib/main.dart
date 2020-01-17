@@ -49,6 +49,7 @@ class _MyAppState extends State<MyApp> {
   ExoPlayerListener<Song> _exoPlayerListener;
   DownloadManagerListener _downloadListener;
   VideoExoPlayerListener _videoExoPlayerListener;
+  List<Download<Song>> _downloadedSongs = List();
 
   String _videoUrl =
       "https://firebasestorage.googleapis.com/v0/b/bodoentertainment-224710.appspot.com/o/videos%2Ftest.mp4?alt=media&token=d66bb13d-b9aa-4a2e-b572-59b63fdb1b6b";
@@ -75,10 +76,6 @@ class _MyAppState extends State<MyApp> {
       onRepeatModeChanged: _onRepeatModeChanged,
       onShuffleModeEnabledChanged: _onShuffleModeEnabledChanged,
       onPlaylistChanged: (Playlist<Song> playlist) {
-        int newSize = playlist != null ? playlist.getSize() : -1;
-//        print(
-//            "Main playlist changed old size: ${_audioPlayer.playlistSize} and new size: $newSize");
-
         for (int i = _audioPlayer.playlistSize - 1; i >= 0; i--) {
           _animatedListKey.currentState.removeItem(i,
               (BuildContext context, Animation animation) {
@@ -113,7 +110,33 @@ class _MyAppState extends State<MyApp> {
     );
 
     _downloadListener = DownloadManagerListener(onInitialized: () {
-      setState(() {});
+      for (int i = 0; i < _downloadedSongs.length; i++) {
+        _downloadedAnimatedListKey.currentState.removeItem(
+          i,
+          (context, animation) {
+            return SlideTransition(
+              position: animation
+                  .drive(Tween(begin: Offset(1, 0), end: Offset(0, 0))),
+              child: ListTile(
+                title: Text(_downloadedSongs[i].media.title),
+                trailing: Icon(Icons.delete),
+              ),
+            );
+          },
+        );
+      }
+
+      _downloadedSongs.clear();
+      for (int i = 0;
+          i < FlutterMediaPlugin.downloadManager.downloadedSongSize;
+          i++) {
+        _downloadedAnimatedListKey.currentState.insertItem(i);
+        _downloadedSongs
+            .add(FlutterMediaPlugin.downloadManager.downloadedSongAtIndex(i));
+      }
+      print("set state");
+      setState(() {
+      });
     }, onDownloadAdded: (index, download) {
       _downloadedAnimatedListKey.currentState.insertItem(index);
     }, onDownloadRemoved: (index, download) {
@@ -432,21 +455,22 @@ class _MyAppState extends State<MyApp> {
             ),
             Center(
               child: Text(
-                "Downloaded Songs ${_downloadManager.downloadedSongSize}",
+                "Downloaded Songs ${_downloadedSongs.length}",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
               ),
             ),
             AnimatedList(
               key: _downloadedAnimatedListKey,
               shrinkWrap: true,
-              initialItemCount: _downloadManager.downloadedSongSize,
+              initialItemCount: _downloadedSongs.length,
               itemBuilder: (context, index, animation) {
-                Download<Media> download =
-                    _downloadManager.downloadedSongAtIndex(index);
+                Download<Media> download = _downloadedSongs[index];
                 return SlideTransition(
                   position: animation
                       .drive(Tween(begin: Offset(1, 0), end: Offset(0, 0))),
-                  child: DownloadedMediaListTile(download: download,),
+                  child: DownloadedMediaListTile(
+                    download: download,
+                  ),
                 );
               },
             ),

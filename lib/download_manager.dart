@@ -62,8 +62,10 @@ class DownloadManager {
 
             _downloadedSongs
                 .add(Download<Song>(song, state, bytesDownloaded, percent));
-          } else if (mediaType == MediaType.video.toString().split('.')[1]) {}
+          } else if (mediaType == MediaType.video.toString().split('.')[1]) {
+          }
         });
+
         for (DownloadManagerListener listener in _downloadManagerListeners) {
           listener.onInitialized();
         }
