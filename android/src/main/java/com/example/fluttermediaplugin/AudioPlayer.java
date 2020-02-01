@@ -164,8 +164,8 @@ class AudioPlayer {
     }
 
     void onNotificationDestroyed() {
-        isShowingNotification = false;
         stop();
+        isShowingNotification = false;
     }
 
     void play() {
@@ -234,12 +234,10 @@ class AudioPlayer {
     }
 
     void stop() {
-        audioExoPlayerListener.clear();
-
         audioExoPlayerListener.onBufferedUpdate(0);
         audioExoPlayerListener.onPlaybackUpdate(0, 0);
 
-        simpleExoPlayer.stop(false);
+        simpleExoPlayer.stop(true);
 
         if (simpleExoPlayer != null) {
             audioExoPlayerListener.onPlayerStateChanged(simpleExoPlayer.getPlayWhenReady(), simpleExoPlayer.getPlaybackState());
@@ -252,6 +250,7 @@ class AudioPlayer {
 
         playlist.clear();
         audioExoPlayerListener.onPlaylistChanged(playlist);
+        audioExoPlayerListener.clear();
     }
 
     void release() {

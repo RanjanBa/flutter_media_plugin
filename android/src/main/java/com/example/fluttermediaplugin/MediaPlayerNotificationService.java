@@ -12,6 +12,7 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.ArrayMap;
@@ -23,14 +24,19 @@ import com.google.android.exoplayer2.Player;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.example.fluttermediaplugin.Utility.Constants.MEDIA_SESSION_TAG;
-import static com.example.fluttermediaplugin.Utility.Constants.PLAYBACK_CHANNEL_ID;
-import static com.example.fluttermediaplugin.Utility.Constants.PLAYBACK_NOTIFICATION_ID;
 
 public class MediaPlayerNotificationService extends Service {
     private static final String TAG = "MediaPlayerNotification";
+
+    private static final String ACTION_HEART = "com.google.android.flutter_media.play";
+    private static final String EXTRA_INSTANCE_ID = "INSTANCE_ID";
     private PlayerNotificationManager playerNotificationManager;
 
     private static MediaPlayerNotificationService instance;
@@ -74,8 +80,7 @@ public class MediaPlayerNotificationService extends Service {
         }
 
         playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
-                FlutterMediaPlugin.getInstance().getRegistrar().context(), PLAYBACK_CHANNEL_ID, R.string.exo_track_unknown, PLAYBACK_NOTIFICATION_ID, new PlayerNotificationManager.MediaDescriptionAdapter() {
-
+                FlutterMediaPlugin.getInstance().getRegistrar().context(), R.string.exo_channel_name, new PlayerNotificationManager.MediaDescriptionAdapter() {
                     @Override
                     public String getCurrentContentTitle(Player player) {
                         Song song = FlutterMediaPlugin.getInstance().getAudioPlayer().getSongByIndex(player.getCurrentWindowIndex());
@@ -145,6 +150,37 @@ public class MediaPlayerNotificationService extends Service {
 
                         return bitmap;
                     }
+                }, new PlayerNotificationManager.CustomActionReceiver() {
+                    @Override
+                    public Map<String, NotificationCompat.Action> createCustomActions(Context context, int instanceId) {
+                        Intent intent = new Intent(ACTION_HEART).setPackage(context.getPackageName());
+                        intent.putExtra(EXTRA_INSTANCE_ID, instanceId);
+
+                        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                                context, instanceId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                        Map<String, NotificationCompat.Action> actions = new HashMap<>();
+                        actions.put(
+                                ACTION_HEART,
+                                new NotificationCompat.Action(
+                                        R.drawable.exo_icon_heart,
+                                        context.getString(R.string.exo_controls_heart_description),
+                                        pendingIntent));
+                        return actions;
+                    }
+
+                    @Override
+                    public List<String> getCustomActions(Player player) {
+                        List<String> stringActions = new ArrayList<>();
+                        stringActions.add(ACTION_HEART);
+                        return stringActions;
+                    }
+
+                    @Override
+                    public void onCustomAction(Player player, String action, Intent intent) {
+                        if(ACTION_HEART.equals(action)) {
+                            Log.d(TAG, "You love song");
+                        }
+                    }
                 }
         );
 
@@ -160,15 +196,14 @@ public class MediaPlayerNotificationService extends Service {
 
             @Override
             public void onNotificationCancelled(int notificationId) {
-//                Log.d(TAG, "Notification canceled");
+                Log.d(TAG, "Notification canceled");
                 notification = null;
                 FlutterMediaPlugin.getInstance().getAudioPlayer().onNotificationDestroyed();
                 stopSelf();
             }
         });
         playerNotificationManager.setPlayer(FlutterMediaPlugin.getInstance().getAudioPlayer().getSimpleExoPlayer());
-        playerNotificationManager.setFastForwardIncrementMs(0);
-        playerNotificationManager.setRewindIncrementMs(0);
+        playerNotificationManager.setUseChronometer(true);
         mediaSession.setActive(true);
         playerNotificationManager.setMediaSessionToken(mediaSession.getSessionToken());
     }

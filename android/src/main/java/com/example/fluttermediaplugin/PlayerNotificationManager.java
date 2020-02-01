@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.os.Looper;
 
 import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.IntDef;
 import androidx.annotation.StringRes;
@@ -19,7 +20,6 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 
 import android.support.v4.media.session.MediaSessionCompat;
-import android.util.Log;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ControlDispatcher;
@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class PlayerNotificationManager {
     public interface MediaDescriptionAdapter {
@@ -56,9 +57,6 @@ public class PlayerNotificationManager {
         Bitmap getCurrentLargeIcon(Player player, BitmapCallback callback);
     }
 
-    /**
-     * Defines and handles custom actions.
-     */
     public interface CustomActionReceiver {
 
         /**
@@ -135,14 +133,6 @@ public class PlayerNotificationManager {
      */
     private static final String ACTION_NEXT = "com.google.android.exoplayer.next";
     /**
-     * The action which fast forwards.
-     */
-    private static final String ACTION_FAST_FORWARD = "com.google.android.exoplayer.ffwd";
-    /**
-     * The action which rewinds.
-     */
-    private static final String ACTION_REWIND = "com.google.android.exoplayer.rewind";
-    /**
      * The action which cancels the notification and stops playback.
      */
     private static final String ACTION_STOP = "com.google.android.exoplayer.stop";
@@ -184,19 +174,10 @@ public class PlayerNotificationManager {
     @interface Priority {
     }
 
-    /**
-     * The default fast forward increment, in milliseconds.
-     */
-    private static final int DEFAULT_FAST_FORWARD_MS = 15000;
-    /**
-     * The default rewind increment, in milliseconds.
-     */
-    private static final int DEFAULT_REWIND_MS = 5000;
-
     private static final long MAX_POSITION_FOR_SEEK_TO_PREVIOUS = 3000;
+    private static int instanceIdCounter = 0;
 
-    private static int instanceIdCounter;
-
+    private final int instanceId;
     private final Context context;
     private final String channelId;
     private final int notificationId;
@@ -209,13 +190,12 @@ public class PlayerNotificationManager {
     private final NotificationBroadcastReceiver notificationBroadcastReceiver;
     private final Map<String, NotificationCompat.Action> playbackActions;
     private final Map<String, NotificationCompat.Action> customActions;
-    private final int instanceId;
 
     private @Nullable
     Player player;
     private ControlDispatcher controlDispatcher;
     private boolean isNotificationStarted;
-    private int currentNotificationTag;
+//    private int currentNotificationTag;
     private @Nullable
     NotificationListener notificationListener;
     private @Nullable
@@ -226,8 +206,6 @@ public class PlayerNotificationManager {
     String stopAction;
     private @Nullable
     PendingIntent stopPendingIntent;
-    private long fastForwardMs;
-    private long rewindMs;
     private int badgeIconType;
     private boolean colorized;
     private int defaults;
@@ -245,46 +223,19 @@ public class PlayerNotificationManager {
     /**
      * Creates a notification manager and a low-priority notification channel with the specified
      * {@code channelId} and {@code channelName}.
-     *
      * @param context                 The {@link Context}.
-     * @param channelId               The id of the notification channel.
      * @param channelName             A string resource identifier for the user visible name of the channel. The
      *                                recommended maximum length is 40 characters; the value may be truncated if it is too long.
-     * @param notificationId          The id of the notification.
      * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
      */
     static PlayerNotificationManager createWithNotificationChannel(
             Context context,
-            String channelId,
             @StringRes int channelName,
-            int notificationId,
-            MediaDescriptionAdapter mediaDescriptionAdapter) {
+            MediaDescriptionAdapter mediaDescriptionAdapter, @Nullable CustomActionReceiver customActionReceiver) {
         NotificationUtil.createNotificationChannel(
-                context, channelId, channelName, NotificationUtil.IMPORTANCE_LOW);
+                context, Utility.Constants.PLAYBACK_CHANNEL_ID, channelName, NotificationUtil.IMPORTANCE_LOW);
         return new PlayerNotificationManager(
-                context, channelId, notificationId, mediaDescriptionAdapter);
-    }
-
-    /**
-     * Creates a notification manager using the specified notification {@code channelId}. The caller
-     * is responsible for creating the notification channel.
-     *
-     * @param context                 The {@link Context}.
-     * @param channelId               The id of the notification channel.
-     * @param notificationId          The id of the notification.
-     * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
-     */
-    PlayerNotificationManager(
-            Context context,
-            String channelId,
-            int notificationId,
-            MediaDescriptionAdapter mediaDescriptionAdapter) {
-        this(
-                context,
-                channelId,
-                notificationId,
-                mediaDescriptionAdapter,
-                /* customActionReceiver= */ null);
+                context, Utility.Constants.PLAYBACK_CHANNEL_ID, Utility.Constants.PLAYBACK_NOTIFICATION_ID, mediaDescriptionAdapter, customActionReceiver);
     }
 
     /**
@@ -297,20 +248,20 @@ public class PlayerNotificationManager {
      * @param mediaDescriptionAdapter The {@link MediaDescriptionAdapter}.
      * @param customActionReceiver    The {@link CustomActionReceiver}.
      */
-    PlayerNotificationManager(
+    private PlayerNotificationManager(
             Context context,
             String channelId,
             int notificationId,
             MediaDescriptionAdapter mediaDescriptionAdapter,
             @Nullable CustomActionReceiver customActionReceiver) {
+        instanceId = instanceIdCounter++;
+
         this.context = context.getApplicationContext();
         this.channelId = channelId;
         this.notificationId = notificationId;
         this.mediaDescriptionAdapter = mediaDescriptionAdapter;
         this.customActionReceiver = customActionReceiver;
         this.controlDispatcher = new DefaultControlDispatcher();
-        instanceId = instanceIdCounter++;
-//        mainHandler = new Handler(Looper.getMainLooper());
         notificationManager = NotificationManagerCompat.from(context);
         playerListener = new PlayerListener();
         notificationBroadcastReceiver = new NotificationBroadcastReceiver();
@@ -324,8 +275,6 @@ public class PlayerNotificationManager {
         smallIconResourceId = R.drawable.exo_notification_small_icon;
         defaults = 0;
         priority = NotificationCompat.PRIORITY_LOW;
-        fastForwardMs = DEFAULT_FAST_FORWARD_MS;
-        rewindMs = DEFAULT_REWIND_MS;
         stopAction = ACTION_STOP;
         badgeIconType = NotificationCompat.BADGE_ICON_SMALL;
         visibility = NotificationCompat.VISIBILITY_PUBLIC;
@@ -336,13 +285,11 @@ public class PlayerNotificationManager {
             intentFilter.addAction(action);
         }
         customActions = customActionReceiver != null ? customActionReceiver.createCustomActions(context, instanceId) : Collections.<String, NotificationCompat.Action>emptyMap();
-//                customActionReceiver != null
-//                        ? customActionReceiver.createCustomActions(context, instanceId)
-//                        : Collections.emptyMap();
+
         for (String action : customActions.keySet()) {
             intentFilter.addAction(action);
         }
-        stopPendingIntent = Assertions.checkNotNull(playbackActions.get(ACTION_STOP)).actionIntent;
+        stopPendingIntent = Objects.requireNonNull(Assertions.checkNotNull(playbackActions.get(ACTION_STOP))).actionIntent;
     }
 
     /**
@@ -361,8 +308,6 @@ public class PlayerNotificationManager {
      */
     public final void setPlayer(@Nullable Player player) {
         Assertions.checkState(Looper.myLooper() == Looper.getMainLooper());
-//        Assertions.checkArgument(
-//                player == null);// || player.getApplicationLooper() == Looper.getMainLooper());
         if (this.player == player) {
             return;
         }
@@ -400,36 +345,8 @@ public class PlayerNotificationManager {
      *
      * @param notificationListener The {@link NotificationListener}.
      */
-    final void setNotificationListener(NotificationListener notificationListener) {
+    public final void setNotificationListener(@NonNull NotificationListener notificationListener) {
         this.notificationListener = notificationListener;
-    }
-
-    /**
-     * Sets the fast forward increment in milliseconds.
-     *
-     * @param fastForwardMs The fast forward increment in milliseconds. A value of zero will cause the
-     *                      fast forward action to be disabled.
-     */
-    final void setFastForwardIncrementMs(long fastForwardMs) {
-        if (this.fastForwardMs == fastForwardMs) {
-            return;
-        }
-        this.fastForwardMs = fastForwardMs;
-        invalidate();
-    }
-
-    /**
-     * Sets the rewind increment in milliseconds.
-     *
-     * @param rewindMs The rewind increment in milliseconds. A value of zero will cause the rewind
-     *                 action to be disabled.
-     */
-    final void setRewindIncrementMs(long rewindMs) {
-        if (this.rewindMs == rewindMs) {
-            return;
-        }
-        this.rewindMs = rewindMs;
-        invalidate();
     }
 
     /**
@@ -437,7 +354,7 @@ public class PlayerNotificationManager {
      *
      * @param useNavigationActions Whether to use navigation actions or not.
      */
-    final void setUseNavigationActions(boolean useNavigationActions) {
+    public final void setUseNavigationActions(boolean useNavigationActions) {
         if (this.useNavigationActions != useNavigationActions) {
             this.useNavigationActions = useNavigationActions;
             invalidate();
@@ -469,9 +386,9 @@ public class PlayerNotificationManager {
         }
         this.stopAction = stopAction;
         if (ACTION_STOP.equals(stopAction)) {
-            stopPendingIntent = Assertions.checkNotNull(playbackActions.get(ACTION_STOP)).actionIntent;
+            stopPendingIntent = Objects.requireNonNull(Assertions.checkNotNull(playbackActions.get(ACTION_STOP))).actionIntent;
         } else if (stopAction != null) {
-            stopPendingIntent = Assertions.checkNotNull(customActions.get(stopAction)).actionIntent;
+            stopPendingIntent = Objects.requireNonNull(Assertions.checkNotNull(customActions.get(stopAction))).actionIntent;
         } else {
             stopPendingIntent = null;
         }
@@ -657,7 +574,7 @@ public class PlayerNotificationManager {
     /**
      * Forces an update of the notification if already started.
      */
-    public void invalidate() {
+    private void invalidate() {
         if (isNotificationStarted && player != null) {
             updateNotification(null);
         }
@@ -700,7 +617,7 @@ public class PlayerNotificationManager {
      * @param largeIcon The large icon to be used.
      * @return The {@link Notification} which has been built.
      */
-    protected Notification createNotification(Player player, @Nullable Bitmap largeIcon) {
+    private Notification createNotification(Player player, @Nullable Bitmap largeIcon) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId);
         List<String> actionNames = getActions(player);
         for (int i = 0; i < actionNames.size(); i++) {
@@ -777,25 +694,21 @@ public class PlayerNotificationManager {
      * <p>
      * <pre>
      *   +------------------------------------------------------------------------+
-     *   | prev | &lt;&lt; | play/pause | &gt;&gt; | next | custom actions | stop |
+     *   | prev | play/pause | next | custom actions | stop |
      *   +------------------------------------------------------------------------+
      * </pre>
      * <p>
      * <p>This method can be safely overridden. However, the names must be of the playback actions
-     * {@link #ACTION_PAUSE}, {@link #ACTION_PLAY}, {@link #ACTION_FAST_FORWARD}, {@link
-     * #ACTION_REWIND}, {@link #ACTION_NEXT} or {@link #ACTION_PREVIOUS}, or a key contained in the
+     * {@link #ACTION_PAUSE}, {@link #ACTION_PLAY}, {@link #ACTION_NEXT} or {@link #ACTION_PREVIOUS}, or a key contained in the
      * map returned by {@link CustomActionReceiver#createCustomActions(Context, int)}. Otherwise the
      * action name is ignored.
      */
-    protected List<String> getActions(Player player) {
+    private List<String> getActions(Player player) {
         boolean isPlayingAd = player.isPlayingAd();
         List<String> stringActions = new ArrayList<>();
         if (!isPlayingAd) {
             if (useNavigationActions) {
                 stringActions.add(ACTION_PREVIOUS);
-            }
-            if (rewindMs > 0) {
-                stringActions.add(ACTION_REWIND);
             }
         }
         if (usePlayPauseActions) {
@@ -806,9 +719,6 @@ public class PlayerNotificationManager {
             }
         }
         if (!isPlayingAd) {
-            if (fastForwardMs > 0) {
-                stringActions.add(ACTION_FAST_FORWARD);
-            }
             if (useNavigationActions && player.getNextWindowIndex() != C.INDEX_UNSET) {
                 stringActions.add(ACTION_NEXT);
             }
@@ -831,7 +741,7 @@ public class PlayerNotificationManager {
      * @param actionNames The names of the actions included in the notification.
      * @param player      The player for which state to build a notification.
      */
-    protected int[] getActionIndicesForCompactView(List<String> actionNames, Player player) {
+    private int[] getActionIndicesForCompactView(List<String> actionNames, Player player) {
         int pauseActionIndex = actionNames.indexOf(ACTION_PAUSE);
         int playActionIndex = actionNames.indexOf(ACTION_PLAY);
         return pauseActionIndex != -1
@@ -846,48 +756,29 @@ public class PlayerNotificationManager {
                 ACTION_PLAY,
                 new NotificationCompat.Action(
                         R.drawable.exo_icon_play,
-                        //R.drawable.exo_notification_play,
                         context.getString(R.string.exo_controls_play_description),
                         createBroadcastIntent(ACTION_PLAY, context, instanceId)));
         actions.put(
                 ACTION_PAUSE,
                 new NotificationCompat.Action(
-                        //R.drawable.exo_notification_pause,
                         R.drawable.exo_icon_pause,
                         context.getString(R.string.exo_controls_pause_description),
                         createBroadcastIntent(ACTION_PAUSE, context, instanceId)));
         actions.put(
                 ACTION_STOP,
                 new NotificationCompat.Action(
-                        //R.drawable.exo_notification_stop,
                         R.drawable.exo_icon_stop,
                         context.getString(R.string.exo_controls_stop_description),
                         createBroadcastIntent(ACTION_STOP, context, instanceId)));
         actions.put(
-                ACTION_REWIND,
-                new NotificationCompat.Action(
-                        //R.drawable.exo_notification_rewind,
-                        R.drawable.exo_icon_rewind,
-                        context.getString(R.string.exo_controls_rewind_description),
-                        createBroadcastIntent(ACTION_REWIND, context, instanceId)));
-        actions.put(
-                ACTION_FAST_FORWARD,
-                new NotificationCompat.Action(
-                        //R.drawable.exo_notification_fast_forward,
-                        R.drawable.exo_icon_fastforward,
-                        context.getString(R.string.exo_controls_fast_forward_description),
-                        createBroadcastIntent(ACTION_FAST_FORWARD, context, instanceId)));
-        actions.put(
                 ACTION_PREVIOUS,
                 new NotificationCompat.Action(
-                        //R.drawable.exo_notification_previous,
                         R.drawable.exo_icon_previous,
                         context.getString(R.string.exo_controls_previous_description),
                         createBroadcastIntent(ACTION_PREVIOUS, context, instanceId)));
         actions.put(
                 ACTION_NEXT,
                 new NotificationCompat.Action(
-                        //R.drawable.exo_notification_next,
                         R.drawable.exo_icon_next,
                         context.getString(R.string.exo_controls_next_description),
                         createBroadcastIntent(ACTION_NEXT, context, instanceId)));
@@ -991,10 +882,6 @@ public class PlayerNotificationManager {
             String action = intent.getAction();
             if (ACTION_PLAY.equals(action) || ACTION_PAUSE.equals(action)) {
                 controlDispatcher.dispatchSetPlayWhenReady(player, ACTION_PLAY.equals(action));
-            } else if (ACTION_FAST_FORWARD.equals(action) || ACTION_REWIND.equals(action)) {
-                long increment = ACTION_FAST_FORWARD.equals(action) ? fastForwardMs : -rewindMs;
-                controlDispatcher.dispatchSeekTo(
-                        player, player.getCurrentWindowIndex(), player.getCurrentPosition() + increment);
             } else if (ACTION_NEXT.equals(action)) {
                 int nextWindowIndex = player.getNextWindowIndex();
                 if (nextWindowIndex != C.INDEX_UNSET) {
