@@ -41,7 +41,8 @@ class DownloadManager {
   }
 
   void _initialize() {
-    channel.invokeMethod('${FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE}/initialize');
+    channel
+        .invokeMethod('${FlutterMediaPlugin.DOWNLOAD_METHOD_TYPE}/initialize');
   }
 
   void callMethod(String method, dynamic arguments) {
@@ -62,8 +63,7 @@ class DownloadManager {
 
             _downloadedSongs
                 .add(Download<Song>(song, state, bytesDownloaded, percent));
-          } else if (mediaType == MediaType.video.toString().split('.')[1]) {
-          }
+          } else if (mediaType == MediaType.video.toString().split('.')[1]) {}
         });
 
         for (DownloadManagerListener listener in _downloadManagerListeners) {
@@ -93,11 +93,11 @@ class DownloadManager {
 
           if (!isFound) {
             Download<Song> download =
-            Download(song, state, bytesDownloaded, percent);
+                Download(song, state, bytesDownloaded, percent);
             _downloadedSongs.add(download);
             int index = _downloadedSongs.length - 1;
             for (DownloadManagerListener listener
-            in _downloadManagerListeners) {
+                in _downloadManagerListeners) {
               listener.onDownloadAdded(index, download);
             }
           }
@@ -118,7 +118,7 @@ class DownloadManager {
             if (_downloadedSongs[i].media.key == song.key) {
               Download<Media> download = _downloadedSongs.removeAt(i);
               for (DownloadManagerListener listener
-              in _downloadManagerListeners) {
+                  in _downloadManagerListeners) {
                 listener.onDownloadRemoved(i, download);
               }
               break;
@@ -180,8 +180,7 @@ class DownloadManagerListener {
     Function() onInitialized,
     Function(int index, Download<Media>) onDownloadAdded,
     Function(int index, Download<Media>) onDownloadRemoved,
-  })
-      : _onInitialized = onInitialized,
+  })  : _onInitialized = onInitialized,
         _onDownloadAdded = onDownloadAdded,
         _onDownloadRemoved = onDownloadRemoved;
 
